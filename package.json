@@ -1,0 +1,26 @@
+{
+  "name": "ai-system-builder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AI System Builder · Google/AWS Summit multi-stop demo (see ../ai-system-builder-design.md)",
+  "workspaces": [
+    "shared",
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm-run-all -p dev:server dev:client",
+    "dev:client": "npm --workspace client run dev",
+    "dev:server": "npm --workspace server run dev",
+    "build": "npm --workspace shared run build && npm --workspace client run build && npm --workspace server run build",
+    "build:client": "npm --workspace client run build",
+    "build:server": "npm --workspace server run build",
+    "lint": "npm --workspace client run lint && npm --workspace server run lint",
+    "db:migrate": "echo 'Run supabase/migrations/*.sql via Supabase dashboard or CLI'"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "typescript": "~5.8.2"
+  }
+}

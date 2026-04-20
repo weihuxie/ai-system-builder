@@ -1,0 +1,17 @@
+// Shared workspace — emits compiled .js + .d.ts to ./dist so runtime
+// consumers (Vercel Functions, Node) don't try to load .ts at runtime.
+// Dev still reads source via tsx/Vite, but builds must run before prod.
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": [],
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src"]
+}

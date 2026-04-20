@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────
+   Design tokens (dark mode, glassmorphism)
+   Brand-specific --accent / --accent-muted are set at runtime by applyTheme().
+   ─────────────────────────────────────────── */
+:root {
+  --bg-base: #0f1115;
+  --bg-surface: #1a1d24;
+  --bg-surface-hover: #1e222a;
+  --border-subtle: rgba(255, 255, 255, 0.10);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.72);
+
+  /* Defaults = Google brand; overridden by applyTheme() */
+  --accent: #3b82f6;
+  --accent-muted: rgba(59, 130, 246, 0.40);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Kaku Gothic ProN",
+    "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accent utility (used where Tailwind doesn't cover brand variable) */
+.accent-bg { background-color: var(--accent); }
+.accent-text { color: var(--accent); }
+.accent-border { border-color: var(--accent); }
+
+/* Line-clamp helper for recommendation rationale (design §3.1.2) */
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

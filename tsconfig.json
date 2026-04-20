@@ -1,0 +1,24 @@
+// ───────────────────────────────────────────
+// Root tsconfig — primarily exists for Vercel's builder.
+//
+// When Vercel compiles `api/index.ts` it walks up from the file looking
+// for a tsconfig.json. Without one at root it falls back to defaults that
+// don't match our NodeNext / .js-extension-for-.ts-source style, which
+// can cause "Cannot find module './routes/admin.js'" errors.
+//
+// This config only covers `api/**`. Each workspace (client/server/shared)
+// owns its own tsconfig.json for local dev and builds.
+// ───────────────────────────────────────────
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "types": ["node"],
+    "allowJs": false,
+    "noEmit": true
+  },
+  "include": ["api/**/*.ts"]
+}
