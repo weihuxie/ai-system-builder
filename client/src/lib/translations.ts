@@ -36,9 +36,11 @@ export interface UiStrings {
   // Admin
   adminTitle: string;
   adminLoginTitle: string;
-  adminPasswordLabel: string;
-  adminLoginButton: string;
-  adminLoggingIn: string;
+  adminSignInWithGoogle: string;
+  adminSigningIn: string;
+  adminNotWhitelistedTitle: string;
+  adminNotWhitelistedHint: string;
+  adminSwitchAccount: string;
   adminLogout: string;
   adminBrandSwitchTitle: string;
   adminProductsTitle: string;
@@ -55,6 +57,22 @@ export interface UiStrings {
   adminFieldUrl: string;
   adminFieldParticipating: string;
   adminSaved: string;
+  adminProductOwner: string;
+  adminProductUnowned: string;
+  adminProductClone: string;
+  adminProductCloned: string;
+  adminProductPublished: string;
+  adminProductUnpublished: string;
+  // Admin users panel (super_admin)
+  adminUsersTitle: string;
+  adminUsersInviteEmail: string;
+  adminUsersInviteRole: string;
+  adminUsersInviteButton: string;
+  adminUsersRevokeButton: string;
+  adminUsersRoleEditor: string;
+  adminUsersRoleSuperAdmin: string;
+  adminUsersStatusActivated: string;
+  adminUsersStatusPending: string;
   // Lang labels (in own lang)
   langLabels: Record<Lang, string>;
 }
@@ -94,9 +112,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     retry: '重试',
     adminTitle: '管理台',
     adminLoginTitle: '管理员登录',
-    adminPasswordLabel: '密码',
-    adminLoginButton: '登录',
-    adminLoggingIn: '登录中…',
+    adminSignInWithGoogle: '使用 Google 账号登录',
+    adminSigningIn: '登录中…',
+    adminNotWhitelistedTitle: '账号未授权',
+    adminNotWhitelistedHint: '你的邮箱未在白名单里。请联系 super_admin 添加后再登录。',
+    adminSwitchAccount: '切换账号',
     adminLogout: '退出',
     adminBrandSwitchTitle: '品牌切换',
     adminProductsTitle: '产品管理',
@@ -113,6 +133,21 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldUrl: '落地页 URL',
     adminFieldParticipating: '参与推荐',
     adminSaved: '已保存',
+    adminProductOwner: '所有者',
+    adminProductUnowned: '无主（孤儿池）',
+    adminProductClone: '克隆',
+    adminProductCloned: '已克隆',
+    adminProductPublished: '已上线',
+    adminProductUnpublished: '已下线',
+    adminUsersTitle: '授权用户',
+    adminUsersInviteEmail: '邮箱',
+    adminUsersInviteRole: '角色',
+    adminUsersInviteButton: '邀请',
+    adminUsersRevokeButton: '移除',
+    adminUsersRoleEditor: '编辑者',
+    adminUsersRoleSuperAdmin: '超级管理员',
+    adminUsersStatusActivated: '已激活',
+    adminUsersStatusPending: '待首次登录',
     ...common,
   },
   'zh-HK': {
@@ -140,9 +175,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     retry: '重試',
     adminTitle: '管理台',
     adminLoginTitle: '管理員登錄',
-    adminPasswordLabel: '密碼',
-    adminLoginButton: '登錄',
-    adminLoggingIn: '登錄中…',
+    adminSignInWithGoogle: '使用 Google 帳號登錄',
+    adminSigningIn: '登錄中…',
+    adminNotWhitelistedTitle: '帳號未授權',
+    adminNotWhitelistedHint: '你的郵箱未在白名單內。請聯絡 super_admin 新增後再登錄。',
+    adminSwitchAccount: '切換帳號',
     adminLogout: '退出',
     adminBrandSwitchTitle: '品牌切換',
     adminProductsTitle: '產品管理',
@@ -159,6 +196,21 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldUrl: '落地頁 URL',
     adminFieldParticipating: '參與推薦',
     adminSaved: '已保存',
+    adminProductOwner: '擁有者',
+    adminProductUnowned: '無主（孤兒池）',
+    adminProductClone: '複製',
+    adminProductCloned: '已複製',
+    adminProductPublished: '已上線',
+    adminProductUnpublished: '已下線',
+    adminUsersTitle: '授權用戶',
+    adminUsersInviteEmail: '郵箱',
+    adminUsersInviteRole: '角色',
+    adminUsersInviteButton: '邀請',
+    adminUsersRevokeButton: '移除',
+    adminUsersRoleEditor: '編輯者',
+    adminUsersRoleSuperAdmin: '超級管理員',
+    adminUsersStatusActivated: '已激活',
+    adminUsersStatusPending: '待首次登錄',
     ...common,
   },
   en: {
@@ -186,9 +238,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     retry: 'Retry',
     adminTitle: 'Admin',
     adminLoginTitle: 'Admin login',
-    adminPasswordLabel: 'Password',
-    adminLoginButton: 'Log in',
-    adminLoggingIn: 'Logging in…',
+    adminSignInWithGoogle: 'Sign in with Google',
+    adminSigningIn: 'Signing in…',
+    adminNotWhitelistedTitle: 'Account not authorized',
+    adminNotWhitelistedHint: 'Your email is not on the allow-list. Ask a super_admin to invite you, then try again.',
+    adminSwitchAccount: 'Switch account',
     adminLogout: 'Log out',
     adminBrandSwitchTitle: 'Brand',
     adminProductsTitle: 'Products',
@@ -205,6 +259,21 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldUrl: 'Landing URL',
     adminFieldParticipating: 'Participating',
     adminSaved: 'Saved',
+    adminProductOwner: 'Owner',
+    adminProductUnowned: 'Unowned (orphan pool)',
+    adminProductClone: 'Clone',
+    adminProductCloned: 'Cloned',
+    adminProductPublished: 'Published',
+    adminProductUnpublished: 'Unpublished',
+    adminUsersTitle: 'Authorized users',
+    adminUsersInviteEmail: 'Email',
+    adminUsersInviteRole: 'Role',
+    adminUsersInviteButton: 'Invite',
+    adminUsersRevokeButton: 'Revoke',
+    adminUsersRoleEditor: 'Editor',
+    adminUsersRoleSuperAdmin: 'Super admin',
+    adminUsersStatusActivated: 'Activated',
+    adminUsersStatusPending: 'Pending first login',
     ...common,
   },
   ja: {
@@ -232,9 +301,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     retry: '再試行',
     adminTitle: '管理',
     adminLoginTitle: '管理者ログイン',
-    adminPasswordLabel: 'パスワード',
-    adminLoginButton: 'ログイン',
-    adminLoggingIn: 'ログイン中…',
+    adminSignInWithGoogle: 'Googleアカウントでログイン',
+    adminSigningIn: 'ログイン中…',
+    adminNotWhitelistedTitle: 'アカウント未認可',
+    adminNotWhitelistedHint: 'このメールはホワイトリストに登録されていません。super_adminに招待を依頼してください。',
+    adminSwitchAccount: 'アカウント切替',
     adminLogout: 'ログアウト',
     adminBrandSwitchTitle: 'ブランド',
     adminProductsTitle: '製品管理',
@@ -251,6 +322,21 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldUrl: 'ランディングURL',
     adminFieldParticipating: '推薦対象',
     adminSaved: '保存しました',
+    adminProductOwner: 'オーナー',
+    adminProductUnowned: '未所有（孤児プール）',
+    adminProductClone: '複製',
+    adminProductCloned: '複製しました',
+    adminProductPublished: '公開中',
+    adminProductUnpublished: '非公開',
+    adminUsersTitle: '認可ユーザー',
+    adminUsersInviteEmail: 'メール',
+    adminUsersInviteRole: 'ロール',
+    adminUsersInviteButton: '招待',
+    adminUsersRevokeButton: '解除',
+    adminUsersRoleEditor: '編集者',
+    adminUsersRoleSuperAdmin: 'スーパー管理者',
+    adminUsersStatusActivated: '有効',
+    adminUsersStatusPending: '初回ログイン待ち',
     ...common,
   },
 };

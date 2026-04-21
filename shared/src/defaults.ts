@@ -50,6 +50,8 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     isParticipating: true,
     createdAt: now,
     updatedAt: now,
+    ownerId: null,
+    ownerEmail: null,
   },
   {
     id: 'CLM',
@@ -78,6 +80,8 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     isParticipating: true,
     createdAt: now,
     updatedAt: now,
+    ownerId: null,
+    ownerEmail: null,
   },
   {
     id: 'ERP',
@@ -106,6 +110,8 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     isParticipating: true,
     createdAt: now,
     updatedAt: now,
+    ownerId: null,
+    ownerEmail: null,
   },
   {
     id: 'Translation',
@@ -134,6 +140,8 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     isParticipating: true,
     createdAt: now,
     updatedAt: now,
+    ownerId: null,
+    ownerEmail: null,
   },
   {
     id: 'IDCompliance',
@@ -162,6 +170,8 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     isParticipating: true,
     createdAt: now,
     updatedAt: now,
+    ownerId: null,
+    ownerEmail: null,
   },
   {
     id: 'GDPR',
@@ -190,6 +200,8 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     isParticipating: true,
     createdAt: now,
     updatedAt: now,
+    ownerId: null,
+    ownerEmail: null,
   },
   {
     id: 'AgentBuilder',
@@ -218,6 +230,8 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     isParticipating: true,
     createdAt: now,
     updatedAt: now,
+    ownerId: null,
+    ownerEmail: null,
   },
 ];
 

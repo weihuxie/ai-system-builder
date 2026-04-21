@@ -17,6 +17,8 @@
     "build:client": "npm --workspace client run build",
     "build:server": "npm --workspace server run build",
     "lint": "npm --workspace client run lint && npm --workspace server run lint",
+    "test": "npm --workspace server run test",
+    "e2e": "npm --workspace client run e2e",
     "db:migrate": "echo 'Run supabase/migrations/*.sql via Supabase dashboard or CLI'"
   },
   "devDependencies": {

@@ -61,3 +61,35 @@ export function sttLangCode(lang: Lang): string {
       return 'en-US';
   }
 }
+
+/**
+ * Suffix appended to each lang's product name when cloning.
+ * copySuffix('zh-CN') = '（副本）', copySuffix('en') = ' (Copy)', etc.
+ */
+export function copySuffix(lang: Lang): string {
+  switch (lang) {
+    case 'zh-CN':
+    case 'zh-HK':
+      return '（副本）';
+    case 'ja':
+      return '（コピー）';
+    case 'en':
+    default:
+      return ' (Copy)';
+  }
+}
+
+/**
+ * Apply copySuffix to a LangMap (all 4 langs at once), stripping any
+ * existing suffix first to avoid "xxx（副本）（副本）" accumulation on repeat clones.
+ */
+export function withCopySuffix(field: LangMap): LangMap {
+  const next = {} as LangMap;
+  for (const lang of ['zh-CN', 'zh-HK', 'en', 'ja'] as const) {
+    const suffix = copySuffix(lang);
+    const original = field[lang] ?? '';
+    const stripped = original.endsWith(suffix) ? original.slice(0, -suffix.length) : original;
+    next[lang] = stripped + suffix;
+  }
+  return next;
+}

@@ -4,7 +4,7 @@ import { DEFAULT_LLM_CHAIN, LlmChainSchema, type LlmChain } from '@asb/shared';
 
 import { providers } from '../lib/providers.js';
 import { getSupabase } from '../lib/supabase.js';
-import { requireAdmin } from '../middleware/auth.js';
+import { adminChain, superAdminChain } from '../middleware/auth.js';
 import { HttpError } from '../middleware/errors.js';
 import { z } from 'zod';
 
@@ -17,7 +17,7 @@ const GLOBAL_CONFIG_ID = 1;
 // Surfaced to admin UI so the lecturer knows which provider rows will actually run.
 // ───────────────────────────────────────────
 
-llmRouter.get('/', requireAdmin, async (_req, res, next) => {
+llmRouter.get('/', ...adminChain, async (_req, res, next) => {
   try {
     const { data, error } = await getSupabase()
       .from('global_config')
@@ -54,7 +54,7 @@ const PutBodySchema = z.object({
   temperature: z.number().min(0).max(2).optional(),
 });
 
-llmRouter.put('/', requireAdmin, async (req, res, next) => {
+llmRouter.put('/', ...superAdminChain, async (req, res, next) => {
   try {
     const parsed = PutBodySchema.safeParse(req.body);
     if (!parsed.success) {
@@ -64,7 +64,7 @@ llmRouter.put('/', requireAdmin, async (req, res, next) => {
     const update: Record<string, unknown> = {
       llm_chain: parsed.data.chain,
       updated_at: now,
-      updated_by: 'admin',
+      updated_by: req.user!.id,
     };
     if (parsed.data.temperature !== undefined) update.temperature = parsed.data.temperature;
 

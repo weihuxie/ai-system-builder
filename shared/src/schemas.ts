@@ -33,11 +33,19 @@ export const ProductItemSchema = z.object({
   isParticipating: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  ownerId: z.string().uuid().nullable(),
+  ownerEmail: z.string().email().nullable(),
 });
 
+// ownerEmail is server-computed (left-join admin_users); never accepted from client.
+// ownerId is optional on input — editor: server forces to req.user.id;
+// super_admin: may pass explicit uuid to reassign.
 export const ProductItemInputSchema = ProductItemSchema.omit({
   createdAt: true,
   updatedAt: true,
+  ownerEmail: true,
+}).extend({
+  ownerId: z.string().uuid().nullable().optional(),
 });
 
 export const LlmProviderIdSchema = z.enum(['gemini', 'kimi', 'deepseek']);
@@ -73,8 +81,26 @@ export const SolutionSchema = z.object({
   rationale: z.record(z.string(), z.string()).default({}),
 });
 
-export const AdminLoginRequestSchema = z.object({
-  password: z.string().min(1).max(128),
+export const UserRoleSchema = z.enum(['editor', 'super_admin']);
+
+export const AdminUserSchema = z.object({
+  email: z.string().email().max(254),
+  userId: z.string().uuid().nullable(),
+  role: UserRoleSchema,
+  invitedAt: z.string(),
+  activatedAt: z.string().nullable(),
+  invitedBy: z.string().uuid().nullable(),
+});
+
+export const InviteUserRequestSchema = z.object({
+  email: z.string().email().max(254),
+  role: UserRoleSchema,
+});
+
+export const AuthedUserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  role: UserRoleSchema,
 });
 
 export const ApiErrorCodeSchema = z.enum([
@@ -84,8 +110,11 @@ export const ApiErrorCodeSchema = z.enum([
   'AI_INVALID',
   'UNAUTHORIZED',
   'FORBIDDEN',
+  'NOT_WHITELISTED',
+  'OWNERSHIP_REQUIRED',
   'VALIDATION',
   'NOT_FOUND',
+  'CONFLICT',
   'RATE_LIMITED',
   'INTERNAL',
 ]);

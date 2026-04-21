@@ -15,7 +15,10 @@ import { useUpsertProductMutation } from '../../lib/queries';
 import { t } from '../../lib/translations';
 import ErrorBanner from '../ErrorBanner';
 
-type Draft = Omit<ProductItem, 'createdAt' | 'updatedAt'>;
+// ownerEmail is server-computed (left-join); Draft never carries it.
+// ownerId defaults to null on create — server sets it to the current user for
+// editors, or accepts an explicit value from super_admin.
+type Draft = Omit<ProductItem, 'createdAt' | 'updatedAt' | 'ownerEmail'>;
 
 function emptyLangMap(): LangMap {
   return { 'zh-CN': '', 'zh-HK': '', en: '', ja: '' };
@@ -32,9 +35,10 @@ function toDraft(p?: ProductItem | null): Draft {
       audience: emptyLangMap(),
       url: emptyBrandMap(),
       isParticipating: true,
+      ownerId: null,
     };
   }
-  const { createdAt: _c, updatedAt: _u, ...rest } = p;
+  const { createdAt: _c, updatedAt: _u, ownerEmail: _oe, ...rest } = p;
   return rest;
 }
 

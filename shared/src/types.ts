@@ -25,6 +25,10 @@ export interface ProductItem {
   isParticipating: boolean;
   createdAt: string; // ISO 8601
   updatedAt: string; // ISO 8601
+  // Ownership (0002 migration). NULL for legacy rows / deleted users = 孤儿池
+  // (super_admin only). ownerEmail is denormalized on read via left-join.
+  ownerId: string | null;
+  ownerEmail: string | null;
 }
 
 // ───────────────────────────────────────────
@@ -104,13 +108,30 @@ export interface SttResponse {
   text: string;
 }
 
-export interface AdminLoginRequest {
-  password: string;
+// Admin user role. editor = 只管自己名下的产品；super_admin = 全产品 + LLM 链 + Brand 切换
+export type UserRole = 'editor' | 'super_admin';
+export const ALL_USER_ROLES: readonly UserRole[] = ['editor', 'super_admin'] as const;
+
+// Whitelist row (matches admin_users table). userId is null until first OAuth login.
+export interface AdminUser {
+  email: string;
+  userId: string | null;
+  role: UserRole;
+  invitedAt: string;
+  activatedAt: string | null;
+  invitedBy: string | null;
 }
 
-export interface AdminLoginResponse {
-  token: string;
-  expiresAt: number; // epoch ms
+// Current logged-in identity returned by GET /admin/me
+export interface AuthedUser {
+  id: string;
+  email: string;
+  role: UserRole;
+}
+
+export interface InviteUserRequest {
+  email: string;
+  role: UserRole;
 }
 
 export interface GeoResponse {
@@ -129,8 +150,11 @@ export type ApiErrorCode =
   | 'AI_INVALID'
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
+  | 'NOT_WHITELISTED' // valid Google login but email not in admin_users
+  | 'OWNERSHIP_REQUIRED' // editor tried to modify a product they don't own
   | 'VALIDATION'
   | 'NOT_FOUND'
+  | 'CONFLICT' // e.g. clone id collision after exhausting suffixes
   | 'RATE_LIMITED'
   | 'INTERNAL';
 

@@ -1,18 +1,40 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { ProductItemInputSchema } from '@asb/shared';
+import { ProductItemInputSchema, withCopySuffix } from '@asb/shared';
 import { getSupabase } from '../lib/supabase.js';
 import { productToRow, rowToProduct, type ProductRow } from '../lib/mappers.js';
-import { requireAdmin } from '../middleware/auth.js';
+import { adminChain, canEditProduct } from '../middleware/auth.js';
 import { HttpError } from '../middleware/errors.js';
 
 export const productsRouter = Router();
 
 // ───────────────────────────────────────────
-// Public read
-// (admin list also uses this endpoint — RLS lets anon see only is_participating=true,
-//  but admin UI calls via the proxied backend which uses the service key and sees all.)
+// Owner email denormalization
+// products.owner_id → auth.users.id; admin_users has (email, user_id).
+// No FK between products and admin_users (both point at auth.users), so we
+// cannot embed via PostgREST. Fetch the admin_users rows for the set of
+// owner_ids and build a lookup map in JS.
+// ───────────────────────────────────────────
+async function buildOwnerEmailMap(ownerIds: Array<string | null>): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(ownerIds.filter((x): x is string => !!x)));
+  if (unique.length === 0) return new Map();
+  const { data, error } = await getSupabase()
+    .from('admin_users')
+    .select('email, user_id')
+    .in('user_id', unique);
+  if (error) throw new HttpError(500, 'INTERNAL', error.message);
+  const map = new Map<string, string>();
+  for (const row of (data ?? []) as Array<{ email: string; user_id: string | null }>) {
+    if (row.user_id) map.set(row.user_id, row.email);
+  }
+  return map;
+}
+
+// ───────────────────────────────────────────
+// GET /api/products
+// Public read (anon via RLS sees only is_participating=true). Here we use the
+// service key so admin UI gets the full list — client filters what it shows.
 // ───────────────────────────────────────────
 
 productsRouter.get('/', async (_req, res, next) => {
@@ -20,62 +42,171 @@ productsRouter.get('/', async (_req, res, next) => {
     const { data, error } = await getSupabase().from('products').select('*').order('id');
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
     const rows = (data ?? []) as ProductRow[];
-    res.json(rows.map(rowToProduct));
+    const emailMap = await buildOwnerEmailMap(rows.map((r) => r.owner_id));
+    res.json(rows.map((r) => rowToProduct(r, r.owner_id ? (emailMap.get(r.owner_id) ?? null) : null)));
   } catch (err) {
     next(err);
   }
 });
 
 // ───────────────────────────────────────────
-// Admin-only writes
+// POST /api/products (admin)
+// editor: ownerId is forced to req.user.id regardless of payload.
+// super_admin: may pass explicit ownerId (to seed a product for someone else).
 // ───────────────────────────────────────────
 
-productsRouter.post('/', requireAdmin, async (req, res, next) => {
+productsRouter.post('/', ...adminChain, async (req, res, next) => {
   try {
     const parsed = ProductItemInputSchema.safeParse(req.body);
     if (!parsed.success) {
       throw new HttpError(400, 'VALIDATION', 'Invalid product', parsed.error.issues);
     }
-    // created_at / updated_at are filled by DB defaults + trigger — don't set here.
+    const user = req.user!;
+    const payload = { ...parsed.data };
+    if (user.role === 'editor') {
+      payload.ownerId = user.id;
+    } else if (payload.ownerId === undefined) {
+      payload.ownerId = user.id;
+    }
+
     const { data, error } = await getSupabase()
       .from('products')
-      .insert(productToRow(parsed.data))
+      .insert(productToRow(payload))
       .select()
       .single();
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
-    res.status(201).json(rowToProduct(data as ProductRow));
+
+    const row = data as ProductRow;
+    const emailMap = await buildOwnerEmailMap([row.owner_id]);
+    res.status(201).json(rowToProduct(row, row.owner_id ? (emailMap.get(row.owner_id) ?? null) : null));
   } catch (err) {
     next(err);
   }
 });
 
-productsRouter.put('/:id', requireAdmin, async (req, res, next) => {
+// ───────────────────────────────────────────
+// PUT /api/products/:id (admin)
+// Ownership-gated: editors can only mutate their own products.
+// editors cannot reassign ownerId (payload value is ignored).
+// ───────────────────────────────────────────
+
+productsRouter.put('/:id', ...adminChain, async (req, res, next) => {
   try {
     const idParsed = z.string().min(1).max(64).safeParse(req.params.id);
     if (!idParsed.success) throw new HttpError(400, 'VALIDATION', 'Invalid id');
+
+    const user = req.user!;
+    const allowed = await canEditProduct(user, idParsed.data);
+    if (!allowed) {
+      throw new HttpError(403, 'OWNERSHIP_REQUIRED', 'Not your product');
+    }
 
     const parsed = ProductItemInputSchema.partial().safeParse(req.body);
     if (!parsed.success) {
       throw new HttpError(400, 'VALIDATION', 'Invalid product patch', parsed.error.issues);
     }
-    // updated_at is bumped by the DB trigger; we just send the changed fields.
+    const payload = { ...parsed.data };
+    if (user.role === 'editor') {
+      // editors cannot reassign ownership
+      delete payload.ownerId;
+    }
+
     const { data, error } = await getSupabase()
       .from('products')
-      .update(productToRow(parsed.data))
+      .update(productToRow(payload))
       .eq('id', idParsed.data)
       .select()
       .single();
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
-    res.json(rowToProduct(data as ProductRow));
+
+    const row = data as ProductRow;
+    const emailMap = await buildOwnerEmailMap([row.owner_id]);
+    res.json(rowToProduct(row, row.owner_id ? (emailMap.get(row.owner_id) ?? null) : null));
   } catch (err) {
     next(err);
   }
 });
 
-productsRouter.delete('/:id', requireAdmin, async (req, res, next) => {
+// ───────────────────────────────────────────
+// DELETE /api/products/:id (admin)
+// ───────────────────────────────────────────
+
+// ───────────────────────────────────────────
+// POST /api/products/:id/clone (admin)
+// Copies a product: new id = {id}-copy (or -copy-2, -copy-3, ... on collision),
+// names get the lang-appropriate suffix, ownerId = current user,
+// isParticipating=false so the clone doesn't appear to visitors until toggled.
+//
+// Any whitelisted admin can clone any product (the clone becomes theirs).
+// Collision budget: 20 attempts — if all exhausted, returns 409 CONFLICT.
+// ───────────────────────────────────────────
+
+const CLONE_MAX_ATTEMPTS = 20;
+
+productsRouter.post('/:id/clone', ...adminChain, async (req, res, next) => {
   try {
     const idParsed = z.string().min(1).max(64).safeParse(req.params.id);
     if (!idParsed.success) throw new HttpError(400, 'VALIDATION', 'Invalid id');
+
+    const supabase = getSupabase();
+    const { data: src, error: srcErr } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', idParsed.data)
+      .maybeSingle();
+    if (srcErr) throw new HttpError(500, 'INTERNAL', srcErr.message);
+    if (!src) throw new HttpError(404, 'NOT_FOUND', 'Source product not found');
+
+    const srcRow = src as ProductRow;
+    const baseId = `${srcRow.id}-copy`;
+
+    // Probe candidate ids one-by-one; on each attempt try to insert.
+    // Unique-violation (23505) on id → bump suffix and retry.
+    for (let attempt = 1; attempt <= CLONE_MAX_ATTEMPTS; attempt++) {
+      const newId = attempt === 1 ? baseId : `${baseId}-${attempt}`;
+      const user = req.user!;
+      const insertRow = {
+        id: newId,
+        name: withCopySuffix(srcRow.name),
+        description: srcRow.description,
+        audience: srcRow.audience,
+        url: srcRow.url,
+        is_participating: false,
+        owner_id: user.id,
+      };
+      const { data, error } = await supabase
+        .from('products')
+        .insert(insertRow)
+        .select()
+        .single();
+      if (!error && data) {
+        const row = data as ProductRow;
+        const emailMap = await buildOwnerEmailMap([row.owner_id]);
+        res.status(201).json(rowToProduct(row, row.owner_id ? (emailMap.get(row.owner_id) ?? null) : null));
+        return;
+      }
+      // 23505 = unique_violation (Postgres). Fall through to next suffix.
+      if (error && error.code !== '23505') {
+        throw new HttpError(500, 'INTERNAL', error.message);
+      }
+    }
+    throw new HttpError(409, 'CONFLICT', 'Too many clones; bump existing ones first');
+  } catch (err) {
+    next(err);
+  }
+});
+
+productsRouter.delete('/:id', ...adminChain, async (req, res, next) => {
+  try {
+    const idParsed = z.string().min(1).max(64).safeParse(req.params.id);
+    if (!idParsed.success) throw new HttpError(400, 'VALIDATION', 'Invalid id');
+
+    const user = req.user!;
+    const allowed = await canEditProduct(user, idParsed.data);
+    if (!allowed) {
+      throw new HttpError(403, 'OWNERSHIP_REQUIRED', 'Not your product');
+    }
+
     const { error } = await getSupabase().from('products').delete().eq('id', idParsed.data);
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
     res.status(204).end();

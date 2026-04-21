@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 import { BrandSchema, type Brand } from '@asb/shared';
 import { getSupabase } from '../lib/supabase.js';
-import { requireAdmin } from '../middleware/auth.js';
+import { superAdminChain } from '../middleware/auth.js';
 import { HttpError } from '../middleware/errors.js';
 
 export const brandRouter = Router();
@@ -38,7 +38,7 @@ brandRouter.get('/', async (_req, res, next) => {
   }
 });
 
-brandRouter.put('/', requireAdmin, async (req, res, next) => {
+brandRouter.put('/', ...superAdminChain, async (req, res, next) => {
   try {
     const parsed = BrandSchema.safeParse(req.body?.brand);
     if (!parsed.success) {
@@ -48,7 +48,7 @@ brandRouter.put('/', requireAdmin, async (req, res, next) => {
     const now = new Date().toISOString();
     const { data, error } = await getSupabase()
       .from('global_config')
-      .update({ brand: parsed.data, updated_at: now, updated_by: 'admin' })
+      .update({ brand: parsed.data, updated_at: now, updated_by: req.user!.id })
       .eq('id', GLOBAL_CONFIG_ID)
       .select('brand, updated_at')
       .single();

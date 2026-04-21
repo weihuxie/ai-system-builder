@@ -35,7 +35,8 @@ generateRouter.post('/', async (req, res, next) => {
     if (prodErr) throw new HttpError(500, 'INTERNAL', `Product fetch failed: ${prodErr.message}`);
     if (cfgErr) throw new HttpError(500, 'INTERNAL', `Config fetch failed: ${cfgErr.message}`);
 
-    const products = ((productRows ?? []) as ProductRow[]).map(rowToProduct);
+    // ownerEmail is irrelevant here (prompt only needs id/name/description/audience).
+    const products = ((productRows ?? []) as ProductRow[]).map((r) => rowToProduct(r));
     if (products.length === 0) {
       throw new HttpError(500, 'INTERNAL', 'No active products configured');
     }
