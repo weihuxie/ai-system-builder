@@ -58,12 +58,35 @@ export interface LlmChainItem {
 
 export type LlmChain = LlmChainItem[];
 
-// Model suggestions surfaced in the admin UI dropdown. Users may also type custom ones.
-// Note: `kimi-latest` requires paid-tier access on platform.moonshot.cn; `moonshot-v1-32k`
-// is the widely-available standard model, so it leads the Kimi list.
+// Model suggestions surfaced in the admin UI combobox. Users may also type any custom
+// model ID — this list is just autocomplete hints, not an allowlist.
+//
+// Curated for text-chat use (no TTS/vision-image/embedding/robotics variants). Newest at
+// top. Source of truth per provider (re-check if models drift):
+//   gemini:   https://ai.google.dev/gemini-api/docs/models
+//   kimi:     https://platform.kimi.ai/docs/models
+//   deepseek: https://api-docs.deepseek.com/quick_start/pricing
 export const LLM_MODEL_PRESETS: Record<LlmProviderId, readonly string[]> = {
-  gemini: ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro', 'gemini-2.0-flash'],
-  kimi: ['moonshot-v1-32k', 'moonshot-v1-128k', 'moonshot-v1-8k', 'kimi-latest', 'kimi-k2-turbo-preview'],
+  gemini: [
+    'gemini-3.1-pro-preview',
+    'gemini-3-flash-preview',
+    'gemini-3.1-flash-lite-preview',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+  ],
+  kimi: [
+    'kimi-k2.6',
+    'kimi-k2.5',
+    'kimi-k2-0905-preview',
+    'kimi-k2-thinking',
+    'kimi-k2-thinking-turbo',
+    'kimi-k2-turbo-preview',
+    'moonshot-v1-128k',
+    'moonshot-v1-32k',
+    'moonshot-v1-8k',
+    'kimi-latest',
+  ],
   deepseek: ['deepseek-chat', 'deepseek-reasoner'],
 };
 
