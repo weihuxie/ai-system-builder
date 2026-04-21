@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 import type { AuthedUser, UserRole } from '@asb/shared';
 
@@ -12,7 +13,9 @@ import { getSupabase } from '../lib/supabase.js';
 //   requireAdminUser   → look up admin_users, attach req.user = { id, email, role }
 //   requireSuperAdmin  → ensure req.user.role === 'super_admin'
 //
-// JWT verification is local (jwt.verify with SUPABASE_JWT_SECRET) — no network hop.
+// JWT verification: Supabase migrated to asymmetric ES256 signing keys in 2025.
+// We first try remote JWKS (ES256/RS256), then fall back to legacy HS256 with
+// SUPABASE_JWT_SECRET (used by tests' self-signed tokens and pre-migration projects).
 // Role lookup is a fresh DB query every request, so invitations / revocations
 // take effect on the next API call without waiting for JWT expiry.
 // ───────────────────────────────
@@ -27,22 +30,44 @@ declare module 'express-serve-static-core' {
 interface SupabaseJwtPayload {
   sub: string;
   email?: string;
-  aud: string;
-  exp: number;
+  aud?: string;
+  exp?: number;
 }
 
-export const requireUser: RequestHandler = (req, _res, next) => {
+let jwksCache: ReturnType<typeof createRemoteJWKSet> | null = null;
+function getJwks() {
+  if (jwksCache) return jwksCache;
+  const url = process.env.SUPABASE_URL;
+  if (!url) return null;
+  jwksCache = createRemoteJWKSet(new URL(`${url}/auth/v1/.well-known/jwks.json`));
+  return jwksCache;
+}
+
+async function verifyToken(token: string): Promise<SupabaseJwtPayload> {
+  // Try remote JWKS (asymmetric — current Supabase signing)
+  const jwks = getJwks();
+  if (jwks) {
+    try {
+      const { payload } = await jwtVerify(token, jwks);
+      return payload as SupabaseJwtPayload;
+    } catch {
+      // Fall through to HS256
+    }
+  }
+  // Fallback: legacy HS256 symmetric secret (tests, pre-migration projects)
+  const secret = process.env.SUPABASE_JWT_SECRET;
+  if (!secret) throw new Error('No JWT verification key available');
+  return jwt.verify(token, secret) as SupabaseJwtPayload;
+}
+
+export const requireUser: RequestHandler = async (req, _res, next) => {
   const auth = req.header('authorization');
   if (!auth || !auth.startsWith('Bearer ')) {
     return next(new HttpError(401, 'UNAUTHORIZED', 'Missing bearer token'));
   }
   const token = auth.slice('Bearer '.length).trim();
-  const secret = process.env.SUPABASE_JWT_SECRET;
-  if (!secret) {
-    return next(new HttpError(500, 'INTERNAL', 'SUPABASE_JWT_SECRET not configured'));
-  }
   try {
-    const payload = jwt.verify(token, secret) as SupabaseJwtPayload;
+    const payload = await verifyToken(token);
     if (!payload.sub || !payload.email) {
       return next(new HttpError(401, 'UNAUTHORIZED', 'Token missing sub/email'));
     }
