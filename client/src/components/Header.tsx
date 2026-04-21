@@ -17,10 +17,11 @@ export default function Header() {
     <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-[var(--bg-base)]/80 border-b border-white/5">
       <div className="mx-auto max-w-6xl flex items-center justify-between gap-4 px-4 sm:px-6 py-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div
-            className="h-7 w-7 shrink-0 rounded-md accent-bg"
-            aria-hidden
+          <img
+            src={theme.logoUrl}
+            alt={`${brand.toUpperCase()} Summit`}
             data-brand-logo={brand}
+            className="h-7 w-auto max-w-[120px] shrink-0 object-contain"
           />
           <h1 className="truncate text-sm sm:text-base font-semibold tracking-tight">
             {pickLang(theme.headerTitle, lang)}
