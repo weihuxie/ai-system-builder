@@ -25,6 +25,12 @@ import type {
 } from '@asb/shared';
 
 import { ApiCallError, apiFetch } from './api';
+import {
+  readBrandCache,
+  readProductsCache,
+  writeBrandCache,
+  writeProductsCache,
+} from './offlineCache';
 
 // ───────────────────────────────
 // Query keys
@@ -39,11 +45,21 @@ export const queryKeys = {
 
 // ───────────────────────────────
 // Products
+// Offline fallback: initialData from localStorage cache (or DEFAULT_PRODUCTS
+// bundled seed), and write-through on success. When the fetch errors, React
+// Query keeps `data` as the initial (cached) value and sets `error` — UI shows
+// OfflineBanner based on `error`, but the bottom product list is never blank.
 // ───────────────────────────────
 export function useProductsQuery(): UseQueryResult<ProductItem[]> {
   return useQuery({
     queryKey: queryKeys.products,
-    queryFn: () => apiFetch<ProductItem[]>('/products'),
+    queryFn: async () => {
+      const data = await apiFetch<ProductItem[]>('/products');
+      writeProductsCache(data);
+      return data;
+    },
+    initialData: readProductsCache,
+    initialDataUpdatedAt: 0, // treat as stale → refetch on mount
     staleTime: 10_000,
   });
 }
@@ -96,7 +112,13 @@ interface BrandResponse {
 export function useBrandQuery(): UseQueryResult<BrandResponse> {
   return useQuery({
     queryKey: queryKeys.brand,
-    queryFn: () => apiFetch<BrandResponse>('/brand'),
+    queryFn: async () => {
+      const data = await apiFetch<BrandResponse>('/brand');
+      writeBrandCache(data);
+      return data;
+    },
+    initialData: readBrandCache,
+    initialDataUpdatedAt: 0,
     staleTime: 30_000,
   });
 }

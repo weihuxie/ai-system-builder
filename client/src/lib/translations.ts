@@ -33,6 +33,9 @@ export interface UiStrings {
   errorNetwork: string;
   errorGeneric: string;
   retry: string;
+  // Offline fallback banner
+  offlineBannerTitle: string;
+  offlineBannerHint: string;
   // Admin
   adminTitle: string;
   adminLoginTitle: string;
@@ -110,6 +113,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     errorNetwork: '网络异常，请检查连接。',
     errorGeneric: '出错了，请重试。',
     retry: '重试',
+    offlineBannerTitle: '离线模式',
+    offlineBannerHint: '网络不可用，正在展示本地缓存的产品。AI 推荐暂不可用。',
     adminTitle: '管理台',
     adminLoginTitle: '管理员登录',
     adminSignInWithGoogle: '使用 Google 账号登录',
@@ -172,6 +177,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     errorAiInvalid: 'AI 返回數據異常，請重試。',
     errorNetwork: '網絡異常，請檢查連接。',
     errorGeneric: '出錯了，請重試。',
+    offlineBannerTitle: '離線模式',
+    offlineBannerHint: '網絡不可用，正在展示本地快取的產品。AI 推薦暫不可用。',
     retry: '重試',
     adminTitle: '管理台',
     adminLoginTitle: '管理員登錄',
@@ -235,6 +242,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     errorAiInvalid: 'AI returned invalid data. Please retry.',
     errorNetwork: 'Network error. Please check your connection.',
     errorGeneric: 'Something went wrong. Please retry.',
+    offlineBannerTitle: 'Offline mode',
+    offlineBannerHint: 'Network is unreachable — showing cached products. AI recommendations are unavailable.',
     retry: 'Retry',
     adminTitle: 'Admin',
     adminLoginTitle: 'Admin login',
@@ -298,6 +307,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     errorAiInvalid: 'AIの返答が不正です。再試行してください。',
     errorNetwork: 'ネットワークエラーです。接続をご確認ください。',
     errorGeneric: 'エラーが発生しました。再試行してください。',
+    offlineBannerTitle: 'オフラインモード',
+    offlineBannerHint: 'ネットワークに接続できません。キャッシュされた製品を表示しています。AI 推薦は現在ご利用いただけません。',
     retry: '再試行',
     adminTitle: '管理',
     adminLoginTitle: '管理者ログイン',

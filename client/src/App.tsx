@@ -10,6 +10,7 @@ import { t } from './lib/translations';
 
 import Header from './components/Header';
 import InputArea from './components/InputArea';
+import OfflineBanner from './components/OfflineBanner';
 import ProductBottomList from './components/ProductBottomList';
 import QuickScenarios from './components/QuickScenarios';
 import RecommendationGrid from './components/RecommendationGrid';
@@ -68,6 +69,7 @@ export default function App() {
   return (
     <div className="min-h-dvh bg-[var(--bg-base)] text-[var(--text-primary)]">
       <Header />
+      <OfflineBanner />
       <main className="mx-auto max-w-6xl px-4 sm:px-6 pb-20">
         <section className="pt-8 sm:pt-12">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
