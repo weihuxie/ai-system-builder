@@ -124,8 +124,8 @@ export default function LlmChainConfig() {
       <ul className="flex flex-col gap-2">
         {localChain.map((item, idx) => {
           const presets = LLM_MODEL_PRESETS[item.providerId];
-          const isCustomModel = !presets.includes(item.model);
           const hasKey = configured[item.providerId];
+          const datalistId = `models-${item.providerId}-${idx}`;
           return (
             <li
               key={idx}
@@ -155,25 +155,21 @@ export default function LlmChainConfig() {
                 ))}
               </select>
 
-              <select
-                value={isCustomModel ? '__custom__' : item.model}
-                onChange={(e) => {
-                  if (e.target.value === '__custom__') return;
-                  updateRow(idx, { model: e.target.value });
-                }}
-                className="bg-transparent border border-white/10 rounded-md px-2 py-1 text-sm text-white/80 focus:outline-none focus:border-white/30 flex-1 min-w-0"
-              >
+              <input
+                type="text"
+                list={datalistId}
+                value={item.model}
+                onChange={(e) => updateRow(idx, { model: e.target.value })}
+                placeholder="model ID"
+                spellCheck={false}
+                autoCapitalize="off"
+                className="bg-transparent border border-white/10 rounded-md px-2 py-1 text-sm text-white/80 focus:outline-none focus:border-white/30 flex-1 min-w-0 font-mono"
+              />
+              <datalist id={datalistId}>
                 {presets.map((m) => (
-                  <option key={m} value={m} className="bg-[var(--bg-surface)]">
-                    {m}
-                  </option>
+                  <option key={m} value={m} />
                 ))}
-                {isCustomModel && (
-                  <option value="__custom__" className="bg-[var(--bg-surface)]">
-                    {item.model}（自定义）
-                  </option>
-                )}
-              </select>
+              </datalist>
 
               {!hasKey && (
                 <span
