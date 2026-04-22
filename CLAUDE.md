@@ -43,6 +43,9 @@
 ### 2.4 Gemini 2.5 Pro（推荐） + 2.5 Flash（STT）
 - 同一家 Key，运维最小
 - STT 若某语言（可能是日语）不达标，**后端**切 Whisper，前端无感
+  - 已实现（`server/src/lib/whisper.ts`）：Gemini 空结果/失败时自动 fallback
+  - 启用条件：env 配了 `OPENAI_API_KEY`；没配 → 单通道 Gemini，0 regression
+  - 东京场前务必验证：带 key / 不带 key 两条路径都要真跑过一次
 - 前端 `MediaRecorder` 录 webm/opus → 后端转文本 → 返回给前端
 
 ### 2.5 品牌感知但**不**分产品库
