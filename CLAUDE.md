@@ -112,6 +112,28 @@ npm run build        # 全量构建
 
 缺 `GEMINI_API_KEY` 时：`/api/generate` 返回 503 + `{ code: 'LLM_REQUIRED' }`，前端应在 banner 提示（和 `ai-studio` 项目的处理方式一致，不做 silent fallback 到模板）。
 
+### 5.1 LLM 管线的两层测试
+
+- **离线 prompt 回归**（每次 PR 跑）
+
+  ```bash
+  npm --workspace server run test:unit
+  ```
+
+  锁死 `buildRecommendationPrompt()` 在 4 lang × 2 brand 组合下的输出。
+  改 prompt 模板 / 换叙述 / 调品牌词 → snapshot 失败 → 看 diff 是否故意，
+  是就 `vitest --update`，不是就回滚。
+
+- **在线 golden eval**（Summit 前手动跑一次）
+
+  ```bash
+  GEMINI_API_KEY=... npm --workspace server run eval
+  ```
+
+  `server/evals/golden.json` 里 12 条 (brand, lang, userInput) → 期望产品
+  ID，真实打 Gemini，报 pass/partial/fail + 延迟。CI 不跑（有成本 + 非
+  确定性），但每次 demo 前、大改 prompt 后务必跑一轮，看 pass 率别掉。
+
 ---
 
 ## 六、风险登记

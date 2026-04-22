@@ -13,3 +13,6 @@ coverage/
 *.tsbuildinfo
 .vercel
 .env*.local
+
+# Eval artifacts — transient, not versioned
+server/evals/eval-result.json

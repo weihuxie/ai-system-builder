@@ -1,0 +1,86 @@
+[
+  {
+    "id": "sales-vp-contract-zh-cn-google",
+    "brand": "google",
+    "lang": "zh-CN",
+    "userInput": "我是销售VP，合同审批流程慢，经常影响季度成单；客户资料散落在多个系统，销售团队重复沟通。",
+    "expectContains": ["CLM", "CRM"]
+  },
+  {
+    "id": "sales-vp-contract-zh-hk-aws",
+    "brand": "aws",
+    "lang": "zh-HK",
+    "userInput": "我是銷售VP，合同審批流程慢，經常影響季度成單；客戶資料散落在多個系統，銷售團隊重複溝通。",
+    "expectContains": ["CLM", "CRM"]
+  },
+  {
+    "id": "sales-vp-contract-en-google",
+    "brand": "google",
+    "lang": "en",
+    "userInput": "I'm a VP of Sales. Contract approvals drag on and kill quarterly close rates; customer records are scattered across systems and reps duplicate outreach.",
+    "expectContains": ["CLM", "CRM"]
+  },
+  {
+    "id": "sales-vp-contract-ja-aws",
+    "brand": "aws",
+    "lang": "ja",
+    "userInput": "私は営業VPです。契約承認が遅く四半期の成約に響き、顧客データが複数システムに散在してチームが重複対応しています。",
+    "expectContains": ["CLM", "CRM"]
+  },
+  {
+    "id": "cross-border-ecom-zh-cn-aws",
+    "brand": "aws",
+    "lang": "zh-CN",
+    "userInput": "我是跨境电商COO，东南亚多站点经常断货爆仓，清关慢，财务对账和实际库存对不上。",
+    "expectContains": ["ERP"]
+  },
+  {
+    "id": "cross-border-ecom-en-google",
+    "brand": "google",
+    "lang": "en",
+    "userInput": "I'm a cross-border e-commerce COO. Multiple Southeast Asia marketplaces have frequent stockouts, customs delays, and reconciliation gaps.",
+    "expectContains": ["ERP"]
+  },
+  {
+    "id": "legal-gdpr-en-google",
+    "brand": "google",
+    "lang": "en",
+    "userInput": "I'm General Counsel at a EU-active SaaS firm. We need to audit cross-border data flows, consent, and third-party sharing against GDPR before CNIL inquiry.",
+    "expectContains": ["GDPR"]
+  },
+  {
+    "id": "legal-idn-compliance-zh-cn-aws",
+    "brand": "aws",
+    "lang": "zh-CN",
+    "userInput": "我们在印尼落地金融业务，UU PDP、OJK 监管、清真认证都要过，合同条款和数据流需要整改清单。",
+    "expectContains": ["IDCompliance"]
+  },
+  {
+    "id": "translation-cmo-ja-google",
+    "brand": "google",
+    "lang": "ja",
+    "userInput": "海外事業のCMOです。契約書・入札文書・マーケ素材の翻訳が追いつかず、用語の一貫性も保てません。",
+    "expectContains": ["Translation"]
+  },
+  {
+    "id": "agent-cto-zh-cn-google",
+    "brand": "google",
+    "lang": "zh-CN",
+    "userInput": "我是 CTO，想用 AI Agent 把 ERP/CRM/工单和内部审批、邮件连起来，但合规、权限、成本都担心。",
+    "expectContains": ["AgentBuilder"]
+  },
+  {
+    "id": "agent-cto-en-aws",
+    "brand": "aws",
+    "lang": "en",
+    "userInput": "As CTO, I want to orchestrate ERP/CRM/ticketing with AI agents that email, approve, and push code — but RBAC, audit, and cost control are must-haves.",
+    "expectContains": ["AgentBuilder"]
+  },
+  {
+    "id": "ambiguous-short-en-google",
+    "brand": "google",
+    "lang": "en",
+    "userInput": "We need help.",
+    "expectContains": []
+  }
+]

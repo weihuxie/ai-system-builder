@@ -13,6 +13,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    // Unit tests run via vitest.unit.config.ts — skip them here to avoid
+    // the shared setup.ts (which requires .env.test for Supabase).
+    exclude: ['node_modules/**', 'dist/**', 'tests/unit/**'],
     globals: false,
     testTimeout: 20_000,
     hookTimeout: 20_000,
