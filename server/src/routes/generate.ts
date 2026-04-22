@@ -10,6 +10,7 @@ import {
   type LlmChain,
 } from '@asb/shared';
 
+import { logEvent, newTraceId } from '../lib/logger.js';
 import { rowToProduct, type ProductRow } from '../lib/mappers.js';
 import { providers } from '../lib/providers.js';
 import { buildRecommendationPrompt } from '../lib/prompt.js';
@@ -19,6 +20,8 @@ import { HttpError } from '../middleware/errors.js';
 export const generateRouter = Router();
 
 generateRouter.post('/', async (req, res, next) => {
+  const traceId = newTraceId();
+  const startedAt = performance.now();
   try {
     const parsed = GenerateRequestSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -122,8 +125,41 @@ generateRouter.post('/', async (req, res, next) => {
     }
 
     const response: GenerateResponse = { selectedProducts: ids, rationale };
+    const winning = trace.find((t) => t.outcome === 'success');
+    logEvent('generate_success', {
+      traceId,
+      latencyMs: Math.round(performance.now() - startedAt),
+      brand,
+      lang,
+      inputLen: userInput.length,
+      activeCount: products.length,
+      provider: winning?.providerId,
+      model: winning?.model,
+      attempts: trace.length,
+      trace,
+      outputIds: ids,
+    });
     res.json(response);
   } catch (err) {
+    const latencyMs = Math.round(performance.now() - startedAt);
+    if (err instanceof HttpError) {
+      logEvent('generate_failed', {
+        traceId,
+        latencyMs,
+        status: err.status,
+        code: err.code,
+        message: err.message,
+        // details 里常有 trace / issues / rawText；尽量收 trace 这块有用字段
+        trace: (err.details as { trace?: unknown })?.trace,
+      });
+    } else {
+      logEvent('generate_failed', {
+        traceId,
+        latencyMs,
+        code: 'UNKNOWN',
+        message: (err as Error)?.message ?? String(err),
+      });
+    }
     next(err);
   }
 });

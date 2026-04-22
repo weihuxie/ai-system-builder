@@ -4,6 +4,7 @@ import multer from 'multer';
 import { LangSchema, type SttResponse } from '@asb/shared';
 import { HttpError } from '../middleware/errors.js';
 import { GEMINI_MODELS, getGemini } from '../lib/gemini.js';
+import { logEvent, newTraceId } from '../lib/logger.js';
 import { isAbortOrTimeoutError, raceWithTimeout, STT_TIMEOUT_MS } from '../lib/timeout.js';
 
 export const sttRouter = Router();
@@ -17,15 +18,20 @@ const upload = multer({
 });
 
 sttRouter.post('/', upload.single('audio'), async (req, res, next) => {
+  const traceId = newTraceId();
+  const startedAt = performance.now();
+  let lang: string | undefined;
+  let audioBytes = 0;
   try {
     if (!req.file) {
       throw new HttpError(400, 'VALIDATION', 'Missing audio file');
     }
+    audioBytes = req.file.size;
     const langParsed = LangSchema.safeParse(req.body.lang);
     if (!langParsed.success) {
       throw new HttpError(400, 'VALIDATION', 'Invalid or missing lang field');
     }
-    const lang = langParsed.data;
+    lang = langParsed.data;
 
     const ai = getGemini();
     const b64 = req.file.buffer.toString('base64');
@@ -33,6 +39,7 @@ sttRouter.post('/', upload.single('audio'), async (req, res, next) => {
     const prompt = `Transcribe this audio recording to ${lang} text. Return plain text only, no extra commentary.`;
 
     let text: string | undefined;
+    let timedOut = false;
     try {
       const resp = await raceWithTimeout(
         ai.models.generateContent({
@@ -57,19 +64,48 @@ sttRouter.post('/', upload.single('audio'), async (req, res, next) => {
       );
       text = resp.text?.trim();
     } catch (e) {
+      timedOut = isAbortOrTimeoutError(e);
       // 超时和调用失败都走 LLM_CALL_FAILED —— 前端同一条错误 banner 就够用。
       // 日志里会清楚区分是 timeout 还是其它（TimeoutError vs 别的 message）。
-      const msg = isAbortOrTimeoutError(e)
-        ? `STT timeout after ${STT_TIMEOUT_MS}ms`
-        : (e as Error).message;
+      const msg = timedOut ? `STT timeout after ${STT_TIMEOUT_MS}ms` : (e as Error).message;
       throw new HttpError(502, 'LLM_CALL_FAILED', msg);
     }
 
     if (!text) throw new HttpError(502, 'LLM_CALL_FAILED', 'Empty STT result');
 
+    logEvent('stt_success', {
+      traceId,
+      latencyMs: Math.round(performance.now() - startedAt),
+      lang,
+      audioBytes,
+      outputLen: text.length,
+      model: GEMINI_MODELS.stt,
+    });
+
     const payload: SttResponse = { text };
     res.json(payload);
   } catch (err) {
+    const latencyMs = Math.round(performance.now() - startedAt);
+    if (err instanceof HttpError) {
+      logEvent('stt_failed', {
+        traceId,
+        latencyMs,
+        status: err.status,
+        code: err.code,
+        message: err.message,
+        lang,
+        audioBytes,
+      });
+    } else {
+      logEvent('stt_failed', {
+        traceId,
+        latencyMs,
+        code: 'UNKNOWN',
+        message: (err as Error)?.message ?? String(err),
+        lang,
+        audioBytes,
+      });
+    }
     next(err);
   }
 });
