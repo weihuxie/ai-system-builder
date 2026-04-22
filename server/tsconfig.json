@@ -7,12 +7,7 @@
     "target": "ES2022",
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"],
-    "paths": {
-      "@asb/shared": ["../shared/src/index.ts"],
-      "@asb/shared/*": ["../shared/src/*"]
-    },
-    "baseUrl": "."
+    "types": ["node"]
   },
   "include": ["src"]
 }

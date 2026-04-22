@@ -4,6 +4,7 @@ import multer from 'multer';
 import { LangSchema, type SttResponse } from '@asb/shared';
 import { HttpError } from '../middleware/errors.js';
 import { GEMINI_MODELS, getGemini } from '../lib/gemini.js';
+import { isAbortOrTimeoutError, raceWithTimeout, STT_TIMEOUT_MS } from '../lib/timeout.js';
 
 export const sttRouter = Router();
 
@@ -33,26 +34,35 @@ sttRouter.post('/', upload.single('audio'), async (req, res, next) => {
 
     let text: string | undefined;
     try {
-      const resp = await ai.models.generateContent({
-        model: GEMINI_MODELS.stt,
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { text: prompt },
-              {
-                inlineData: {
-                  mimeType: req.file.mimetype || 'audio/webm',
-                  data: b64,
+      const resp = await raceWithTimeout(
+        ai.models.generateContent({
+          model: GEMINI_MODELS.stt,
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { text: prompt },
+                {
+                  inlineData: {
+                    mimeType: req.file.mimetype || 'audio/webm',
+                    data: b64,
+                  },
                 },
-              },
-            ],
-          },
-        ],
-      });
+              ],
+            },
+          ],
+        }),
+        STT_TIMEOUT_MS,
+        'STT',
+      );
       text = resp.text?.trim();
     } catch (e) {
-      throw new HttpError(502, 'LLM_CALL_FAILED', (e as Error).message);
+      // 超时和调用失败都走 LLM_CALL_FAILED —— 前端同一条错误 banner 就够用。
+      // 日志里会清楚区分是 timeout 还是其它（TimeoutError vs 别的 message）。
+      const msg = isAbortOrTimeoutError(e)
+        ? `STT timeout after ${STT_TIMEOUT_MS}ms`
+        : (e as Error).message;
+      throw new HttpError(502, 'LLM_CALL_FAILED', msg);
     }
 
     if (!text) throw new HttpError(502, 'LLM_CALL_FAILED', 'Empty STT result');

@@ -3,9 +3,14 @@ import { Type, type Schema } from '@google/genai';
 import type { LlmProviderId } from '@asb/shared';
 
 import { getGemini } from './gemini.js';
+import {
+  GENERATE_TIMEOUT_MS,
+  isAbortOrTimeoutError,
+  raceWithTimeout,
+} from './timeout.js';
 
 // Unified provider result: either text or a typed error.
-// kind='overload' → transient (503/429), caller may fall through to next provider.
+// kind='overload' → transient (503/429/timeout), caller may fall through to next provider.
 // kind='fatal' → terminal (auth, validation, 5xx unknown), still falls through but surfaces msg.
 // kind='disabled' → provider not usable in this env (e.g. no API key).
 export type ProviderResult =
@@ -63,20 +68,27 @@ export const geminiProvider: LlmProvider = {
   async generate(model, { prompt, activeProductIds, temperature }) {
     try {
       const ai = getGemini();
-      const resp = await ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: buildGeminiSchema(activeProductIds),
-          temperature,
-        },
-      });
+      const resp = await raceWithTimeout(
+        ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: buildGeminiSchema(activeProductIds),
+            temperature,
+          },
+        }),
+        GENERATE_TIMEOUT_MS,
+        'Gemini',
+      );
       const text = resp.text;
       if (!text) return { ok: false, kind: 'fatal', message: 'Empty response from Gemini' };
       return { ok: true, rawText: text };
     } catch (e) {
       const msg = (e as Error).message || '';
+      if (isAbortOrTimeoutError(e)) {
+        return { ok: false, kind: 'overload', message: msg };
+      }
       const overload = /UNAVAILABLE|503|429|RESOURCE_EXHAUSTED|high demand|quota/i.test(msg);
       return { ok: false, kind: overload ? 'overload' : 'fatal', message: msg };
     }
@@ -128,6 +140,7 @@ export const kimiProvider: LlmProvider = {
           temperature,
           response_format: { type: 'json_object' },
         }),
+        signal: AbortSignal.timeout(GENERATE_TIMEOUT_MS),
       });
       if (!resp.ok) {
         const body = await resp.text();
@@ -145,7 +158,11 @@ export const kimiProvider: LlmProvider = {
       if (!text) return { ok: false, kind: 'fatal', message: 'Empty response from Kimi' };
       return { ok: true, rawText: text };
     } catch (e) {
-      return { ok: false, kind: 'fatal', message: (e as Error).message || 'Kimi fetch failed' };
+      const msg = (e as Error).message || 'Kimi fetch failed';
+      if (isAbortOrTimeoutError(e)) {
+        return { ok: false, kind: 'overload', message: `Kimi timeout after ${GENERATE_TIMEOUT_MS}ms` };
+      }
+      return { ok: false, kind: 'fatal', message: msg };
     }
   },
 };
@@ -190,6 +207,7 @@ export const deepseekProvider: LlmProvider = {
           temperature,
           response_format: { type: 'json_object' },
         }),
+        signal: AbortSignal.timeout(GENERATE_TIMEOUT_MS),
       });
       if (!resp.ok) {
         const body = await resp.text();
@@ -207,7 +225,11 @@ export const deepseekProvider: LlmProvider = {
       if (!text) return { ok: false, kind: 'fatal', message: 'Empty response from DeepSeek' };
       return { ok: true, rawText: text };
     } catch (e) {
-      return { ok: false, kind: 'fatal', message: (e as Error).message || 'DeepSeek fetch failed' };
+      const msg = (e as Error).message || 'DeepSeek fetch failed';
+      if (isAbortOrTimeoutError(e)) {
+        return { ok: false, kind: 'overload', message: `DeepSeek timeout after ${GENERATE_TIMEOUT_MS}ms` };
+      }
+      return { ok: false, kind: 'fatal', message: msg };
     }
   },
 };
