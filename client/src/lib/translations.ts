@@ -21,6 +21,7 @@ export interface UiStrings {
   quickScenarioTemplate: (role: string, industry: string, challenge: string) => string;
   // Recommendation
   recommendationsTitle: string;
+  rationaleLabel: string;
   rationaleExpand: string;
   rationaleCollapse: string;
   productCtaLearnMore: string;
@@ -103,6 +104,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     quickScenarioTemplate: (role, industry, challenge) =>
       `我是${industry}的${role}。${challenge}`,
     recommendationsTitle: 'AI 推荐方案',
+    rationaleLabel: '为什么推荐：',
     rationaleExpand: '展开详情',
     rationaleCollapse: '收起',
     productCtaLearnMore: '了解更多 →',
@@ -168,6 +170,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     quickScenarioTemplate: (role, industry, challenge) =>
       `我是${industry}的${role}。${challenge}`,
     recommendationsTitle: 'AI 推薦方案',
+    rationaleLabel: '為什麼推薦：',
     rationaleExpand: '展開詳情',
     rationaleCollapse: '收起',
     productCtaLearnMore: '了解更多 →',
@@ -233,6 +236,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     quickScenarioTemplate: (role, industry, challenge) =>
       `I'm a ${role} at a ${industry} company. ${challenge}`,
     recommendationsTitle: 'AI recommendations',
+    rationaleLabel: 'Why this fits: ',
     rationaleExpand: 'Show more',
     rationaleCollapse: 'Show less',
     productCtaLearnMore: 'Learn more →',
@@ -298,6 +302,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     quickScenarioTemplate: (role, industry, challenge) =>
       `私は${industry}の${role}です。${challenge}`,
     recommendationsTitle: 'AI推薦プラン',
+    rationaleLabel: 'おすすめ理由：',
     rationaleExpand: '詳細を表示',
     rationaleCollapse: '閉じる',
     productCtaLearnMore: '詳しく見る →',

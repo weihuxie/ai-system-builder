@@ -63,7 +63,14 @@ export default function RecommendationCard({ product, rationale, lang, brand, ra
             expanded ? '' : 'line-clamp-4',
           ].join(' ')}
         >
-          {rationale || pickLang(product.description, lang)}
+          {rationale ? (
+            <>
+              <span className="accent-text font-semibold">{ui.rationaleLabel}</span>
+              {rationale}
+            </>
+          ) : (
+            pickLang(product.description, lang)
+          )}
         </p>
         {overflows && (
           <button
