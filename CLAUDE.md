@@ -42,9 +42,14 @@
 
 #### 2.3.1 邀请 editor 的双通道（whitelist + magic link）
 
-`POST /api/admin/users` 做两件事：
+`POST /api/admin/users` 做三件事：
 1. **upsert admin_users 白名单行**（source of truth，失败就 500）
 2. **调 `supabase.auth.admin.inviteUserByEmail()`** 发 magic link 邮件（best-effort，失败只 log）
+3. **Self-heal `admin_users.user_id`**（code-level 兜底，不依赖 DB trigger）
+   —— 从 invite 响应里拿 `user.id`（或 `listUsers()` 查已存在用户），手动 UPDATE
+   白名单行把 `user_id` 和 `activated_at` 补上。这样即使 migration 0002 的
+   `activate_admin_on_signup` trigger 没装 / 被误删，受邀者也能通过 `requireAdminUser`
+   的 user_id join 查到身份，不会报 `Account not authorized`。
 
 **magic link 步骤受 `APP_URL` env gate 控制**：
 - 生产 Vercel 配了 `APP_URL=https://ai-system-builder.vercel.app` → 两步都走，被邀请人收邮件

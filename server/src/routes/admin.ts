@@ -100,23 +100,57 @@ adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
     // Best-effort magic-link email. Any failure is logged but not thrown —
     // the whitelist row is the source of truth for access; email is UX sugar.
     let inviteEmailSent = false;
+    let authUserId: string | null = null;
     const appUrl = process.env.APP_URL?.replace(/\/$/, '');
     if (appUrl) {
-      const { error: inviteErr } = await sb.auth.admin.inviteUserByEmail(email, {
+      const { data: inviteData, error: inviteErr } = await sb.auth.admin.inviteUserByEmail(email, {
         redirectTo: `${appUrl}/admin`,
       });
       if (!inviteErr) {
         inviteEmailSent = true;
+        authUserId = inviteData?.user?.id ?? null;
       } else if (/already.*(registered|exists)/i.test(inviteErr.message)) {
-        // Invitee already has an auth.users row — they can just log in as
-        // usual. Not an error worth surfacing.
+        // Invitee already has an auth.users row — look it up so we can still
+        // self-heal admin_users.user_id (the DB trigger only fires on NEW
+        // signups, so re-invites of existing users never get linked otherwise).
+        const { data: list, error: listErr } = await sb.auth.admin.listUsers({ perPage: 200 });
+        if (listErr) {
+          // eslint-disable-next-line no-console
+          console.warn(`[invite] listUsers failed during relink of ${email}: ${listErr.message}`);
+        } else {
+          authUserId = list?.users?.find((u) => u.email === email)?.id ?? null;
+        }
       } else {
         // eslint-disable-next-line no-console
         console.warn(`[invite] inviteUserByEmail(${email}) failed: ${inviteErr.message}`);
       }
     }
 
-    res.status(201).json({ ...rowToAdminUser(data as AdminUserRow), inviteEmailSent });
+    // Self-heal admin_users.user_id — belt-and-suspenders to the DB trigger
+    // `activate_admin_on_signup` (migration 0002). Even if that trigger never
+    // runs (not installed / accidentally dropped / invitee signs in via a
+    // magic link whose token got pre-fetched by their mail client), the
+    // whitelist row ends up linked to the auth.users row here, which is what
+    // requireAdminUser joins on. Without this, the invitee hits
+    // "Account not authorized" even after a successful auth.
+    let healedRow: AdminUserRow = data as AdminUserRow;
+    if (authUserId && healedRow.user_id !== authUserId) {
+      const nowIso = new Date().toISOString();
+      const { data: updated, error: linkErr } = await sb
+        .from('admin_users')
+        .update({ user_id: authUserId, activated_at: nowIso })
+        .eq('email', email)
+        .select()
+        .single();
+      if (linkErr) {
+        // eslint-disable-next-line no-console
+        console.warn(`[invite] self-heal admin_users.user_id for ${email} failed: ${linkErr.message}`);
+      } else if (updated) {
+        healedRow = updated as AdminUserRow;
+      }
+    }
+
+    res.status(201).json({ ...rowToAdminUser(healedRow), inviteEmailSent });
   } catch (err) {
     next(err);
   }
