@@ -57,6 +57,27 @@
 - （可选）Authentication → Email Templates → Invite user 改中文模板
 - （强烈推荐）Authentication → SMTP → 配 Custom SMTP（Resend/SendGrid），默认 Supabase SMTP 每小时只能发几封
 
+#### 2.3.2 QQ / 163 邮箱的 magic link 陷阱
+
+**腾讯 / 网易邮箱的"反钓鱼链接预取"**会在邮件送达时主动 GET 邮件里的所有 URL
+做安全扫描。Supabase 的 verify URL 是**一次性 token**——扫描器 GET 一下，token
+就被消费，真实用户再点就失效。
+
+**现象**：受邀者点邮件链接 → 跳到 `/admin` 但**不带 hash fragment** → 前端拿不到
+session → 显示登录页。用户以为是 "还要再走一次 Google 登录"。
+
+**LoginForm 的处理**（`client/src/components/admin/LoginForm.tsx`）：
+- **主通道：magic link 自助补发** (`signInWithOtp({ shouldCreateUser: false })`)
+  —— 用户在登录页输邮箱，Supabase 重发一封 magic link，手动点即可。仍受同样扫描
+  影响但至少有 self-service 出路。
+- **副通道：Google OAuth** —— 有 Gmail / Workspace 的用户直接走。
+- **域名预警**：输入 `@qq.com / 163 / 126 / sina / sohu / yeah.net / aliyun.com`
+  时页面弹橙色提示，建议换邮箱或用手机 App 立刻点链接（桌面客户端扫描更严）。
+
+**彻底绕过**的方案（v2 可能要做）：给受邀者一个"设置密码"页面——密码不是一次性
+token，不会被扫描器消费。Supabase 原生不提供 "邀请后设密码" 页，需自建 UI 调
+`supabase.auth.updateUser({ password })`。
+
 ### 2.4 Gemini 2.5 Pro（推荐） + 2.5 Flash（STT）
 - 同一家 Key，运维最小
 - STT 若某语言（可能是日语）不达标，**后端**切 Whisper，前端无感

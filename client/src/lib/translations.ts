@@ -40,6 +40,15 @@ export interface UiStrings {
   // Admin
   adminTitle: string;
   adminLoginTitle: string;
+  adminLoginInviteHint: string;
+  adminLoginOtpLabel: string;
+  adminLoginOtpSend: string;
+  adminLoginOtpSending: string;
+  adminLoginOtpSent: string; // contains {email}
+  adminLoginOtpNotInvited: string;
+  adminLoginOtpRateLimit: string;
+  adminLoginOr: string;
+  adminLoginDomainWarning: string; // contains {domain}
   adminSignInWithGoogle: string;
   adminSigningIn: string;
   adminNotWhitelistedTitle: string;
@@ -121,6 +130,15 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     offlineBannerHint: '网络不可用，正在展示本地缓存的产品。AI 推荐暂不可用。',
     adminTitle: '管理台',
     adminLoginTitle: '管理员登录',
+    adminLoginInviteHint: '从邀请邮件点链接应自动进入管理台。如看到此页，说明链接已失效（QQ/163 等邮箱的安全扫描会预取链接），在下方重新申请一封即可。',
+    adminLoginOtpLabel: '邮箱',
+    adminLoginOtpSend: '发送登录链接',
+    adminLoginOtpSending: '发送中…',
+    adminLoginOtpSent: '登录链接已发送至 {email}。邮件可能需 1–2 分钟到达，请查收（也看看垃圾邮件）。',
+    adminLoginOtpNotInvited: '此邮箱未被邀请。请联系 super_admin 将你加入授权名单后再试。',
+    adminLoginOtpRateLimit: '发送过于频繁，请等 1 分钟后重试。',
+    adminLoginOr: '或',
+    adminLoginDomainWarning: '检测到 {domain} 邮箱——此类邮箱的安全扫描经常预取链接致失效。建议改用 Gmail / 公司 Workspace 邮箱；若仍想用此邮箱，收到邮件后请立刻用手机端 App 点链接（桌面端扫描更严）。',
     adminSignInWithGoogle: '使用 Google 账号登录',
     adminSigningIn: '登录中…',
     adminNotWhitelistedTitle: '账号未授权',
@@ -189,6 +207,15 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     retry: '重試',
     adminTitle: '管理台',
     adminLoginTitle: '管理員登錄',
+    adminLoginInviteHint: '從邀請郵件點連結應自動進入管理台。如看到此頁，說明連結已失效（QQ/163 等郵箱的安全掃描會預取連結），在下方重新申請一封即可。',
+    adminLoginOtpLabel: '郵箱',
+    adminLoginOtpSend: '發送登錄連結',
+    adminLoginOtpSending: '發送中…',
+    adminLoginOtpSent: '登錄連結已發送至 {email}。郵件可能需 1–2 分鐘到達，請查收（也看看垃圾郵件）。',
+    adminLoginOtpNotInvited: '此郵箱未被邀請。請聯繫 super_admin 將你加入授權名單後再試。',
+    adminLoginOtpRateLimit: '發送過於頻繁，請等 1 分鐘後重試。',
+    adminLoginOr: '或',
+    adminLoginDomainWarning: '檢測到 {domain} 郵箱——此類郵箱的安全掃描經常預取連結致失效。建議改用 Gmail / 公司 Workspace 郵箱；若仍想用此郵箱，收到郵件後請立刻用手機端 App 點連結（桌面端掃描更嚴）。',
     adminSignInWithGoogle: '使用 Google 帳號登錄',
     adminSigningIn: '登錄中…',
     adminNotWhitelistedTitle: '帳號未授權',
@@ -257,6 +284,15 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     retry: 'Retry',
     adminTitle: 'Admin',
     adminLoginTitle: 'Admin login',
+    adminLoginInviteHint: 'Clicking the invite email link should log you in automatically. If you see this page, the link was likely consumed by your email client — request a fresh one below.',
+    adminLoginOtpLabel: 'Email',
+    adminLoginOtpSend: 'Send login link',
+    adminLoginOtpSending: 'Sending…',
+    adminLoginOtpSent: 'A login link was sent to {email}. It may take 1–2 minutes (check spam too).',
+    adminLoginOtpNotInvited: 'This email is not on the allow-list. Ask a super_admin to invite you first.',
+    adminLoginOtpRateLimit: 'Too many requests. Please wait ~1 minute and try again.',
+    adminLoginOr: 'OR',
+    adminLoginDomainWarning: '{domain} emails often pre-fetch links and invalidate them. Prefer Gmail / Workspace — or on mobile, tap the link immediately in the app (desktop scanners are stricter).',
     adminSignInWithGoogle: 'Sign in with Google',
     adminSigningIn: 'Signing in…',
     adminNotWhitelistedTitle: 'Account not authorized',
@@ -325,6 +361,15 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     retry: '再試行',
     adminTitle: '管理',
     adminLoginTitle: '管理者ログイン',
+    adminLoginInviteHint: '招待メールのリンクをクリックすれば自動で管理画面に入ります。この画面が表示された場合はリンクが失効しているので、下記から再送信してください。',
+    adminLoginOtpLabel: 'メールアドレス',
+    adminLoginOtpSend: 'ログインリンクを送信',
+    adminLoginOtpSending: '送信中…',
+    adminLoginOtpSent: '{email} にログインリンクを送信しました。1〜2 分ほどかかる場合があります（迷惑メールもご確認ください）。',
+    adminLoginOtpNotInvited: 'このメールは招待されていません。super_admin に招待を依頼してから再試行してください。',
+    adminLoginOtpRateLimit: '送信回数が多すぎます。約 1 分後に再試行してください。',
+    adminLoginOr: 'または',
+    adminLoginDomainWarning: '{domain} のメールはリンクを事前スキャンして無効化することがあります。Gmail / Workspace 推奨。このまま使う場合はモバイルアプリで即座にクリックしてください（PC クライアントの方が厳しめ）。',
     adminSignInWithGoogle: 'Googleアカウントでログイン',
     adminSigningIn: 'ログイン中…',
     adminNotWhitelistedTitle: 'アカウント未認可',
