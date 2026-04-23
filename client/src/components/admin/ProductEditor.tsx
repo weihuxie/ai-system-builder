@@ -5,7 +5,7 @@ import {
   ALL_BRANDS,
   ALL_LANGS,
   type Brand,
-  type BrandMap,
+  type BrandLangMap,
   type Lang,
   type LangMap,
   type ProductItem,
@@ -23,8 +23,8 @@ type Draft = Omit<ProductItem, 'createdAt' | 'updatedAt' | 'ownerEmail'>;
 function emptyLangMap(): LangMap {
   return { 'zh-CN': '', 'zh-HK': '', en: '', ja: '' };
 }
-function emptyBrandMap(): BrandMap {
-  return { google: '', aws: '' };
+function emptyBrandLangMap(): BrandLangMap {
+  return { google: emptyLangMap(), aws: emptyLangMap() };
 }
 function toDraft(p?: ProductItem | null): Draft {
   if (!p) {
@@ -33,7 +33,7 @@ function toDraft(p?: ProductItem | null): Draft {
       name: emptyLangMap(),
       description: emptyLangMap(),
       audience: emptyLangMap(),
-      url: emptyBrandMap(),
+      url: emptyBrandLangMap(),
       isParticipating: true,
       ownerId: null,
     };
@@ -170,17 +170,27 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
           </div>
         ))}
 
-        {/* URL per brand */}
+        {/* URL per brand × lang — shares the lang tab above, so switching the tab
+            shows this lang's two brand URLs. Fallback logic (pickBrandLang) lets
+            you leave a slot empty; the runtime will show brand.en then google.en. */}
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {ALL_BRANDS.map((b) => (
             <div key={b}>
               <label className="block text-xs text-white/60">
-                {ui.adminFieldUrl} — {BRAND_LABEL[b]}
+                {ui.adminFieldUrl} — {BRAND_LABEL[b]} · {LANG_LABEL[editingLang]}
               </label>
               <input
                 type="url"
-                value={draft.url[b]}
-                onChange={(e) => setDraft({ ...draft, url: { ...draft.url, [b]: e.target.value } })}
+                value={draft.url[b][editingLang]}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    url: {
+                      ...draft.url,
+                      [b]: { ...draft.url[b], [editingLang]: e.target.value },
+                    },
+                  })
+                }
                 placeholder="https://…"
                 className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
               />

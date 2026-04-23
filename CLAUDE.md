@@ -53,6 +53,31 @@
 - 品牌差异只体现在：① 视觉（accent/logo/header）② 落地页 URL ③ AI rationale 叙述倾向
 - **不要**给 ProductItem 加 `brand` / `availableIn` 字段
 
+#### 2.5.1 落地页 URL 是 `brand × lang`（8 插槽）
+
+`ProductItem.url` 类型是 `BrandLangMap = Record<Brand, LangMap>`，即每条产品每个
+品牌下都有 4 个 lang 的 URL 可填。消费侧统一走 `pickBrandLang(url, brand, lang)`，
+fallback 顺序（刻意牺牲 lang 一致性优先保 brand 一致性）：
+
+1. `brand.lang`（精确匹配）
+2. `brand.en`（同品牌退回英文）
+3. `google.lang`（退到主品牌同语言）
+4. `google.en`（最后兜底）
+5. `''` → 按钮消失
+
+改 schema 的人须知：
+- Admin UI 在 `ProductEditor` 里 URL 输入**跟随 lang tab**——切到日语 tab 会看到
+  Google / AWS 两行 URL 输入框都在编辑 `ja` 值。
+- Server `rowToProduct` 里有 `normaliseUrl` 兼容老 JSONB shape（`{google:"x"}`），
+  新部署**务必跑一次 migration**，把现有 DB 数据 inflate 成新 shape：
+  ```bash
+  SUPABASE_URL=... SUPABASE_SERVICE_KEY=... \
+    node scripts/migrate-product-urls.mjs --dry-run   # 先看
+  SUPABASE_URL=... SUPABASE_SERVICE_KEY=... \
+    node scripts/migrate-product-urls.mjs             # 再写
+  ```
+  幂等（二次跑自动跳过已升级的行）。
+
 ---
 
 ## 三、写代码前的惯例

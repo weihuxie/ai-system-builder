@@ -119,7 +119,20 @@ export async function seedProduct(opts: {
     name: { 'zh-CN': label, 'zh-HK': label, en: label, ja: label },
     description: { 'zh-CN': 'desc', 'zh-HK': 'desc', en: 'desc', ja: 'desc' },
     audience: { 'zh-CN': 'aud', 'zh-HK': 'aud', en: 'aud', ja: 'aud' },
-    url: { google: 'https://example.com/g', aws: 'https://example.com/a' },
+    url: {
+      google: {
+        'zh-CN': 'https://example.com/g',
+        'zh-HK': 'https://example.com/g',
+        en: 'https://example.com/g',
+        ja: 'https://example.com/g',
+      },
+      aws: {
+        'zh-CN': 'https://example.com/a',
+        'zh-HK': 'https://example.com/a',
+        en: 'https://example.com/a',
+        ja: 'https://example.com/a',
+      },
+    },
     is_participating: opts.isParticipating ?? true,
     owner_id: opts.ownerId,
   };

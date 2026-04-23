@@ -3,7 +3,7 @@
 // Used by both client (UI) and server (prompt construction).
 // ───────────────────────────────────────────
 
-import type { Lang, LangMap, Brand, BrandMap } from './types.js';
+import type { Lang, LangMap, Brand, BrandMap, BrandLangMap } from './types.js';
 
 /**
  * Resolve a LangMap field to a displayable string.
@@ -22,14 +22,47 @@ export function pickLang(field: LangMap | undefined, lang: Lang): string {
 }
 
 /**
- * Resolve a BrandMap (e.g. product.url) to the current brand's value.
- * If current brand's value is empty, fall back to google (our primary SKU).
+ * Resolve a BrandMap (legacy, brand-only URL) to the current brand's value.
+ * Kept for backward compat with any code still reading a flat BrandMap;
+ * for per-lang URLs use pickBrandLang instead.
  */
 export function pickBrand(field: BrandMap | undefined, brand: Brand): string {
   if (!field) return '';
   const v = field[brand];
   if (v) return v;
   return field.google ?? '';
+}
+
+/**
+ * Resolve a BrandLangMap (product.url) to a single URL.
+ * Fallback order — brand-consistency first, lang second:
+ *   1. brand × lang        (exact match)
+ *   2. brand × en          (same brand, default lang)
+ *   3. google × lang       (primary brand, same lang)
+ *   4. google × en         (last-resort global URL)
+ *   5. ''                  (nothing to show → caller hides the CTA)
+ *
+ * Rationale: switching brand mid-visit is worse than seeing English under the
+ * same brand. e.g. if viewer chose 日本語 + AWS and only google.ja exists,
+ * we show aws.en (English AWS) rather than workspace.google.com/ja.
+ */
+export function pickBrandLang(
+  field: BrandLangMap | undefined,
+  brand: Brand,
+  lang: Lang,
+): string {
+  if (!field) return '';
+  const brandUrls = field[brand];
+  if (brandUrls) {
+    if (brandUrls[lang]) return brandUrls[lang];
+    if (brandUrls.en) return brandUrls.en;
+  }
+  const google = field.google;
+  if (google) {
+    if (google[lang]) return google[lang];
+    if (google.en) return google.en;
+  }
+  return '';
 }
 
 /**

@@ -86,7 +86,10 @@ export async function seedE2EProduct(opts: {
     name: { 'zh-CN': label, 'zh-HK': label, en: label, ja: label },
     description: { 'zh-CN': 'd', 'zh-HK': 'd', en: 'd', ja: 'd' },
     audience: { 'zh-CN': 'a', 'zh-HK': 'a', en: 'a', ja: 'a' },
-    url: { google: 'https://g.com', aws: 'https://a.com' },
+    url: {
+      google: { 'zh-CN': 'https://g.com', 'zh-HK': 'https://g.com', en: 'https://g.com', ja: 'https://g.com' },
+      aws: { 'zh-CN': 'https://a.com', 'zh-HK': 'https://a.com', en: 'https://a.com', ja: 'https://a.com' },
+    },
     is_participating: opts.isParticipating ?? true,
     owner_id: opts.ownerId,
   });

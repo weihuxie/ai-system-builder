@@ -11,6 +11,15 @@ export const ALL_BRANDS: readonly Brand[] = ['google', 'aws'] as const;
 
 export type LangMap = Record<Lang, string>;
 export type BrandMap = Record<Brand, string>;
+/**
+ * Landing-page URL map: per brand × per lang.
+ * Shape: { google: { 'zh-CN': '…', 'zh-HK': '…', en: '…', ja: '…' }, aws: { … } }
+ *
+ * Why this instead of a flat BrandMap: lets product owners point 日本 viewers
+ * to workspace.google.com/intl/ja/ while 英文 viewers see the global URL.
+ * Empty lang slot → pickBrandLang falls back to brand.en → google.en → ''.
+ */
+export type BrandLangMap = Record<Brand, LangMap>;
 
 // ───────────────────────────────────────────
 // Product
@@ -21,7 +30,7 @@ export interface ProductItem {
   name: LangMap;
   description: LangMap;
   audience: LangMap;
-  url: BrandMap; // { google: '...', aws: '...' }
+  url: BrandLangMap; // per-brand × per-lang; see BrandLangMap above
   isParticipating: boolean;
   createdAt: string; // ISO 8601
   updatedAt: string; // ISO 8601

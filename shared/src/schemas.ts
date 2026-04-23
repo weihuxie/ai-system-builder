@@ -24,12 +24,18 @@ export const BrandMapSchema = z.object({
   aws: z.string(),
 });
 
+// Per-brand × per-lang URL map. See types.ts BrandLangMap for the rationale.
+export const BrandLangMapSchema = z.object({
+  google: LangMapSchema,
+  aws: LangMapSchema,
+});
+
 export const ProductItemSchema = z.object({
   id: z.string().min(1).max(64),
   name: LangMapSchema,
   description: LangMapSchema,
   audience: LangMapSchema,
-  url: BrandMapSchema,
+  url: BrandLangMapSchema,
   isParticipating: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),

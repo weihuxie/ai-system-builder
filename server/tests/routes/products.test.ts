@@ -12,7 +12,10 @@ function productPayload(id: string, overrides: Record<string, unknown> = {}) {
     name: { 'zh-CN': label, 'zh-HK': label, en: label, ja: label },
     description: { 'zh-CN': 'x', 'zh-HK': 'x', en: 'x', ja: 'x' },
     audience: { 'zh-CN': 'y', 'zh-HK': 'y', en: 'y', ja: 'y' },
-    url: { google: 'https://g.com', aws: 'https://a.com' },
+    url: {
+      google: { 'zh-CN': 'https://g.com', 'zh-HK': 'https://g.com', en: 'https://g.com', ja: 'https://g.com' },
+      aws: { 'zh-CN': 'https://a.com', 'zh-HK': 'https://a.com', en: 'https://a.com', ja: 'https://a.com' },
+    },
     isParticipating: true,
     ...overrides,
   };

@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
 
-import { pickBrand, pickLang, type Brand, type Lang, type ProductItem } from '@asb/shared';
+import { pickBrandLang, pickLang, type Brand, type Lang, type ProductItem } from '@asb/shared';
 
 import { t } from '../lib/translations';
 
@@ -23,7 +23,7 @@ export default function RecommendationCard({ product, rationale, lang, brand, ra
   const ui = t(lang);
   const name = pickLang(product.name, lang);
   const audience = pickLang(product.audience, lang);
-  const url = pickBrand(product.url, brand);
+  const url = pickBrandLang(product.url, brand, lang);
 
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);

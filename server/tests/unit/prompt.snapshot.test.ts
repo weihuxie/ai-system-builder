@@ -43,7 +43,20 @@ const FIXTURE_PRODUCTS: ProductItem[] = [
       en: 'VP of Sales',
       ja: '営業VP',
     },
-    url: { google: 'https://example.com/g', aws: 'https://example.com/a' },
+    url: {
+      google: {
+        'zh-CN': 'https://example.com/g/zh-CN',
+        'zh-HK': 'https://example.com/g/zh-HK',
+        en: 'https://example.com/g',
+        ja: 'https://example.com/g/ja',
+      },
+      aws: {
+        'zh-CN': 'https://example.com/a/zh-CN',
+        'zh-HK': 'https://example.com/a/zh-HK',
+        en: 'https://example.com/a',
+        ja: 'https://example.com/a/ja',
+      },
+    },
     isParticipating: true,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
@@ -70,7 +83,20 @@ const FIXTURE_PRODUCTS: ProductItem[] = [
       en: 'General Counsel',
       ja: '法務責任者',
     },
-    url: { google: 'https://example.com/g2', aws: 'https://example.com/a2' },
+    url: {
+      google: {
+        'zh-CN': 'https://example.com/g2/zh-CN',
+        'zh-HK': 'https://example.com/g2/zh-HK',
+        en: 'https://example.com/g2',
+        ja: 'https://example.com/g2/ja',
+      },
+      aws: {
+        'zh-CN': 'https://example.com/a2/zh-CN',
+        'zh-HK': 'https://example.com/a2/zh-HK',
+        en: 'https://example.com/a2',
+        ja: 'https://example.com/a2/ja',
+      },
+    },
     isParticipating: true,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',

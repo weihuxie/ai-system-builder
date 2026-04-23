@@ -31,8 +31,18 @@ values
       'ja',    '営業部長、営業担当、カスタマーサクセスマネージャー'
     ),
     jsonb_build_object(
-      'google', 'https://workspace.google.com/',
-      'aws',    'https://aws.amazon.com/connect/'
+      'google', jsonb_build_object(
+        'zh-CN', 'https://workspace.google.com/intl/zh-CN/',
+        'zh-HK', 'https://workspace.google.com/intl/zh-HK/',
+        'en',    'https://workspace.google.com/',
+        'ja',    'https://workspace.google.com/intl/ja/'
+      ),
+      'aws', jsonb_build_object(
+        'zh-CN', 'https://aws.amazon.com/cn/connect/',
+        'zh-HK', 'https://aws.amazon.com/connect/',
+        'en',    'https://aws.amazon.com/connect/',
+        'ja',    'https://aws.amazon.com/jp/connect/'
+      )
     ),
     true
   ),
@@ -57,8 +67,18 @@ values
       'ja',    '法務責任者、営業VP、調達マネージャー'
     ),
     jsonb_build_object(
-      'google', 'https://workspace.google.com/',
-      'aws',    'https://aws.amazon.com/marketplace/'
+      'google', jsonb_build_object(
+        'zh-CN', 'https://workspace.google.com/intl/zh-CN/',
+        'zh-HK', 'https://workspace.google.com/intl/zh-HK/',
+        'en',    'https://workspace.google.com/',
+        'ja',    'https://workspace.google.com/intl/ja/'
+      ),
+      'aws', jsonb_build_object(
+        'zh-CN', 'https://aws.amazon.com/cn/marketplace/',
+        'zh-HK', 'https://aws.amazon.com/marketplace/',
+        'en',    'https://aws.amazon.com/marketplace/',
+        'ja',    'https://aws.amazon.com/jp/marketplace/'
+      )
     ),
     true
   ),
@@ -83,8 +103,18 @@ values
       'ja',    '財務責任者、経理、出納'
     ),
     jsonb_build_object(
-      'google', 'https://workspace.google.com/',
-      'aws',    'https://aws.amazon.com/marketplace/'
+      'google', jsonb_build_object(
+        'zh-CN', 'https://workspace.google.com/intl/zh-CN/',
+        'zh-HK', 'https://workspace.google.com/intl/zh-HK/',
+        'en',    'https://workspace.google.com/',
+        'ja',    'https://workspace.google.com/intl/ja/'
+      ),
+      'aws', jsonb_build_object(
+        'zh-CN', 'https://aws.amazon.com/cn/marketplace/',
+        'zh-HK', 'https://aws.amazon.com/marketplace/',
+        'en',    'https://aws.amazon.com/marketplace/',
+        'ja',    'https://aws.amazon.com/jp/marketplace/'
+      )
     ),
     true
   )
