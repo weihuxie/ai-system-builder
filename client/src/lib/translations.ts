@@ -77,6 +77,8 @@ export interface UiStrings {
   adminUsersRoleSuperAdmin: string;
   adminUsersStatusActivated: string;
   adminUsersStatusPending: string;
+  adminUsersInviteEmailSent: string;
+  adminUsersInviteEmailSkipped: string;
   // Lang labels (in own lang)
   langLabels: Record<Lang, string>;
 }
@@ -155,6 +157,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersRoleSuperAdmin: '超级管理员',
     adminUsersStatusActivated: '已激活',
     adminUsersStatusPending: '待首次登录',
+    adminUsersInviteEmailSent: '已发送邀请邮件，对方点邮件里的链接即可登录。',
+    adminUsersInviteEmailSkipped: '已加入白名单。请手动通知对方用 Google 账号登录。',
     ...common,
   },
   'zh-HK': {
@@ -221,6 +225,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersRoleSuperAdmin: '超級管理員',
     adminUsersStatusActivated: '已激活',
     adminUsersStatusPending: '待首次登錄',
+    adminUsersInviteEmailSent: '已發送邀請郵件，對方點郵件中的連結即可登錄。',
+    adminUsersInviteEmailSkipped: '已加入白名單。請手動通知對方用 Google 帳號登錄。',
     ...common,
   },
   en: {
@@ -287,6 +293,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersRoleSuperAdmin: 'Super admin',
     adminUsersStatusActivated: 'Activated',
     adminUsersStatusPending: 'Pending first login',
+    adminUsersInviteEmailSent: 'Invite email sent — they can log in via the link.',
+    adminUsersInviteEmailSkipped: 'Added to allow-list. Please notify them to sign in with Google.',
     ...common,
   },
   ja: {
@@ -353,6 +361,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersRoleSuperAdmin: 'スーパー管理者',
     adminUsersStatusActivated: '有効',
     adminUsersStatusPending: '初回ログイン待ち',
+    adminUsersInviteEmailSent: '招待メールを送信しました。リンクからログインしてもらえます。',
+    adminUsersInviteEmailSkipped: 'ホワイトリストに追加しました。Google でログインするよう手動でご連絡ください。',
     ...common,
   },
 };

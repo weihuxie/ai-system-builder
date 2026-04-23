@@ -62,8 +62,20 @@ adminRouter.get('/users', ...superAdminChain, async (_req, res, next) => {
 
 // ───────────────────────────────
 // POST /api/admin/users (super_admin only) — invite
-// Creates an admin_users row; user_id is filled by the trigger on first login.
-// Re-inviting an email that already exists is idempotent (updates role).
+//
+// Does TWO things (best-effort):
+//   1. upsert admin_users whitelist row (authoritative — if this fails, we 500)
+//   2. fire Supabase inviteUserByEmail → magic-link email to the invitee
+//      (opportunistic — logged on failure, does not fail the request)
+//
+// The whitelist + signup trigger is enough to let the invitee log in via
+// Google OAuth. The magic-link email is a convenience so the super_admin
+// doesn't have to notify out-of-band.
+//
+// Gated on APP_URL env var: if unset, skip step 2 entirely (tests + local
+// dev don't send real emails). Response carries `inviteEmailSent` so the
+// UI can tell super_admin whether they still need to ping the invitee
+// manually.
 // ───────────────────────────────
 adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
   try {
@@ -74,7 +86,8 @@ adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
     const { email, role } = parsed.data;
     const invitedBy = req.user!.id;
 
-    const { data, error } = await getSupabase()
+    const sb = getSupabase();
+    const { data, error } = await sb
       .from('admin_users')
       .upsert(
         { email, role, invited_by: invitedBy },
@@ -83,7 +96,27 @@ adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
       .select()
       .single();
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
-    res.status(201).json(rowToAdminUser(data as AdminUserRow));
+
+    // Best-effort magic-link email. Any failure is logged but not thrown —
+    // the whitelist row is the source of truth for access; email is UX sugar.
+    let inviteEmailSent = false;
+    const appUrl = process.env.APP_URL?.replace(/\/$/, '');
+    if (appUrl) {
+      const { error: inviteErr } = await sb.auth.admin.inviteUserByEmail(email, {
+        redirectTo: `${appUrl}/admin`,
+      });
+      if (!inviteErr) {
+        inviteEmailSent = true;
+      } else if (/already.*(registered|exists)/i.test(inviteErr.message)) {
+        // Invitee already has an auth.users row — they can just log in as
+        // usual. Not an error worth surfacing.
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn(`[invite] inviteUserByEmail(${email}) failed: ${inviteErr.message}`);
+      }
+    }
+
+    res.status(201).json({ ...rowToAdminUser(data as AdminUserRow), inviteEmailSent });
   } catch (err) {
     next(err);
   }

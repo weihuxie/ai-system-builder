@@ -241,11 +241,16 @@ export function useAdminUsersQuery(enabled: boolean): UseQueryResult<AdminUser[]
   });
 }
 
-export function useInviteUserMutation(): UseMutationResult<AdminUser, Error, InviteUserRequest> {
+// POST /admin/users returns AdminUser + a best-effort flag telling the UI
+// whether a magic-link email was fired (depends on APP_URL being set
+// server-side). Not part of shared AdminUser because it's response-only.
+export type InviteUserResult = AdminUser & { inviteEmailSent: boolean };
+
+export function useInviteUserMutation(): UseMutationResult<InviteUserResult, Error, InviteUserRequest> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload) =>
-      apiFetch<AdminUser>('/admin/users', {
+      apiFetch<InviteUserResult>('/admin/users', {
         method: 'POST',
         body: JSON.stringify(payload),
       }),

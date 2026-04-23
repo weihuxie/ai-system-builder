@@ -40,6 +40,23 @@
 - Realtime 订阅 products / global_config 表实现多站同步
 - 不用 localStorage 做 Config 持久化（单机数据漂移会害死多站）
 
+#### 2.3.1 邀请 editor 的双通道（whitelist + magic link）
+
+`POST /api/admin/users` 做两件事：
+1. **upsert admin_users 白名单行**（source of truth，失败就 500）
+2. **调 `supabase.auth.admin.inviteUserByEmail()`** 发 magic link 邮件（best-effort，失败只 log）
+
+**magic link 步骤受 `APP_URL` env gate 控制**：
+- 生产 Vercel 配了 `APP_URL=https://ai-system-builder.vercel.app` → 两步都走，被邀请人收邮件
+- 本地 dev / 测试环境**不设** `APP_URL` → 只做 whitelist，不发真邮件（避免测试污染 Supabase auth.users + 避免 dev 期间误发邮件给真人）
+
+响应体有 `inviteEmailSent: boolean`，前端 UI 据此提示 super_admin 是否还要手动通知。
+
+**Supabase Dashboard 必做**（邮件才能收到）：
+- Authentication → URL Configuration → Redirect URLs 加 `https://ai-system-builder.vercel.app/admin`
+- （可选）Authentication → Email Templates → Invite user 改中文模板
+- （强烈推荐）Authentication → SMTP → 配 Custom SMTP（Resend/SendGrid），默认 Supabase SMTP 每小时只能发几封
+
 ### 2.4 Gemini 2.5 Pro（推荐） + 2.5 Flash（STT）
 - 同一家 Key，运维最小
 - STT 若某语言（可能是日语）不达标，**后端**切 Whisper，前端无感

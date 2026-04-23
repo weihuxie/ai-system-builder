@@ -34,6 +34,9 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('editor');
+  // Surfaces different copy depending on whether the server was able to
+  // fire a magic-link email (APP_URL configured) vs. whitelist-only.
+  const [inviteToast, setInviteToast] = useState<{ emailSent: boolean } | null>(null);
 
   const roleLabel = (r: UserRole) =>
     r === 'super_admin' ? ui.adminUsersRoleSuperAdmin : ui.adminUsersRoleEditor;
@@ -43,7 +46,8 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) return;
     try {
-      await invite.mutateAsync({ email: trimmed, role });
+      const result = await invite.mutateAsync({ email: trimmed, role });
+      setInviteToast({ emailSent: result.inviteEmailSent });
       setEmail('');
     } catch {
       // banner
@@ -99,6 +103,32 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
           {ui.adminUsersInviteButton}
         </button>
       </form>
+
+      {inviteToast && (
+        <div
+          className={[
+            'mt-3 rounded-lg px-3 py-2 text-xs flex items-start justify-between gap-3',
+            inviteToast.emailSent
+              ? 'bg-emerald-500/10 text-emerald-200 border border-emerald-500/20'
+              : 'bg-amber-500/10 text-amber-200 border border-amber-500/20',
+          ].join(' ')}
+          role="status"
+        >
+          <span>
+            {inviteToast.emailSent
+              ? ui.adminUsersInviteEmailSent
+              : ui.adminUsersInviteEmailSkipped}
+          </span>
+          <button
+            type="button"
+            onClick={() => setInviteToast(null)}
+            className="opacity-70 hover:opacity-100 text-xs"
+            aria-label="dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <ErrorBanner
         error={usersQuery.error ?? invite.error ?? revoke.error}
