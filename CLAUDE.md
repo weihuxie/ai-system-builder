@@ -155,6 +155,32 @@ if (!parsed.success) throw new AIInvalidError(parsed.error);
 - 前端：`import.meta.env.VITE_X`
 - **禁止**前端用 `process.env.X`（v1 demo 就是这个坑：Key 打进 bundle）
 
+### 3.5 改代码就推（或给理由）
+
+**默认行为**：改完代码 → typecheck/build/unit test 过 → `git commit` → `git push origin main` → Vercel 自动部署。**不需要用户每次催**。
+
+**不推的合法理由**（必须主动告诉用户）：
+- 代码半成品 / WIP，commit 也别 commit
+- 测试挂了（先修）
+- 用户明确说"先别推 / 等我"
+- 跨多个逻辑变更，正在分批 commit 中（说一声"还差 N 个 commit"）
+- 改的是 dashboard 配置（Vercel env / Supabase / Google OAuth）—— 我没权限，必须用户操作
+
+**不推但没说理由 = bug**。用户问"好了么"前我就该 push 完了。
+
+commit 风格：
+- 单个逻辑改动一个 commit，别堆杂烩
+- subject 用 `type(scope): 中文摘要`，body 写**为什么**改，不是改了**什么**（diff 自己会说）
+- co-author 行带上 `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`
+
+**推完后的返回 URL（生产环境快速参考）**：
+- 主域名：**https://summit.aiverygen.ai** ← Summit demo 的对外 URL
+- 老 alias：`https://ai-system-builder.vercel.app`（Vercel 自动 307 → 主域，保留兜底）
+- Vercel Dashboard：https://vercel.com/dashboard → 项目名 `summit`
+- GitHub repo：`weihuxie/ai-system-builder`，main 分支即生产
+- 部署链路：`git push origin main` → Vercel webhook 自动 build → 1-2 min 后 Ready
+- 推完汇报模板：把改动总结一段 + Vercel Deployments 链接 / 域名给到用户，让 ta 一键去验
+
 ---
 
 ## 四、已知坑位（陆续补充）
