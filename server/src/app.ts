@@ -23,10 +23,39 @@ import { errorHandler, notFoundHandler } from './middleware/errors.js';
 
 const app = express();
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+// CORS allowlist: union of
+//   - explicit `ALLOWED_ORIGINS` (comma-separated, full URLs)
+//   - `APP_URL`              (custom domain, e.g. https://summit.aiverygen.ai)
+//   - `VERCEL_URL`           (auto-injected per deployment, e.g. ai-system-builder-xxx.vercel.app)
+//   - `VERCEL_BRANCH_URL`    (stable preview URL per branch)
+//   - `VERCEL_PROJECT_PRODUCTION_URL` (stable prod alias, e.g. ai-system-builder.vercel.app)
+//   - `http://localhost:5173` (vite dev fallback)
+// Rationale: Vercel auto-injects `VERCEL_URL` so preview deploys never break
+// CORS, and `APP_URL` covers the custom domain so swapping domains only
+// requires changing one env var. Drift in `ALLOWED_ORIGINS` was the cause of
+// the summit.aiverygen.ai 500 outage on 2026-04-25.
+const collectAllowedOrigins = (): string[] => {
+  const seen = new Set<string>();
+  const add = (raw: string | undefined): void => {
+    if (!raw) return;
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    // VERCEL_URL etc. come without scheme — prepend https://
+    const withScheme = /^https?:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`;
+    seen.add(withScheme.replace(/\/$/, ''));
+  };
+
+  for (const v of (process.env.ALLOWED_ORIGINS || '').split(',')) add(v);
+  add(process.env.APP_URL);
+  add(process.env.VERCEL_URL);
+  add(process.env.VERCEL_BRANCH_URL);
+  add(process.env.VERCEL_PROJECT_PRODUCTION_URL);
+  add('http://localhost:5173');
+
+  return [...seen];
+};
+
+const allowedOrigins = collectAllowedOrigins();
 
 app.use(
   cors({
@@ -35,6 +64,9 @@ app.use(
       // In Vercel production the frontend and API share origin, so `origin` is
       // typically undefined for same-origin fetches — pass through.
       if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      // Also allow any *.vercel.app preview belonging to any project — these
+      // are short-lived deploy URLs; explicit listing is impractical.
+      if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return cb(null, true);
       return cb(new Error(`Origin ${origin} not allowed`));
     },
     credentials: false,

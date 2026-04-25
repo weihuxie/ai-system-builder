@@ -52,15 +52,22 @@
    的 user_id join 查到身份，不会报 `Account not authorized`。
 
 **magic link 步骤受 `APP_URL` env gate 控制**：
-- 生产 Vercel 配了 `APP_URL=https://ai-system-builder.vercel.app` → 两步都走，被邀请人收邮件
+- 生产 Vercel 配了 `APP_URL=https://summit.aiverygen.ai` → 两步都走，被邀请人收邮件
 - 本地 dev / 测试环境**不设** `APP_URL` → 只做 whitelist，不发真邮件（避免测试污染 Supabase auth.users + 避免 dev 期间误发邮件给真人）
 
 响应体有 `inviteEmailSent: boolean`，前端 UI 据此提示 super_admin 是否还要手动通知。
 
 **Supabase Dashboard 必做**（邮件才能收到）：
-- Authentication → URL Configuration → Redirect URLs 加 `https://ai-system-builder.vercel.app/admin`
+- Authentication → URL Configuration → Site URL = `https://summit.aiverygen.ai`
+- Authentication → URL Configuration → Redirect URLs 加 `https://summit.aiverygen.ai/**`
 - （可选）Authentication → Email Templates → Invite user 改中文模板
 - （强烈推荐）Authentication → SMTP → 配 Custom SMTP（Resend/SendGrid），默认 Supabase SMTP 每小时只能发几封
+
+**换域名时还要改的 env**（漏一个就 500）：
+- Vercel `APP_URL` → 新域名（影响邀请邮件 redirect）
+- Vercel `ALLOWED_ORIGINS` → 可选，因为 `app.ts` 已自动放行 `APP_URL` / `VERCEL_URL`
+- Supabase Site URL + Redirect URLs（见上）
+- Google OAuth Authorized origins/redirects → **不需要改**（callback 走 Supabase）
 
 #### 2.3.2 QQ / 163 邮箱的 magic link 陷阱
 
