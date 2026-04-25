@@ -33,13 +33,50 @@ async function buildOwnerEmailMap(ownerIds: Array<string | null>): Promise<Map<s
 
 // ───────────────────────────────────────────
 // GET /api/products
-// Public read (anon via RLS sees only is_participating=true). Here we use the
-// service key so admin UI gets the full list — client filters what it shows.
+// Public read — used by the homepage catalog & AI recommendation grid.
+// Returns ONLY is_participating=true rows. Tightened from the previous
+// `select(*)` which returned every product (including non-participating
+// drafts) to anyone hitting the endpoint, and leaked sibling editors'
+// products to authenticated editors via Network tab. Admin UI now uses
+// /api/admin/products which is auth-aware and role-filtered.
 // ───────────────────────────────────────────
 
 productsRouter.get('/', async (_req, res, next) => {
   try {
-    const { data, error } = await getSupabase().from('products').select('*').order('id');
+    const { data, error } = await getSupabase()
+      .from('products')
+      .select('*')
+      .eq('is_participating', true)
+      .order('id');
+    if (error) throw new HttpError(500, 'INTERNAL', error.message);
+    const rows = (data ?? []) as ProductRow[];
+    const emailMap = await buildOwnerEmailMap(rows.map((r) => r.owner_id));
+    res.json(rows.map((r) => rowToProduct(r, r.owner_id ? (emailMap.get(r.owner_id) ?? null) : null)));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ───────────────────────────────────────────
+// GET /api/admin/products (admin)
+// Auth + role aware:
+//   - super_admin → every row (so they can re-assign / orphan-pool / undelete)
+//   - editor      → only rows they own (owner_id = req.user.id)
+// Editors hitting this endpoint never see siblings' products even via raw
+// Network response, closing the leak that the legacy GET /api/products had.
+// Mounted on the products router (not admin router) so the file ownership
+// helpers (buildOwnerEmailMap, mappers) stay co-located. Path is namespaced
+// via app.ts mount pattern below.
+// ───────────────────────────────────────────
+
+productsRouter.get('/admin', ...adminChain, async (req, res, next) => {
+  try {
+    const user = req.user!;
+    let q = getSupabase().from('products').select('*').order('id');
+    if (user.role === 'editor') {
+      q = q.eq('owner_id', user.id);
+    }
+    const { data, error } = await q;
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
     const rows = (data ?? []) as ProductRow[];
     const emailMap = await buildOwnerEmailMap(rows.map((r) => r.owner_id));

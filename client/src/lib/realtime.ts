@@ -29,7 +29,9 @@ export function subscribeToConfig(qc: QueryClient): Unsubscribe {
       'postgres_changes',
       { event: '*', schema: 'public', table: 'products' },
       () => {
+        // Public catalog + admin scoped list both depend on products rows.
         qc.invalidateQueries({ queryKey: queryKeys.products });
+        qc.invalidateQueries({ queryKey: queryKeys.adminProducts });
       },
     )
     .on(

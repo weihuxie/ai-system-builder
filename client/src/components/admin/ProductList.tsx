@@ -5,9 +5,9 @@ import { toast } from 'sonner';
 import { pickLang, type AuthedUser, type ProductItem } from '@asb/shared';
 
 import {
+  useAdminProductsQuery,
   useCloneProductMutation,
   useDeleteProductMutation,
-  useProductsQuery,
   useUpsertProductMutation,
 } from '../../lib/queries';
 import { t } from '../../lib/translations';
@@ -21,7 +21,9 @@ export default function ProductList({ me }: { me: AuthedUser }) {
   const lang = useAppStore((s) => s.lang);
   const ui = t(lang);
 
-  const productsQuery = useProductsQuery();
+  // Admin-scoped query (server enforces: editor → only own rows; super_admin → all).
+  // Editor can no longer see siblings' products even via raw Network response.
+  const productsQuery = useAdminProductsQuery(true);
   const del = useDeleteProductMutation();
   const clone = useCloneProductMutation();
   const upsert = useUpsertProductMutation();
@@ -31,8 +33,11 @@ export default function ProductList({ me }: { me: AuthedUser }) {
 
   const all = productsQuery.data ?? [];
 
+  // For editor the server already filtered to own rows — no extra client filter
+  // (the dropdown isn't shown for editors anyway). For super_admin, retain the
+  // mine/all/orphan triage that lets them eyeball each editor's slice.
   const visible = useMemo(() => {
-    if (me.role === 'editor') return all.filter((p) => p.ownerId === me.id);
+    if (me.role === 'editor') return all;
     if (filter === 'mine') return all.filter((p) => p.ownerId === me.id);
     if (filter === 'orphan') return all.filter((p) => p.ownerId === null);
     return all;

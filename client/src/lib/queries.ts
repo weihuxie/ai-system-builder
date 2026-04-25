@@ -37,6 +37,9 @@ import {
 // ───────────────────────────────
 export const queryKeys = {
   products: ['products'] as const,
+  /** Admin-scoped (auth + role filtered) products list. Distinct cache key
+   *  from `products` because anon + admin views return different rowsets. */
+  adminProducts: ['admin-products'] as const,
   brand: ['brand'] as const,
   llmChain: ['llm-chain'] as const,
   me: ['me'] as const,
@@ -64,6 +67,24 @@ export function useProductsQuery(): UseQueryResult<ProductItem[]> {
   });
 }
 
+// ───────────────────────────────
+// Admin products query (auth + role filtered, no offline cache)
+// Used by the admin /admin product list panel. Server enforces:
+//   - super_admin → every row
+//   - editor      → only rows they own
+// Hitting this without a session 401s. No localStorage fallback because
+// admin UX assumes online (and we don't want stale role-scoped data
+// surviving a logout).
+// ───────────────────────────────
+export function useAdminProductsQuery(enabled: boolean): UseQueryResult<ProductItem[]> {
+  return useQuery({
+    queryKey: queryKeys.adminProducts,
+    queryFn: () => apiFetch<ProductItem[]>('/products/admin'),
+    enabled,
+    staleTime: 10_000,
+  });
+}
+
 export function useUpsertProductMutation(): UseMutationResult<
   ProductItem,
   Error,
@@ -78,7 +99,12 @@ export function useUpsertProductMutation(): UseMutationResult<
         body: JSON.stringify(product),
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.products }),
+    onSuccess: () => {
+      // Invalidate BOTH the public catalog (homepage) AND the admin scoped list.
+      // Skipping adminProducts would leave the editor's UI stale after their own edits.
+      qc.invalidateQueries({ queryKey: queryKeys.products });
+      qc.invalidateQueries({ queryKey: queryKeys.adminProducts });
+    },
   });
 }
 
@@ -88,7 +114,12 @@ export function useDeleteProductMutation(): UseMutationResult<void, Error, strin
     mutationFn: async (id) => {
       await apiFetch<void>(`/products/${id}`, { method: 'DELETE' });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.products }),
+    onSuccess: () => {
+      // Invalidate BOTH the public catalog (homepage) AND the admin scoped list.
+      // Skipping adminProducts would leave the editor's UI stale after their own edits.
+      qc.invalidateQueries({ queryKey: queryKeys.products });
+      qc.invalidateQueries({ queryKey: queryKeys.adminProducts });
+    },
   });
 }
 
@@ -97,7 +128,12 @@ export function useCloneProductMutation(): UseMutationResult<ProductItem, Error,
   return useMutation({
     mutationFn: (id) =>
       apiFetch<ProductItem>(`/products/${id}/clone`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.products }),
+    onSuccess: () => {
+      // Invalidate BOTH the public catalog (homepage) AND the admin scoped list.
+      // Skipping adminProducts would leave the editor's UI stale after their own edits.
+      qc.invalidateQueries({ queryKey: queryKeys.products });
+      qc.invalidateQueries({ queryKey: queryKeys.adminProducts });
+    },
   });
 }
 
