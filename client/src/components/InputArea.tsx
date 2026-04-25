@@ -31,7 +31,9 @@ const InputArea = forwardRef<HTMLTextAreaElement>(function InputArea(_, external
     resetForNewQuery();
     try {
       const resp = await gen.mutateAsync({ userInput: input, lang });
-      setSolution({ selectedProducts: resp.selectedProducts, rationale: resp.rationale });
+      // Pass the whole response (incl. provider/model/latencyMs meta) into the
+      // store so RecommendationGrid can label the result with the actual model.
+      setSolution(resp);
     } catch {
       // banner will render via gen.error
     }
