@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Check, Copy, Trash2 } from 'lucide-react';
 
 import {
   ALL_USER_ROLES,
@@ -34,9 +34,13 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('editor');
-  // Surfaces different copy depending on whether the server was able to
-  // fire a magic-link email (APP_URL configured) vs. whitelist-only.
-  const [inviteToast, setInviteToast] = useState<{ emailSent: boolean } | null>(null);
+  // After a successful invite the server returns a one-time URL the super_admin
+  // hands to the invitee out-of-band (Lark/WeChat/SMS). `inviteResult` holds
+  // the email + URL so the UI can render a copy-affordance until dismissed.
+  const [inviteResult, setInviteResult] = useState<
+    { email: string; link: string | null } | null
+  >(null);
+  const [copied, setCopied] = useState(false);
 
   const roleLabel = (r: UserRole) =>
     r === 'super_admin' ? ui.adminUsersRoleSuperAdmin : ui.adminUsersRoleEditor;
@@ -47,10 +51,23 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
     if (!trimmed) return;
     try {
       const result = await invite.mutateAsync({ email: trimmed, role });
-      setInviteToast({ emailSent: result.inviteEmailSent });
+      setInviteResult({ email: trimmed, link: result.inviteLink });
+      setCopied(false);
       setEmail('');
     } catch {
       // banner
+    }
+  };
+
+  const copyLink = async () => {
+    if (!inviteResult?.link) return;
+    try {
+      await navigator.clipboard.writeText(inviteResult.link);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API blocked (insecure context, permissions). User can still
+      // select & copy manually from the textarea.
     }
   };
 
@@ -104,29 +121,63 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
         </button>
       </form>
 
-      {inviteToast && (
+      {inviteResult && (
         <div
           className={[
-            'mt-3 rounded-lg px-3 py-2 text-xs flex items-start justify-between gap-3',
-            inviteToast.emailSent
-              ? 'bg-emerald-500/10 text-emerald-200 border border-emerald-500/20'
-              : 'bg-amber-500/10 text-amber-200 border border-amber-500/20',
+            'mt-3 rounded-lg border p-3',
+            inviteResult.link
+              ? 'border-emerald-500/20 bg-emerald-500/5'
+              : 'border-amber-500/20 bg-amber-500/5',
           ].join(' ')}
           role="status"
         >
-          <span>
-            {inviteToast.emailSent
-              ? ui.adminUsersInviteEmailSent
-              : ui.adminUsersInviteEmailSkipped}
-          </span>
-          <button
-            type="button"
-            onClick={() => setInviteToast(null)}
-            className="opacity-70 hover:opacity-100 text-xs"
-            aria-label="dismiss"
-          >
-            ✕
-          </button>
+          <div className="flex items-start justify-between gap-3">
+            <div className="text-xs leading-relaxed">
+              <p className={inviteResult.link ? 'text-emerald-200' : 'text-amber-200'}>
+                {inviteResult.link
+                  ? ui.adminUsersInviteLinkReady.replace('{email}', inviteResult.email)
+                  : ui.adminUsersInviteLinkSkipped.replace('{email}', inviteResult.email)}
+              </p>
+              {inviteResult.link && (
+                <p className="mt-1 text-[11px] text-white/50">
+                  {ui.adminUsersInviteLinkHint}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setInviteResult(null)}
+              className="text-xs opacity-70 hover:opacity-100 shrink-0"
+              aria-label="dismiss"
+            >
+              ✕
+            </button>
+          </div>
+
+          {inviteResult.link && (
+            <div className="mt-3 flex items-stretch gap-2">
+              <input
+                type="text"
+                readOnly
+                value={inviteResult.link}
+                onFocus={(e) => e.currentTarget.select()}
+                className="flex-1 min-w-0 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[11px] font-mono text-white/80 outline-none"
+              />
+              <button
+                type="button"
+                onClick={copyLink}
+                className={[
+                  'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition shrink-0',
+                  copied
+                    ? 'bg-emerald-500/20 text-emerald-200'
+                    : 'accent-bg text-black hover:brightness-110',
+                ].join(' ')}
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? ui.adminUsersInviteLinkCopied : ui.adminUsersInviteLinkCopy}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

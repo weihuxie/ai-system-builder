@@ -89,8 +89,20 @@ export interface UiStrings {
   adminUsersRoleSuperAdmin: string;
   adminUsersStatusActivated: string;
   adminUsersStatusPending: string;
+  /** @deprecated kept until cleanup; replaced by adminUsersInviteLink* below. */
   adminUsersInviteEmailSent: string;
+  /** @deprecated */
   adminUsersInviteEmailSkipped: string;
+  /** Toast title when inviteLink is ready (use {email} placeholder). */
+  adminUsersInviteLinkReady: string;
+  /** Toast title when APP_URL was unset and we couldn't generate a link. */
+  adminUsersInviteLinkSkipped: string;
+  /** Helper text under the link prompting super_admin to share via Lark/WeChat. */
+  adminUsersInviteLinkHint: string;
+  /** Button: copy link to clipboard. */
+  adminUsersInviteLinkCopy: string;
+  /** Button label after a successful copy (transient, ~2s). */
+  adminUsersInviteLinkCopied: string;
   // Lang labels (in own lang)
   langLabels: Record<Lang, string>;
 }
@@ -181,6 +193,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersStatusPending: '待首次登录',
     adminUsersInviteEmailSent: '已发送邀请邮件，对方点邮件里的链接即可登录。',
     adminUsersInviteEmailSkipped: '已加入白名单。请手动通知对方用 Google 账号登录。',
+    adminUsersInviteLinkReady: '已为 {email} 生成邀请链接，复制后通过飞书/微信/短信发给对方即可登录。',
+    adminUsersInviteLinkSkipped: '已为 {email} 加入白名单。当前环境未生成链接，请通知对方用 Google 账号登录。',
+    adminUsersInviteLinkHint: '链接为一次性，点开即生效，过期或被点击后失效，请尽快发送。',
+    adminUsersInviteLinkCopy: '复制链接',
+    adminUsersInviteLinkCopied: '已复制',
     ...common,
   },
   'zh-HK': {
@@ -259,6 +276,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersStatusPending: '待首次登錄',
     adminUsersInviteEmailSent: '已發送邀請郵件，對方點郵件中的連結即可登錄。',
     adminUsersInviteEmailSkipped: '已加入白名單。請手動通知對方用 Google 帳號登錄。',
+    adminUsersInviteLinkReady: '已為 {email} 生成邀請連結，複製後透過飛書／微信／簡訊發給對方即可登錄。',
+    adminUsersInviteLinkSkipped: '已為 {email} 加入白名單。目前環境未產生連結，請通知對方用 Google 帳號登錄。',
+    adminUsersInviteLinkHint: '連結為一次性，點開即生效，過期或被點擊後失效，請盡快發送。',
+    adminUsersInviteLinkCopy: '複製連結',
+    adminUsersInviteLinkCopied: '已複製',
     ...common,
   },
   en: {
@@ -337,6 +359,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersStatusPending: 'Pending first login',
     adminUsersInviteEmailSent: 'Invite email sent — they can log in via the link.',
     adminUsersInviteEmailSkipped: 'Added to allow-list. Please notify them to sign in with Google.',
+    adminUsersInviteLinkReady: 'Invite link ready for {email}. Copy and send via Lark / WeChat / SMS.',
+    adminUsersInviteLinkSkipped: '{email} added to allow-list. Link generation skipped — please notify them to sign in with Google.',
+    adminUsersInviteLinkHint: 'One-time link. Expires or invalidates on first click. Send promptly.',
+    adminUsersInviteLinkCopy: 'Copy link',
+    adminUsersInviteLinkCopied: 'Copied',
     ...common,
   },
   ja: {
@@ -415,6 +442,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersStatusPending: '初回ログイン待ち',
     adminUsersInviteEmailSent: '招待メールを送信しました。リンクからログインしてもらえます。',
     adminUsersInviteEmailSkipped: 'ホワイトリストに追加しました。Google でログインするよう手動でご連絡ください。',
+    adminUsersInviteLinkReady: '{email} 用の招待リンクを生成しました。Lark / WeChat / SMS でコピーして送信してください。',
+    adminUsersInviteLinkSkipped: '{email} をホワイトリストに追加しました。現在の環境ではリンクを生成できません。Google でログインするようご連絡ください。',
+    adminUsersInviteLinkHint: 'リンクは一回限り有効。クリックまたは期限切れで無効になります。早めに送信してください。',
+    adminUsersInviteLinkCopy: 'リンクをコピー',
+    adminUsersInviteLinkCopied: 'コピー済み',
     ...common,
   },
 };

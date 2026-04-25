@@ -63,19 +63,31 @@ adminRouter.get('/users', ...superAdminChain, async (_req, res, next) => {
 // ───────────────────────────────
 // POST /api/admin/users (super_admin only) — invite
 //
-// Does TWO things (best-effort):
+// Does THREE things:
 //   1. upsert admin_users whitelist row (authoritative — if this fails, we 500)
-//   2. fire Supabase inviteUserByEmail → magic-link email to the invitee
-//      (opportunistic — logged on failure, does not fail the request)
+//   2. generate a one-time invite/login URL via Supabase admin generateLink
+//      (NO email sent — we hand the URL back to the super_admin to share via
+//      Lark / WeChat / SMS / whatever private channel they trust)
+//   3. self-heal admin_users.user_id ↔ auth.users.id link
 //
-// The whitelist + signup trigger is enough to let the invitee log in via
-// Google OAuth. The magic-link email is a convenience so the super_admin
-// doesn't have to notify out-of-band.
+// Why generateLink instead of inviteUserByEmail?
+//   - Email channels are unreliable: QQ/163 mail clients pre-fetch links and
+//     burn the one-time token before the user sees it (see §2.3.2). Even with
+//     custom Resend SMTP, deliverability / spam filters / SMTP quotas are
+//     ongoing pain. Sharing the URL out-of-band sidesteps all of this.
+//   - The URL is the same one Supabase would have emailed; identical security
+//     model (one-time token, expires, invalidates on first click).
 //
-// Gated on APP_URL env var: if unset, skip step 2 entirely (tests + local
-// dev don't send real emails). Response carries `inviteEmailSent` so the
-// UI can tell super_admin whether they still need to ping the invitee
-// manually.
+// Flow for new invitees: generateLink({type:'invite'}) creates the auth.users
+// row and returns the action_link. For re-invites of users that already exist
+// in auth.users (e.g. previously invited via the old email flow, or another
+// Supabase project they already had access to), invite type fails with
+// "already registered" — we fall back to type='magiclink' which produces a
+// fresh one-time login URL without trying to recreate the user.
+//
+// Gated on APP_URL env var: if unset (local dev / unit tests), skip link
+// generation entirely. Response carries `inviteLink: string | null` so the
+// UI can render a "copy & send" affordance.
 // ───────────────────────────────
 adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
   try {
@@ -97,41 +109,46 @@ adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
       .single();
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
 
-    // Best-effort magic-link email. Any failure is logged but not thrown —
-    // the whitelist row is the source of truth for access; email is UX sugar.
-    let inviteEmailSent = false;
+    // Best-effort link generation. Any failure is logged but not thrown —
+    // the whitelist row is the source of truth for access; the link is UX sugar.
+    let inviteLink: string | null = null;
     let authUserId: string | null = null;
     const appUrl = process.env.APP_URL?.replace(/\/$/, '');
     if (appUrl) {
-      const { data: inviteData, error: inviteErr } = await sb.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${appUrl}/admin`,
+      // Try invite first (creates auth.users row if absent).
+      const { data: inviteData, error: inviteErr } = await sb.auth.admin.generateLink({
+        type: 'invite',
+        email,
+        options: { redirectTo: `${appUrl}/admin` },
       });
       if (!inviteErr) {
-        inviteEmailSent = true;
+        inviteLink = inviteData?.properties?.action_link ?? null;
         authUserId = inviteData?.user?.id ?? null;
       } else if (/already.*(registered|exists)/i.test(inviteErr.message)) {
-        // Invitee already has an auth.users row — look it up so we can still
-        // self-heal admin_users.user_id (the DB trigger only fires on NEW
-        // signups, so re-invites of existing users never get linked otherwise).
-        const { data: list, error: listErr } = await sb.auth.admin.listUsers({ perPage: 200 });
-        if (listErr) {
+        // User already has an auth.users row — fall back to magiclink (no
+        // user creation, just a fresh one-time login URL).
+        const { data: linkData, error: linkErr } = await sb.auth.admin.generateLink({
+          type: 'magiclink',
+          email,
+          options: { redirectTo: `${appUrl}/admin` },
+        });
+        if (linkErr) {
           // eslint-disable-next-line no-console
-          console.warn(`[invite] listUsers failed during relink of ${email}: ${listErr.message}`);
+          console.warn(`[invite] magiclink fallback for existing ${email} failed: ${linkErr.message}`);
         } else {
-          authUserId = list?.users?.find((u) => u.email === email)?.id ?? null;
+          inviteLink = linkData?.properties?.action_link ?? null;
+          authUserId = linkData?.user?.id ?? null;
         }
       } else {
         // eslint-disable-next-line no-console
-        console.warn(`[invite] inviteUserByEmail(${email}) failed: ${inviteErr.message}`);
+        console.warn(`[invite] generateLink(invite) for ${email} failed: ${inviteErr.message}`);
       }
     }
 
     // Self-heal admin_users.user_id — belt-and-suspenders to the DB trigger
     // `activate_admin_on_signup` (migration 0002). Even if that trigger never
-    // runs (not installed / accidentally dropped / invitee signs in via a
-    // magic link whose token got pre-fetched by their mail client), the
-    // whitelist row ends up linked to the auth.users row here, which is what
-    // requireAdminUser joins on. Without this, the invitee hits
+    // runs, the whitelist row ends up linked to the auth.users row here,
+    // which is what requireAdminUser joins on. Without this, the invitee hits
     // "Account not authorized" even after a successful auth.
     let healedRow: AdminUserRow = data as AdminUserRow;
     if (authUserId && healedRow.user_id !== authUserId) {
@@ -150,7 +167,13 @@ adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
       }
     }
 
-    res.status(201).json({ ...rowToAdminUser(healedRow), inviteEmailSent });
+    res.status(201).json({
+      ...rowToAdminUser(healedRow),
+      inviteLink,
+      // Kept for one release as a deprecated alias so any older client cached
+      // by the browser doesn't crash on a missing field. Always false now.
+      inviteEmailSent: false,
+    });
   } catch (err) {
     next(err);
   }

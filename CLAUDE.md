@@ -40,28 +40,44 @@
 - Realtime 订阅 products / global_config 表实现多站同步
 - 不用 localStorage 做 Config 持久化（单机数据漂移会害死多站）
 
-#### 2.3.1 邀请 editor 的双通道（whitelist + magic link）
+#### 2.3.1 邀请 editor 的当前流程（whitelist + 一次性链接）
+
+**演进历史**：v1 用 `inviteUserByEmail` 自动发邮件，被 QQ/163 邮件预取 + Supabase
+SMTP 限速反复折磨，2026-04 改成"生成链接 super_admin 自己发"——绕开邮件投递。
 
 `POST /api/admin/users` 做三件事：
+
 1. **upsert admin_users 白名单行**（source of truth，失败就 500）
-2. **调 `supabase.auth.admin.inviteUserByEmail()`** 发 magic link 邮件（best-effort，失败只 log）
+2. **调 `supabase.auth.admin.generateLink()`** 生成一次性登录 URL，**不发邮件**
+   —— 优先 `type:'invite'`（创建 auth.users 行），返回 "already registered" 时
+   fallback 到 `type:'magiclink'`（已存在用户的一次性登录）。响应里把 `action_link`
+   原样返回到前端 `inviteLink: string | null` 字段。
 3. **Self-heal `admin_users.user_id`**（code-level 兜底，不依赖 DB trigger）
-   —— 从 invite 响应里拿 `user.id`（或 `listUsers()` 查已存在用户），手动 UPDATE
-   白名单行把 `user_id` 和 `activated_at` 补上。这样即使 migration 0002 的
-   `activate_admin_on_signup` trigger 没装 / 被误删，受邀者也能通过 `requireAdminUser`
-   的 user_id join 查到身份，不会报 `Account not authorized`。
+   —— 从 generateLink 响应拿 `user.id`，手动 UPDATE 白名单行的 `user_id` 和
+   `activated_at`。即使 migration 0002 的 `activate_admin_on_signup` trigger 没装
+   也能通过 `requireAdminUser` 的 user_id join 查到身份。
 
-**magic link 步骤受 `APP_URL` env gate 控制**：
-- 生产 Vercel 配了 `APP_URL=https://summit.aiverygen.ai` → 两步都走，被邀请人收邮件
-- 本地 dev / 测试环境**不设** `APP_URL` → 只做 whitelist，不发真邮件（避免测试污染 Supabase auth.users + 避免 dev 期间误发邮件给真人）
+**Step 2 受 `APP_URL` env gate 控制**：
+- 生产 Vercel 配了 `APP_URL=https://summit.aiverygen.ai` → 生成链接，前端展示复制框
+- 本地 dev / 测试环境**不设** `APP_URL` → 只做 whitelist，`inviteLink: null`
+  （避免测试污染 Supabase auth.users）
 
-响应体有 `inviteEmailSent: boolean`，前端 UI 据此提示 super_admin 是否还要手动通知。
+响应体仍保留 `inviteEmailSent: boolean`（永远 `false`）做向后兼容，下次 refactor 删。
 
-**Supabase Dashboard 必做**（邮件才能收到）：
+**前端 UI**：`AdminUsersPanel` 邀请成功后展开一个绿色卡片，里面是只读输入框（链接）
++ 复制按钮 + "通过飞书/微信/短信发给对方" 提示语。super_admin 自己挑信任的渠道。
+
+**链接安全特性**：
+- 一次性 token —— 任何人点过一次后失效
+- 默认有效期由 Supabase 决定（invite ~24h，magiclink ~1h）
+- 通过 Lark/微信等私密渠道发送 → 绕开邮件扫描器预取（QQ/163 的杀手）
+
+**Supabase Dashboard 必做**：
 - Authentication → URL Configuration → Site URL = `https://summit.aiverygen.ai`
 - Authentication → URL Configuration → Redirect URLs 加 `https://summit.aiverygen.ai/**`
+  （注意是 `/**` 通配符，没有就匹配不到 `/admin` 子路径）
 - （可选）Authentication → Email Templates → Invite user 改中文模板
-- （强烈推荐）Authentication → SMTP → 配 Custom SMTP（Resend/SendGrid），默认 Supabase SMTP 每小时只能发几封
+- **不再需要** custom SMTP（Resend/SendGrid）—— 不发邮件了。配了也无所谓不影响
 
 **换域名时还要改的 env**（漏一个就 500）：
 - Vercel `APP_URL` → 新域名（影响邀请邮件 redirect）
