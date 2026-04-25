@@ -173,13 +173,33 @@ commit 风格：
 - subject 用 `type(scope): 中文摘要`，body 写**为什么**改，不是改了**什么**（diff 自己会说）
 - co-author 行带上 `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`
 
-**推完后的返回 URL（生产环境快速参考）**：
+**推完后的汇报检查清单（每次都必须回这 4 行）**：
+
+```
+✅ Commit:    <hash> <subject>
+✅ 部署状态:  Ready / Building / Failed
+✅ 主域名:    https://summit.aiverygen.ai
+✅ 直链:      https://summit-<hash>-weihuxies-projects.vercel.app   ← 用 vercel inspect 拿
+```
+
+**少一行 = bug**。即使是 docs-only 改动也要给主域，让用户一键去验。
+不要让用户问"部署了么 / URL 是啥" —— 提前给。
+
+**用 Vercel CLI 验证部署状态**（不要靠等 / 猜）：
+
+```bash
+vercel ls --yes                                    # 看最新一次 deploy 是否 Ready
+vercel inspect https://summit.aiverygen.ai         # 看 prod alias 当前指向哪个 commit
+vercel --prod --yes                                # webhook 没触发时手动 deploy
+```
+
+**生产环境快速参考**：
 - 主域名：**https://summit.aiverygen.ai** ← Summit demo 的对外 URL
 - 老 alias：`https://ai-system-builder.vercel.app`（Vercel 自动 307 → 主域，保留兜底）
-- Vercel Dashboard：https://vercel.com/dashboard → 项目名 `summit`
+- Vercel Dashboard：https://vercel.com/dashboard → 项目名 `summit`（不是 ai-system-builder）
 - GitHub repo：`weihuxie/ai-system-builder`，main 分支即生产
 - 部署链路：`git push origin main` → Vercel webhook 自动 build → 1-2 min 后 Ready
-- 推完汇报模板：把改动总结一段 + Vercel Deployments 链接 / 域名给到用户，让 ta 一键去验
+- **GitHub→Vercel webhook 偶尔不触发**（实际遇到过）：push 后 vercel ls 没新行 → `vercel --prod --yes` 手动推
 
 ---
 
