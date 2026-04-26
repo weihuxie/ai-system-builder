@@ -148,9 +148,28 @@ productsRouter.put('/:id', ...adminChain, async (req, res, next) => {
       delete payload.ownerId;
     }
 
+    // After ownership-strip the payload may be empty (e.g. editor sent ONLY
+    // ownerId — a stealth-reassign attempt). Postgres rejects UPDATE ... SET
+    // (no columns), surfacing as a 500. Treat empty payload as a successful
+    // no-op and just return the current row, matching the "silently ignored"
+    // contract editor sees for the stripped field.
+    const row_update = productToRow(payload);
+    if (Object.keys(row_update).length === 0) {
+      const { data, error } = await getSupabase()
+        .from('products')
+        .select('*')
+        .eq('id', idParsed.data)
+        .single();
+      if (error) throw new HttpError(500, 'INTERNAL', error.message);
+      const row = data as ProductRow;
+      const emailMap = await buildOwnerEmailMap([row.owner_id]);
+      res.json(rowToProduct(row, row.owner_id ? (emailMap.get(row.owner_id) ?? null) : null));
+      return;
+    }
+
     const { data, error } = await getSupabase()
       .from('products')
-      .update(productToRow(payload))
+      .update(row_update)
       .eq('id', idParsed.data)
       .select()
       .single();
