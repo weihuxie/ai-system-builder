@@ -67,6 +67,10 @@ export interface UiStrings {
   adminSave: string;
   adminCancel: string;
   adminFieldId: string;
+  /** Help text under the ID input explaining what it's for. */
+  adminFieldIdHint: string;
+  /** Error text when the entered ID collides with an existing product ({id} placeholder). */
+  adminFieldIdCollision: string;
   adminFieldName: string;
   adminFieldDescription: string;
   adminFieldAudience: string;
@@ -173,6 +177,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminSave: '保存',
     adminCancel: '取消',
     adminFieldId: 'ID',
+    adminFieldIdHint: '产品的英文短码，AI 推荐结果和日志会引用此 ID。在英文 tab 输入名称会自动建议。',
+    adminFieldIdCollision: 'ID "{id}" 已被其它产品占用，请换一个。',
     adminFieldName: '名称',
     adminFieldDescription: '描述',
     adminFieldAudience: '适用人群',
@@ -256,6 +262,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminSave: '保存',
     adminCancel: '取消',
     adminFieldId: 'ID',
+    adminFieldIdHint: '產品的英文短碼，AI 推薦結果和日誌會引用此 ID。在英文 tab 輸入名稱會自動建議。',
+    adminFieldIdCollision: 'ID "{id}" 已被其它產品佔用，請換一個。',
     adminFieldName: '名稱',
     adminFieldDescription: '描述',
     adminFieldAudience: '適用人群',
@@ -339,6 +347,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminSave: 'Save',
     adminCancel: 'Cancel',
     adminFieldId: 'ID',
+    adminFieldIdHint: 'Short English code for this product. AI recommendations and logs reference this ID. Auto-suggested when you type the English name.',
+    adminFieldIdCollision: 'ID "{id}" already taken by another product. Pick a different one.',
     adminFieldName: 'Name',
     adminFieldDescription: 'Description',
     adminFieldAudience: 'Audience',
@@ -422,6 +432,8 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminSave: '保存',
     adminCancel: 'キャンセル',
     adminFieldId: 'ID',
+    adminFieldIdHint: 'この製品の英語の短縮コード。AI 推奨結果とログで参照されます。英語タブで名称を入力すると自動提案されます。',
+    adminFieldIdCollision: 'ID "{id}" は他の製品で使用済みです。別のものを選択してください。',
     adminFieldName: '名称',
     adminFieldDescription: '説明',
     adminFieldAudience: '対象ユーザー',
