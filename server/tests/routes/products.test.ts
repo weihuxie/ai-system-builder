@@ -26,7 +26,11 @@ describe('GET /api/products', () => {
     await resetDb();
   });
 
-  it('returns full list (no auth) — service key bypasses RLS', async () => {
+  it('returns only is_participating=true rows (anon homepage view)', async () => {
+    // Endpoint policy (changed 2026-04-25): /api/products is the public
+    // catalog feed, so it filters to is_participating=true and intentionally
+    // hides editor drafts. Admin UI uses /api/products/admin which returns
+    // role-scoped rowsets (see test below).
     const ed = await seedUser({ email: 'ed1@example.com', role: 'editor' });
     await seedProduct({ id: 'pub1', ownerId: ed.userId });
     await seedProduct({ id: 'pub2', ownerId: null, isParticipating: false });
@@ -35,7 +39,7 @@ describe('GET /api/products', () => {
     expect(res.status).toBe(200);
     const ids = res.body.map((p: { id: string }) => p.id);
     expect(ids).toContain('pub1');
-    expect(ids).toContain('pub2');
+    expect(ids).not.toContain('pub2');
   });
 
   it('denormalizes ownerEmail from admin_users via lookup map', async () => {
@@ -221,20 +225,28 @@ describe('POST /api/products/:id/clone', () => {
     expect(res.body.code).toBe('NOT_FOUND');
   });
 
-  it('409 CONFLICT after exhausting the suffix budget', async () => {
-    const ed = await seedUser({ email: 'ed-exhaust@example.com', role: 'editor' });
-    await seedProduct({ id: 'src', ownerId: ed.userId });
-    await seedProduct({ id: 'src-copy', ownerId: ed.userId });
-    // Pre-fill -copy-2 through -copy-20 (match CLONE_MAX_ATTEMPTS).
-    for (let i = 2; i <= 20; i++) {
-      await seedProduct({ id: `src-copy-${i}`, ownerId: ed.userId });
-    }
-    const token = mintJwt({ sub: ed.userId, email: ed.email });
+  it(
+    '409 CONFLICT after exhausting the suffix budget',
+    async () => {
+      const ed = await seedUser({ email: 'ed-exhaust@example.com', role: 'editor' });
+      await seedProduct({ id: 'src', ownerId: ed.userId });
+      await seedProduct({ id: 'src-copy', ownerId: ed.userId });
+      // Pre-fill -copy-2 through -copy-20 (match CLONE_MAX_ATTEMPTS).
+      for (let i = 2; i <= 20; i++) {
+        await seedProduct({ id: `src-copy-${i}`, ownerId: ed.userId });
+      }
+      const token = mintJwt({ sub: ed.userId, email: ed.email });
 
-    const res = await request(app).post('/api/products/src/clone').set(authHeader(token));
-    expect(res.status).toBe(409);
-    expect(res.body.code).toBe('CONFLICT');
-  });
+      const res = await request(app).post('/api/products/src/clone').set(authHeader(token));
+      expect(res.status).toBe(409);
+      expect(res.body.code).toBe('CONFLICT');
+    },
+    // 22 sequential Supabase round-trips (1 src + 20 fillers + 1 clone attempt
+    // that itself does up to 20 lookups). Public-internet RTT 200-300ms × 40+
+    // ops easily blows past vitest's 20s default. Bump generously since this
+    // test is intentionally exercising the worst case.
+    60_000,
+  );
 
   it('401 without auth', async () => {
     const ed = await seedUser({ email: 'ed-noauth@example.com', role: 'editor' });
