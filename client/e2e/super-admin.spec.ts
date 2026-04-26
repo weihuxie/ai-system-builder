@@ -38,8 +38,13 @@ test('super_admin can invite a new editor via the Users panel', async ({ page })
   await page.getByPlaceholder('name@gmail.com').fill(email);
   await page.getByRole('button', { name: /邀请|Invite/ }).click();
 
-  // New row appears in the list.
-  await expect(page.locator(`text=${email}`)).toBeVisible({ timeout: 10_000 });
+  // The invitee email now appears in TWO places after a successful invite:
+  //   1. the success toast ("invite link ready for {email}")
+  //   2. the new row in the user list (the canonical assertion)
+  // Use the user-list <span> directly to avoid Playwright's strict-mode
+  // ambiguity. The list entries wrap each email in a <span>, the toast does
+  // not, so an `exact: true` getByText pinpoints the row only.
+  await expect(page.getByText(email, { exact: true })).toBeVisible({ timeout: 10_000 });
 });
 
 test('super_admin can switch brand', async ({ page }) => {
@@ -47,11 +52,19 @@ test('super_admin can switch brand', async ({ page }) => {
   await signInAs(page, boss.email, boss.password);
 
   // The BrandSwitch component renders a toggle with "Google" / "AWS" options.
-  // Click AWS; page re-renders with AWS accent.
+  // Click AWS; the click fires a PUT /api/brand mutation, but the click
+  // promise resolves on UI event-loop tick — *before* the network roundtrip.
+  // We have to wait for the actual response to land before asserting on the
+  // server state, otherwise the GET below races the PUT and reads the stale
+  // value.
   const awsButton = page.getByRole('button', { name: /aws/i }).first();
+  const putResponse = page.waitForResponse(
+    (r) => /\/api\/brand$/.test(r.url()) && r.request().method() === 'PUT' && r.ok(),
+  );
   await awsButton.click();
+  await putResponse;
 
-  // Confirm the PUT succeeded by reloading and re-reading brand from GET /api/brand
+  // Confirm the PUT landed by re-reading brand from GET /api/brand
   const res = await page.request.get('/api/brand');
   expect(res.ok()).toBe(true);
   const body = await res.json();

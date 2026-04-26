@@ -41,10 +41,16 @@ export async function signInAs(
 
   await page.goto('/admin');
   await page.evaluate(
-    ({ key, value }) => {
+    ({ key, value, langKey, langVal }) => {
       localStorage.setItem(key, value);
+      // Pin the UI language to zh-CN so e2e regex assertions like /品牌切换/
+      // match deterministically. Without this, detectInitialLang in
+      // client/src/lib/i18n.ts falls through to /api/geo (depends on the test
+      // machine's public IP) → navigator.language (Playwright default en-US),
+      // making test outcome environment-dependent.
+      localStorage.setItem(langKey, langVal);
     },
-    { key: storageKey, value: sessionJson },
+    { key: storageKey, value: sessionJson, langKey: 'asb.lang', langVal: 'zh-CN' },
   );
   await page.reload();
 }

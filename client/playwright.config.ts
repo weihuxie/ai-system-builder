@@ -47,6 +47,13 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    // Force zh-CN for assertions that look up Chinese headings ("品牌切换",
+    // "授权用户", "产品管理"). Without this Playwright headless Chromium
+    // defaults to en-US → UI renders in English → regex assertions fail.
+    // detectInitialLang in client/src/lib/i18n.ts checks navigator.language
+    // first (after localStorage and geo), so setting `locale` here propagates
+    // through.
+    locale: 'zh-CN',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
