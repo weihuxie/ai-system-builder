@@ -66,11 +66,23 @@ export interface UiStrings {
   adminConfirmDelete: string;
   adminSave: string;
   adminCancel: string;
+  /** @deprecated The "ID" field is no longer surfaced in the editor — name.en
+   *  is now the user-facing identity. Kept temporarily so any old cached
+   *  client doesn't crash; remove after one deploy cycle. */
   adminFieldId: string;
-  /** Help text under the ID input explaining what it's for. */
+  /** @deprecated kept for cache-compat; see adminFieldEnNameHint instead. */
   adminFieldIdHint: string;
-  /** Error text when the entered ID collides with an existing product ({id} placeholder). */
+  /** @deprecated kept for cache-compat; see adminFieldEnNameCollision. */
   adminFieldIdCollision: string;
+  /** Inline meta below the EN name input on create — shows the auto-derived
+   *  short code so editors see what AI prompts will reference. {id} placeholder. */
+  adminFieldEnNameHint: string;
+  /** Inline meta when EN name is empty — explains why save is disabled. */
+  adminFieldEnNameHintEmpty: string;
+  /** Inline error when the auto-derived code collides with an existing product. {id} placeholder. */
+  adminFieldEnNameCollision: string;
+  /** Banner next to the disabled Save button when editor never filled EN name. */
+  adminFieldEnNameRequired: string;
   adminFieldName: string;
   adminFieldDescription: string;
   adminFieldAudience: string;
@@ -179,6 +191,10 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldId: 'ID',
     adminFieldIdHint: '产品的英文短码，AI 推荐结果和日志会引用此 ID。在英文 tab 输入名称会自动建议。',
     adminFieldIdCollision: 'ID "{id}" 已被其它产品占用，请换一个。',
+    adminFieldEnNameHint: '保存后系统将以代号 "{id}" 作为此产品的内部引用（AI 推荐和日志）。',
+    adminFieldEnNameHintEmpty: '请输入英文名称（必填，作为产品唯一标识）。',
+    adminFieldEnNameCollision: '已有产品的英文名称对应同样代号 "{id}"，请改个名称区分开。',
+    adminFieldEnNameRequired: '请在 EN tab 填写英文名称才能保存',
     adminFieldName: '名称',
     adminFieldDescription: '描述',
     adminFieldAudience: '适用人群',
@@ -264,6 +280,10 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldId: 'ID',
     adminFieldIdHint: '產品的英文短碼，AI 推薦結果和日誌會引用此 ID。在英文 tab 輸入名稱會自動建議。',
     adminFieldIdCollision: 'ID "{id}" 已被其它產品佔用，請換一個。',
+    adminFieldEnNameHint: '保存後系統將以代號 "{id}" 作為此產品的內部引用（AI 推薦和日誌）。',
+    adminFieldEnNameHintEmpty: '請輸入英文名稱（必填，作為產品唯一識別）。',
+    adminFieldEnNameCollision: '已有產品的英文名稱對應相同代號 "{id}"，請改個名稱區分開。',
+    adminFieldEnNameRequired: '請在 EN tab 填寫英文名稱才能保存',
     adminFieldName: '名稱',
     adminFieldDescription: '描述',
     adminFieldAudience: '適用人群',
@@ -349,6 +369,10 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldId: 'ID',
     adminFieldIdHint: 'Short English code for this product. AI recommendations and logs reference this ID. Auto-suggested when you type the English name.',
     adminFieldIdCollision: 'ID "{id}" already taken by another product. Pick a different one.',
+    adminFieldEnNameHint: 'On save this product will be referenced internally as code "{id}" (AI recommendations + logs).',
+    adminFieldEnNameHintEmpty: 'Enter an English name (required — used as the product\'s unique identifier).',
+    adminFieldEnNameCollision: 'Another product\'s English name produces the same code "{id}". Rename to differentiate.',
+    adminFieldEnNameRequired: 'Fill in the English name (EN tab) before saving',
     adminFieldName: 'Name',
     adminFieldDescription: 'Description',
     adminFieldAudience: 'Audience',
@@ -434,6 +458,10 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldId: 'ID',
     adminFieldIdHint: 'この製品の英語の短縮コード。AI 推奨結果とログで参照されます。英語タブで名称を入力すると自動提案されます。',
     adminFieldIdCollision: 'ID "{id}" は他の製品で使用済みです。別のものを選択してください。',
+    adminFieldEnNameHint: '保存後、システムは内部参照（AI 推奨・ログ）でコード "{id}" を使用します。',
+    adminFieldEnNameHintEmpty: '英語名を入力してください（必須、製品の一意な識別子として使用）。',
+    adminFieldEnNameCollision: '別の製品の英語名から同じコード "{id}" が生成されます。名称を変更して区別してください。',
+    adminFieldEnNameRequired: '保存する前に EN タブで英語名を入力してください',
     adminFieldName: '名称',
     adminFieldDescription: '説明',
     adminFieldAudience: '対象ユーザー',
