@@ -80,7 +80,37 @@ sttRouter.post('/', upload.single('audio'), async (req, res, next) => {
     lang = langParsed.data;
     const mimeType = req.file.mimetype || 'audio/webm';
 
-    // ── 1. Gemini STT (default primary) ──
+    // ── 1. Whisper (default primary) ──
+    // Switched from Gemini-primary on 2026-04-26: Whisper handles noisy
+    // multilingual audio (Summit venues are crowded) and zh/ja accents
+    // measurably better than Gemini Flash STT, and OpenAI Asia edges have
+    // tighter latency from our Asia user base. Gemini stays as fallback so
+    // we don't lose the redundancy that the project's been getting away
+    // with. If OPENAI_API_KEY is unset we skip directly to Gemini below
+    // (e.g. local dev where the maintainer hasn't bothered with OpenAI).
+    let primaryError: string = '';
+    if (isWhisperConfigured()) {
+      const wh = await whisperTranscribe({ audio: req.file.buffer, mimeType, lang });
+      if (wh.ok) {
+        attempts.push({ provider: 'whisper', outcome: 'success' });
+        logEvent('stt_success', {
+          traceId,
+          latencyMs: Math.round(performance.now() - startedAt),
+          lang,
+          audioBytes,
+          outputLen: wh.text.length,
+          provider: 'whisper',
+          model: 'whisper-1',
+          attempts,
+        });
+        res.json({ text: wh.text } satisfies SttResponse);
+        return;
+      }
+      attempts.push({ provider: 'whisper', outcome: 'error', message: wh.message });
+      primaryError = wh.message;
+    }
+
+    // ── 2. Gemini STT (fallback) ──
     const gem = await geminiStt({ audio: req.file.buffer, mimeType, lang });
     if (gem.ok) {
       attempts.push({ provider: 'gemini', outcome: 'success' });
@@ -103,31 +133,9 @@ sttRouter.post('/', upload.single('audio'), async (req, res, next) => {
       message: gem.message,
     });
 
-    // ── 2. Whisper fallback (if OPENAI_API_KEY configured) ──
-    // 讲师视角无感：同一个 /api/stt，前端收到文本即可。
-    // 没配 key → Whisper 不启用，直接抛原 Gemini 错误给前端 banner。
-    if (isWhisperConfigured()) {
-      const wh = await whisperTranscribe({ audio: req.file.buffer, mimeType, lang });
-      if (wh.ok) {
-        attempts.push({ provider: 'whisper', outcome: 'success' });
-        logEvent('stt_success', {
-          traceId,
-          latencyMs: Math.round(performance.now() - startedAt),
-          lang,
-          audioBytes,
-          outputLen: wh.text.length,
-          provider: 'whisper',
-          model: 'whisper-1',
-          attempts,
-        });
-        res.json({ text: wh.text } satisfies SttResponse);
-        return;
-      }
-      attempts.push({ provider: 'whisper', outcome: 'error', message: wh.message });
-    }
-
-    // 两家都挂了（或 Whisper 没配）→ 前端拿到 LLM_CALL_FAILED
-    throw new HttpError(502, 'LLM_CALL_FAILED', gem.message);
+    // 两家都挂了 → 前端拿到 LLM_CALL_FAILED。报错保留主通道的信息（whisper
+    // 优先，没配 key 才退到 gemini 信息），让 trace 里能一眼看出谁先炸的。
+    throw new HttpError(502, 'LLM_CALL_FAILED', primaryError || gem.message);
   } catch (err) {
     const latencyMs = Math.round(performance.now() - startedAt);
     if (err instanceof HttpError) {

@@ -49,7 +49,20 @@ export default function MicButton() {
 
   async function startRecording() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Browser-built-in audio constraints — free wins for noisy Summit venues:
+      //   noiseSuppression — kills background hum / venue music / HVAC
+      //   echoCancellation — kills speaker bleed (usually mute, but defense-in-depth)
+      //   autoGainControl  — normalises volume so soft-spoken lecturers transcribe ok
+      // Chrome/Safari/Firefox all support these; older browsers ignore unknown
+      // constraints (don't error). All are server-side hints we already pay
+      // a penalty for ignoring (Gemini STT is sensitive to ambient noise).
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          noiseSuppression: true,
+          echoCancellation: true,
+          autoGainControl: true,
+        },
+      });
       streamRef.current = stream;
       const mr = new MediaRecorder(stream);
       chunksRef.current = [];
