@@ -469,29 +469,50 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
  * Quick scenarios shown on the landing page.
  * 4 fixed cards per language; click → auto-compose "我是<industry>的<role>，痛点是<challenge>".
  */
+// Each lang has 8 scenarios picked to span the demo product catalog (CRM /
+// CLM / Expense / Settlement / SCP / SRM / OMS / AgentBuilder). Lecturer
+// can click any of them when voice fails or when the venue's too noisy to
+// trust the mic. super_admin can edit at runtime via the admin panel
+// (stored in global_config.quick_scenarios jsonb when overridden).
 export const DEFAULT_QUICK_OPTIONS: Record<Lang, QuickOption[]> = {
   'zh-CN': [
     { role: '财务总监', industry: '跨国制造企业', challenge: '跨国团队差旅报销混乱，财务对账困难，缺乏费用透明度。' },
     { role: '销售VP', industry: '科技公司', challenge: '销售与法务协作效率低，合同审批慢，客户数据经常丢失。' },
     { role: 'CMO', industry: '零售品牌', challenge: '客户数据分散在各个系统，营销转化率低，缺乏深度数据洞察。' },
     { role: '研发负责人', industry: '互联网公司', challenge: '研发与业务脱节，项目进度难以把控，资源分配不合理。' },
+    { role: '采购总监', industry: '汽车零部件供应商', challenge: '供应商数据散乱，比价靠 Excel 来回发邮件，价格谈判没有数据支撑。' },
+    { role: 'COO', industry: '电商平台', challenge: '订单分散在多个销售渠道，库存频繁出错，跨渠道履约慢，售后回款也对不上。' },
+    { role: 'CTO', industry: '金融科技公司', challenge: '想给业务团队上一套智能体平台，让运营自己拖拽生成业务流，但担心数据安全和合规。' },
+    { role: '供应链总监', industry: '快消零售连锁', challenge: '门店补货依赖人工经验，节假日预测严重失准，门店缺货又总仓积压。' },
   ],
   'zh-HK': [
     { role: '財務總監', industry: '跨國製造企業', challenge: '跨國團隊差旅報銷混亂，財務對賬困難，缺乏費用透明度。' },
     { role: '銷售VP', industry: '科技公司', challenge: '銷售與法務協作效率低，合同審批慢，客戶資料經常丟失。' },
     { role: 'CMO', industry: '零售品牌', challenge: '客戶資料分散在各個系統，營銷轉化率低，缺乏深度資料洞察。' },
     { role: '研發負責人', industry: '互聯網公司', challenge: '研發與業務脫節，項目進度難以把控，資源分配不合理。' },
+    { role: '採購總監', industry: '汽車零部件供應商', challenge: '供應商資料散亂，比價靠 Excel 來回發郵件，價格談判沒有數據支撐。' },
+    { role: 'COO', industry: '電商平台', challenge: '訂單分散在多個銷售渠道，庫存頻繁出錯，跨渠道履約慢，售後回款也對不上。' },
+    { role: 'CTO', industry: '金融科技公司', challenge: '想給業務團隊上一套智能體平台，讓運營自己拖拽生成業務流，但擔心資料安全和合規。' },
+    { role: '供應鏈總監', industry: '快消零售連鎖', challenge: '門店補貨依賴人工經驗，節假日預測嚴重失準，門店缺貨又總倉積壓。' },
   ],
   en: [
     { role: 'CFO', industry: 'Multinational Manufacturing', challenge: 'Cross-border travel expenses are chaotic, reconciliation is difficult, spending lacks transparency.' },
     { role: 'VP of Sales', industry: 'Tech Company', challenge: 'Sales-legal collaboration is slow, contract approvals drag, customer data gets lost.' },
     { role: 'CMO', industry: 'Retail Brand', challenge: 'Customer data scattered across systems, marketing conversion is low, we lack deep insights.' },
     { role: 'Head of R&D', industry: 'Internet Company', challenge: 'R&D is disconnected from business, progress is hard to track, resources allocated poorly.' },
+    { role: 'Procurement Director', industry: 'Auto Parts Supplier', challenge: 'Supplier data is scattered, RFQs bounce around in email and Excel, price negotiations lack data backing.' },
+    { role: 'COO', industry: 'E-commerce Platform', challenge: 'Orders span multiple sales channels, inventory drifts, fulfilment is slow, and after-sales settlement never reconciles.' },
+    { role: 'CTO', industry: 'Fintech Company', challenge: 'Want to deploy an agent-builder platform so business teams can drag-and-drop workflows, but worried about data security and compliance.' },
+    { role: 'Supply Chain Director', industry: 'FMCG Retail Chain', challenge: 'Store replenishment relies on gut feel, holiday forecasts are wildly off, stores stock out while warehouses overflow.' },
   ],
   ja: [
     { role: 'CFO', industry: '多国籍製造企業', challenge: '国境を越えた出張経費は混乱しており、照合が困難で、経費の透明性が欠けています。' },
     { role: '営業VP', industry: 'テクノロジー企業', challenge: '営業と法務の連携が非効率で、契約承認が遅く、顧客データが頻繁に失われます。' },
     { role: 'CMO', industry: '小売ブランド', challenge: '顧客データはシステム全体に分散しており、マーケティングのコンバージョン率は低く、深いデータの洞察が不足しています。' },
     { role: 'R&D責任者', industry: 'インターネット企業', challenge: 'R&Dはビジネスから切り離されており、プロジェクトの進捗管理が難しく、リソースの割り当てが不合理です。' },
+    { role: '調達責任者', industry: '自動車部品サプライヤー', challenge: 'サプライヤー情報が分散しており、見積りは Excel とメールで往復、価格交渉にデータの裏付けがありません。' },
+    { role: 'COO', industry: 'EC プラットフォーム', challenge: '注文が複数の販売チャネルに分散し、在庫がずれ、クロスチャネル履行が遅く、アフターサービスの清算も合いません。' },
+    { role: 'CTO', industry: 'フィンテック企業', challenge: '業務チームがドラッグ&ドロップで業務フローを構築できるエージェントビルダーを導入したいが、データセキュリティとコンプライアンスが懸念です。' },
+    { role: 'サプライチェーン責任者', industry: 'FMCG 小売チェーン', challenge: '店舗の補充は人の勘に頼っており、祝日の予測が大きく外れ、店舗で欠品し倉庫では過剰在庫になります。' },
   ],
 };
