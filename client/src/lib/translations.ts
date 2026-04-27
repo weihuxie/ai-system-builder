@@ -60,6 +60,12 @@ export interface UiStrings {
   adminLogout: string;
   adminBrandSwitchTitle: string;
   adminProductsTitle: string;
+  /** Lead-in copy for editors: counts of own vs platform products. {my} {platform} placeholders. */
+  adminProductsEditorHint: string;
+  /** Badge on rows the editor owns (editable). */
+  adminProductBadgeMine: string;
+  /** Badge on platform-seeded rows shown to editors as read-only reference. */
+  adminProductBadgePlatform: string;
   adminAddProduct: string;
   adminEditProduct: string;
   adminDeleteProduct: string;
@@ -207,6 +213,9 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminLogout: '退出',
     adminBrandSwitchTitle: '品牌切换',
     adminProductsTitle: '产品管理',
+    adminProductsEditorHint: '我的产品 {my} 个 · 平台参考 {platform} 个（仅查看，不可编辑）',
+    adminProductBadgeMine: '我的',
+    adminProductBadgePlatform: '平台',
     adminAddProduct: '新增产品',
     adminEditProduct: '编辑',
     adminDeleteProduct: '删除',
@@ -314,6 +323,9 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminLogout: '退出',
     adminBrandSwitchTitle: '品牌切換',
     adminProductsTitle: '產品管理',
+    adminProductsEditorHint: '我的產品 {my} 個 · 平台參考 {platform} 個（僅檢視，不可編輯）',
+    adminProductBadgeMine: '我的',
+    adminProductBadgePlatform: '平台',
     adminAddProduct: '新增產品',
     adminEditProduct: '編輯',
     adminDeleteProduct: '刪除',
@@ -421,6 +433,9 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminLogout: 'Log out',
     adminBrandSwitchTitle: 'Brand',
     adminProductsTitle: 'Products',
+    adminProductsEditorHint: '{my} of yours · {platform} platform reference (read-only)',
+    adminProductBadgeMine: 'Yours',
+    adminProductBadgePlatform: 'Platform',
     adminAddProduct: 'Add product',
     adminEditProduct: 'Edit',
     adminDeleteProduct: 'Delete',
@@ -528,6 +543,9 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminLogout: 'ログアウト',
     adminBrandSwitchTitle: 'ブランド',
     adminProductsTitle: '製品管理',
+    adminProductsEditorHint: '自分の製品 {my} 件 · プラットフォーム参照 {platform} 件（閲覧のみ、編集不可）',
+    adminProductBadgeMine: '自分',
+    adminProductBadgePlatform: 'プラットフォーム',
     adminAddProduct: '製品を追加',
     adminEditProduct: '編集',
     adminDeleteProduct: '削除',

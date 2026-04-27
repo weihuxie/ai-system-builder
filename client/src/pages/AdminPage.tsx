@@ -90,7 +90,32 @@ export default function AdminPage() {
     <div className="min-h-dvh bg-[var(--bg-base)] text-[var(--text-primary)]">
       <header className="sticky top-0 z-20 border-b border-white/5 backdrop-blur bg-[var(--bg-base)]/80">
         <div className="mx-auto max-w-4xl flex items-center justify-between gap-3 px-4 sm:px-6 py-3">
-          <h1 className="text-sm sm:text-base font-semibold">{ui.adminTitle}</h1>
+          <div className="flex items-baseline gap-3 min-w-0">
+            <h1 className="text-sm sm:text-base font-semibold shrink-0">{ui.adminTitle}</h1>
+            {/* Identity strip — fresh editors land in /admin not knowing what
+                account they signed in with. Showing email + role badge here
+                avoids the "光秃秃" first impression and helps super_admin
+                eyeball who's logged in across multiple devices/sessions. */}
+            {me.data && (
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-white/50 truncate">
+                <span className="truncate" title={me.data.email}>
+                  {me.data.email}
+                </span>
+                <span
+                  className={[
+                    'shrink-0 rounded-full px-1.5 py-0.5 text-[10px]',
+                    me.data.role === 'super_admin'
+                      ? 'bg-amber-500/10 text-amber-200'
+                      : 'bg-white/5 text-white/60',
+                  ].join(' ')}
+                >
+                  {me.data.role === 'super_admin'
+                    ? ui.adminUsersRoleSuperAdmin
+                    : ui.adminUsersRoleEditor}
+                </span>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             <LangSwitch />
             {(authed || session) && (
@@ -105,6 +130,27 @@ export default function AdminPage() {
             )}
           </div>
         </div>
+        {/* Mobile fallback: identity below the title row when the inline
+            version above gets hidden (sm:flex hidden on mobile). */}
+        {me.data && (
+          <div className="sm:hidden mx-auto max-w-4xl px-4 pb-2 flex items-center gap-1.5 text-xs text-white/50">
+            <span className="truncate" title={me.data.email}>
+              {me.data.email}
+            </span>
+            <span
+              className={[
+                'shrink-0 rounded-full px-1.5 py-0.5 text-[10px]',
+                me.data.role === 'super_admin'
+                  ? 'bg-amber-500/10 text-amber-200'
+                  : 'bg-white/5 text-white/60',
+              ].join(' ')}
+            >
+              {me.data.role === 'super_admin'
+                ? ui.adminUsersRoleSuperAdmin
+                : ui.adminUsersRoleEditor}
+            </span>
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8">

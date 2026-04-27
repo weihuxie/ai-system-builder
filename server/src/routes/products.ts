@@ -60,13 +60,14 @@ productsRouter.get('/', async (_req, res, next) => {
 // ───────────────────────────────────────────
 // GET /api/admin/products (admin)
 // Auth + role aware:
-//   - super_admin → every row (so they can re-assign / orphan-pool / undelete)
-//   - editor      → only rows they own (owner_id = req.user.id)
-// Editors hitting this endpoint never see siblings' products even via raw
-// Network response, closing the leak that the legacy GET /api/products had.
-// Mounted on the products router (not admin router) so the file ownership
-// helpers (buildOwnerEmailMap, mappers) stay co-located. Path is namespaced
-// via app.ts mount pattern below.
+//   - super_admin → every row (re-assign / orphan-pool / audit)
+//   - editor      → own rows (owner_id = self) + platform rows (owner_id IS NULL)
+//                   Platform rows are the seeded demo catalog with no owner —
+//                   editor sees them as read-only reference (UI greys mutate
+//                   buttons; canEditProduct on server blocks any PUT/DELETE
+//                   regardless). Sibling editors' products STILL hidden, so
+//                   the editor isolation contract from the previous refactor
+//                   is preserved — the relaxation only opens orphan rows.
 // ───────────────────────────────────────────
 
 productsRouter.get('/admin', ...adminChain, async (req, res, next) => {
@@ -74,7 +75,8 @@ productsRouter.get('/admin', ...adminChain, async (req, res, next) => {
     const user = req.user!;
     let q = getSupabase().from('products').select('*').order('id');
     if (user.role === 'editor') {
-      q = q.eq('owner_id', user.id);
+      // PostgREST .or() with .is.null clause — syntax: 'col.is.null'
+      q = q.or(`owner_id.eq.${user.id},owner_id.is.null`);
     }
     const { data, error } = await q;
     if (error) throw new HttpError(500, 'INTERNAL', error.message);

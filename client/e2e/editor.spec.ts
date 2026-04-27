@@ -48,3 +48,36 @@ test('editor can clone their own product', async ({ page }) => {
   // New row appears with -copy suffix.
   await expect(page.locator('text=cloneme-copy').first()).toBeVisible({ timeout: 10_000 });
 });
+
+test('editor sees platform products (ownerId=null) as read-only reference', async ({ page }) => {
+  const ed = await seedE2EUser('ed-platform', 'editor');
+  await seedE2EProduct({ id: 'plat-ref', ownerId: null });
+  await seedE2EProduct({ id: 'mine-x', ownerId: ed.userId });
+  await signInAs(page, ed.email, ed.password);
+
+  // Both visible: the editor's own + the platform-seeded reference.
+  await expect(page.locator('text=plat-ref').first()).toBeVisible();
+  await expect(page.locator('text=mine-x').first()).toBeVisible();
+
+  // Editor's own row carries the "我的" badge; platform row carries "平台".
+  const myRow = page.locator('li').filter({ hasText: 'mine-x' });
+  const platRow = page.locator('li').filter({ hasText: 'plat-ref' });
+  await expect(myRow.getByText('我的')).toBeVisible();
+  await expect(platRow.getByText('平台')).toBeVisible();
+
+  // Platform row's edit + delete buttons should be disabled (server-enforced
+  // via canEditProduct, but UI also greys them so editor can't even attempt).
+  // The buttons stay rendered for layout consistency, just disabled.
+  await expect(platRow.getByRole('button', { name: /编辑|Edit|編輯/ })).toBeDisabled();
+  await expect(platRow.getByRole('button', { name: /删除|Delete|刪除/ })).toBeDisabled();
+});
+
+test('editor sees their email + role badge in the header', async ({ page }) => {
+  const ed = await seedE2EUser('ed-identity', 'editor');
+  await signInAs(page, ed.email, ed.password);
+
+  // Email is shown verbatim somewhere in the header strip.
+  await expect(page.getByText(ed.email).first()).toBeVisible();
+  // Role badge — zh-CN default.
+  await expect(page.getByText(/编辑者/).first()).toBeVisible();
+});

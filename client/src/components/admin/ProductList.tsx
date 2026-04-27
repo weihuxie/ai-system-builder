@@ -33,17 +33,27 @@ export default function ProductList({ me }: { me: AuthedUser }) {
 
   const all = productsQuery.data ?? [];
 
-  // For editor the server already filtered to own rows — no extra client filter
-  // (the dropdown isn't shown for editors anyway). For super_admin, retain the
-  // mine/all/orphan triage that lets them eyeball each editor's slice.
+  // For editor: server returns own + platform (ownerId=null). Sort own to top
+  // so the editor always sees their work first, then the read-only reference
+  // catalog below. For super_admin: retain mine/all/orphan filter triage.
   const visible = useMemo(() => {
-    if (me.role === 'editor') return all;
+    if (me.role === 'editor') {
+      return [...all].sort((a, b) => {
+        const aMine = a.ownerId === me.id ? 0 : 1;
+        const bMine = b.ownerId === me.id ? 0 : 1;
+        if (aMine !== bMine) return aMine - bMine;
+        return a.id.localeCompare(b.id);
+      });
+    }
     if (filter === 'mine') return all.filter((p) => p.ownerId === me.id);
     if (filter === 'orphan') return all.filter((p) => p.ownerId === null);
     return all;
   }, [all, filter, me.id, me.role]);
 
   const canMutate = (p: ProductItem) => me.role === 'super_admin' || p.ownerId === me.id;
+  const isPlatform = (p: ProductItem) => p.ownerId === null;
+  const myCount = me.role === 'editor' ? all.filter((p) => p.ownerId === me.id).length : 0;
+  const platformCount = me.role === 'editor' ? all.filter((p) => p.ownerId === null).length : 0;
 
   const onDelete = async (p: ProductItem) => {
     if (!window.confirm(ui.adminConfirmDelete)) return;
@@ -124,6 +134,17 @@ export default function ProductList({ me }: { me: AuthedUser }) {
         </div>
       )}
 
+      {/* Editor lead-in: a count summary + a hint that platform rows are
+          read-only reference. Onboarding aid for fresh editors who'd otherwise
+          see a single empty row and not know what to do. */}
+      {me.role === 'editor' && (
+        <p className="mt-2 text-[11px] text-white/40 leading-relaxed">
+          {ui.adminProductsEditorHint
+            .replace('{my}', String(myCount))
+            .replace('{platform}', String(platformCount))}
+        </p>
+      )}
+
       <ErrorBanner
         error={productsQuery.error ?? del.error ?? clone.error ?? upsert.error}
         lang={lang}
@@ -132,8 +153,17 @@ export default function ProductList({ me }: { me: AuthedUser }) {
       <ul className="mt-4 divide-y divide-white/5">
         {visible.map((p) => {
           const mutable = canMutate(p);
+          const platformRow = me.role === 'editor' && isPlatform(p);
           return (
-            <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+            <li
+              key={p.id}
+              className={[
+                'flex items-center justify-between gap-3 py-3',
+                platformRow && 'opacity-70', // visually fade read-only reference rows
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium">{pickLang(p.name, lang)}</span>
@@ -157,6 +187,21 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                   {me.role === 'super_admin' && (
                     <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] text-white/50">
                       {p.ownerEmail ?? ui.adminProductUnowned}
+                    </span>
+                  )}
+                  {/* Editor-side ownership badge:
+                      "我的" → editable
+                      "平台" → read-only reference (super_admin curated) */}
+                  {me.role === 'editor' && (
+                    <span
+                      className={[
+                        'rounded-full border px-2 py-0.5 text-[10px]',
+                        platformRow
+                          ? 'border-white/10 bg-white/[0.03] text-white/50'
+                          : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200',
+                      ].join(' ')}
+                    >
+                      {platformRow ? ui.adminProductBadgePlatform : ui.adminProductBadgeMine}
                     </span>
                   )}
                 </div>
