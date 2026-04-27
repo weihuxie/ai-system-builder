@@ -16,6 +16,7 @@ import LoginForm from '../components/admin/LoginForm';
 import BrandSwitch from '../components/admin/BrandSwitch';
 import LlmChainConfig from '../components/admin/LlmChainConfig';
 import ProductList from '../components/admin/ProductList';
+import QuickScenariosPanel from '../components/admin/QuickScenariosPanel';
 import AdminUsersPanel from '../components/admin/AdminUsersPanel';
 
 /**
@@ -134,6 +135,7 @@ export default function AdminPage() {
               <>
                 <BrandSwitch />
                 <LlmChainConfig />
+                <QuickScenariosPanel />
                 <AdminUsersPanel me={me.data} />
               </>
             )}

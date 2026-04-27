@@ -18,6 +18,7 @@ import { generateRouter } from './routes/generate.js';
 import { geoRouter } from './routes/geo.js';
 import { llmRouter } from './routes/llm.js';
 import { productsRouter } from './routes/products.js';
+import { quickScenariosRouter } from './routes/quickScenarios.js';
 import { sttRouter } from './routes/stt.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 
@@ -90,6 +91,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/brand', brandRouter);
 app.use('/api/geo', geoRouter);
 app.use('/api/llm-chain', llmRouter);
+app.use('/api/quick-scenarios', quickScenariosRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

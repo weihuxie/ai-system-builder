@@ -105,6 +105,21 @@ export interface UiStrings {
   adminUsersRoleSuperAdmin: string;
   adminUsersStatusActivated: string;
   adminUsersStatusPending: string;
+  // Quick scenarios admin panel
+  adminQuickScenariosTitle: string;
+  adminQuickScenariosHint: string;
+  adminQuickScenariosUnsaved: string;
+  adminQuickScenariosReset: string;
+  adminQuickScenariosResetConfirm: string;
+  adminQuickScenariosFieldRole: string;
+  adminQuickScenariosFieldRolePlaceholder: string;
+  adminQuickScenariosFieldIndustry: string;
+  adminQuickScenariosFieldIndustryPlaceholder: string;
+  adminQuickScenariosFieldChallenge: string;
+  adminQuickScenariosFieldChallengePlaceholder: string;
+  adminQuickScenariosAdd: string;
+  adminQuickScenariosEmpty: string;
+  adminQuickScenariosMaxReached: string;
   /** @deprecated kept until cleanup; replaced by adminUsersInviteLink* below. */
   adminUsersInviteEmailSent: string;
   /** @deprecated */
@@ -216,6 +231,20 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersRoleSuperAdmin: '超级管理员',
     adminUsersStatusActivated: '已激活',
     adminUsersStatusPending: '待首次登录',
+    adminQuickScenariosTitle: '快速场景',
+    adminQuickScenariosHint: '首页底部展示给观众的预设场景。讲师在嘈杂场地或语音失效时一键触发推荐。改完点保存立即生效，无需部署。',
+    adminQuickScenariosUnsaved: '有未保存的修改',
+    adminQuickScenariosReset: '恢复默认',
+    adminQuickScenariosResetConfirm: '确定恢复为内置默认场景？当前所有自定义场景将被清空。',
+    adminQuickScenariosFieldRole: '角色',
+    adminQuickScenariosFieldRolePlaceholder: '销售VP',
+    adminQuickScenariosFieldIndustry: '行业',
+    adminQuickScenariosFieldIndustryPlaceholder: '科技公司',
+    adminQuickScenariosFieldChallenge: '痛点',
+    adminQuickScenariosFieldChallengePlaceholder: '销售与法务协作慢，合同审批周期长。',
+    adminQuickScenariosAdd: '添加场景',
+    adminQuickScenariosEmpty: '此语言暂无场景，点下方添加',
+    adminQuickScenariosMaxReached: '已达上限 (20)',
     adminUsersInviteEmailSent: '已发送邀请邮件，对方点邮件里的链接即可登录。',
     adminUsersInviteEmailSkipped: '已加入白名单。请手动通知对方用 Google 账号登录。',
     adminUsersInviteLinkReady: '已为 {email} 生成邀请链接，复制后通过飞书/微信/短信发给对方即可登录。',
@@ -305,6 +334,20 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersRoleSuperAdmin: '超級管理員',
     adminUsersStatusActivated: '已激活',
     adminUsersStatusPending: '待首次登錄',
+    adminQuickScenariosTitle: '快速場景',
+    adminQuickScenariosHint: '首頁底部展示給觀眾的預設場景。講師在嘈雜場地或語音失效時一鍵觸發推薦。改完點保存立即生效，無需部署。',
+    adminQuickScenariosUnsaved: '有未保存的修改',
+    adminQuickScenariosReset: '還原預設',
+    adminQuickScenariosResetConfirm: '確定還原為內建預設場景？目前所有自訂場景將被清空。',
+    adminQuickScenariosFieldRole: '角色',
+    adminQuickScenariosFieldRolePlaceholder: '銷售VP',
+    adminQuickScenariosFieldIndustry: '行業',
+    adminQuickScenariosFieldIndustryPlaceholder: '科技公司',
+    adminQuickScenariosFieldChallenge: '痛點',
+    adminQuickScenariosFieldChallengePlaceholder: '銷售與法務協作慢，合同審批週期長。',
+    adminQuickScenariosAdd: '加入場景',
+    adminQuickScenariosEmpty: '此語言暫無場景，點下方加入',
+    adminQuickScenariosMaxReached: '已達上限 (20)',
     adminUsersInviteEmailSent: '已發送邀請郵件，對方點郵件中的連結即可登錄。',
     adminUsersInviteEmailSkipped: '已加入白名單。請手動通知對方用 Google 帳號登錄。',
     adminUsersInviteLinkReady: '已為 {email} 生成邀請連結，複製後透過飛書／微信／簡訊發給對方即可登錄。',
@@ -394,6 +437,20 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersRoleSuperAdmin: 'Super admin',
     adminUsersStatusActivated: 'Activated',
     adminUsersStatusPending: 'Pending first login',
+    adminQuickScenariosTitle: 'Quick scenarios',
+    adminQuickScenariosHint: 'Pre-canned prompts shown to visitors at the bottom of the homepage. Lecturer can fall back to these when the venue is noisy or STT is unreliable. Saves take effect immediately — no redeploy needed.',
+    adminQuickScenariosUnsaved: 'Unsaved changes',
+    adminQuickScenariosReset: 'Reset to defaults',
+    adminQuickScenariosResetConfirm: 'Reset to bundled defaults? All current customisations will be cleared.',
+    adminQuickScenariosFieldRole: 'Role',
+    adminQuickScenariosFieldRolePlaceholder: 'VP of Sales',
+    adminQuickScenariosFieldIndustry: 'Industry',
+    adminQuickScenariosFieldIndustryPlaceholder: 'Tech Company',
+    adminQuickScenariosFieldChallenge: 'Challenge',
+    adminQuickScenariosFieldChallengePlaceholder: 'Sales-legal collaboration is slow, contract approvals drag.',
+    adminQuickScenariosAdd: 'Add scenario',
+    adminQuickScenariosEmpty: 'No scenarios for this language. Add one below.',
+    adminQuickScenariosMaxReached: 'Limit reached (20)',
     adminUsersInviteEmailSent: 'Invite email sent — they can log in via the link.',
     adminUsersInviteEmailSkipped: 'Added to allow-list. Please notify them to sign in with Google.',
     adminUsersInviteLinkReady: 'Invite link ready for {email}. Copy and send via Lark / WeChat / SMS.',
@@ -483,6 +540,20 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminUsersRoleSuperAdmin: 'スーパー管理者',
     adminUsersStatusActivated: '有効',
     adminUsersStatusPending: '初回ログイン待ち',
+    adminQuickScenariosTitle: 'クイックシナリオ',
+    adminQuickScenariosHint: 'ホームページ下部に表示される事前定義シナリオ。会場が騒がしい・音声認識が不安定な時、講師がワンクリックで推奨を呼び出せます。保存後即時反映、再デプロイ不要。',
+    adminQuickScenariosUnsaved: '未保存の変更があります',
+    adminQuickScenariosReset: 'デフォルトに戻す',
+    adminQuickScenariosResetConfirm: '組み込みデフォルトに戻しますか？現在のカスタマイズはすべて削除されます。',
+    adminQuickScenariosFieldRole: '役職',
+    adminQuickScenariosFieldRolePlaceholder: '営業VP',
+    adminQuickScenariosFieldIndustry: '業界',
+    adminQuickScenariosFieldIndustryPlaceholder: 'テクノロジー企業',
+    adminQuickScenariosFieldChallenge: '課題',
+    adminQuickScenariosFieldChallengePlaceholder: '営業と法務の連携が遅く、契約承認に時間がかかる。',
+    adminQuickScenariosAdd: 'シナリオを追加',
+    adminQuickScenariosEmpty: 'この言語のシナリオはありません。下のボタンから追加してください。',
+    adminQuickScenariosMaxReached: '上限到達 (20)',
     adminUsersInviteEmailSent: '招待メールを送信しました。リンクからログインしてもらえます。',
     adminUsersInviteEmailSkipped: 'ホワイトリストに追加しました。Google でログインするよう手動でご連絡ください。',
     adminUsersInviteLinkReady: '{email} 用の招待リンクを生成しました。Lark / WeChat / SMS でコピーして送信してください。',

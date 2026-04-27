@@ -64,6 +64,21 @@ export const LlmChainItemSchema = z.object({
 
 export const LlmChainSchema = z.array(LlmChainItemSchema).max(10);
 
+// Quick scenarios — admin-editable list of pre-canned demo prompts. Each
+// language has its own array (typically 4-12 items). Capped at 20 per lang
+// so the homepage 2-col grid doesn't scroll forever.
+export const QuickOptionSchema = z.object({
+  role: z.string().min(1).max(80),
+  industry: z.string().min(1).max(80),
+  challenge: z.string().min(1).max(500),
+});
+export const QuickOptionsByLangSchema = z.object({
+  'zh-CN': z.array(QuickOptionSchema).max(20),
+  'zh-HK': z.array(QuickOptionSchema).max(20),
+  en: z.array(QuickOptionSchema).max(20),
+  ja: z.array(QuickOptionSchema).max(20),
+});
+
 export const GlobalConfigSchema = z.object({
   brand: BrandSchema,
   llmChain: LlmChainSchema,

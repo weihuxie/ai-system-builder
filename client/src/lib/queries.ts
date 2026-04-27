@@ -21,8 +21,10 @@ import type {
   LlmChain,
   LlmProviderId,
   ProductItem,
+  QuickOption,
   SttResponse,
 } from '@asb/shared';
+import { DEFAULT_QUICK_OPTIONS } from '@asb/shared';
 
 import { ApiCallError, apiFetch } from './api';
 import {
@@ -44,6 +46,7 @@ export const queryKeys = {
   llmChain: ['llm-chain'] as const,
   me: ['me'] as const,
   adminUsers: ['admin-users'] as const,
+  quickScenarios: ['quick-scenarios'] as const,
 };
 
 // ───────────────────────────────
@@ -133,6 +136,52 @@ export function useCloneProductMutation(): UseMutationResult<ProductItem, Error,
       // Skipping adminProducts would leave the editor's UI stale after their own edits.
       qc.invalidateQueries({ queryKey: queryKeys.products });
       qc.invalidateQueries({ queryKey: queryKeys.adminProducts });
+    },
+  });
+}
+
+// ───────────────────────────────
+// Quick Scenarios
+// Server returns 4-lang scenarios array (DB → defaults fallback per-lang).
+// Cached 60s, falls back to bundled DEFAULT_QUICK_OPTIONS on network error
+// so the homepage never goes blank on a Shanghai venue with flaky WiFi.
+// ───────────────────────────────
+export interface QuickScenariosResponse {
+  scenarios: Record<Lang, QuickOption[]>;
+  isCustomised: boolean;
+  updatedAt: string | null;
+}
+
+export function useQuickScenariosQuery(): UseQueryResult<QuickScenariosResponse> {
+  return useQuery({
+    queryKey: queryKeys.quickScenarios,
+    queryFn: () => apiFetch<QuickScenariosResponse>('/quick-scenarios'),
+    initialData: {
+      scenarios: DEFAULT_QUICK_OPTIONS,
+      isCustomised: false,
+      updatedAt: null,
+    },
+    initialDataUpdatedAt: 0,
+    staleTime: 60_000,
+  });
+}
+
+export function useUpdateQuickScenariosMutation(): UseMutationResult<
+  QuickScenariosResponse,
+  Error,
+  { scenarios: Record<Lang, QuickOption[]> } | { reset: true }
+> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload) =>
+      apiFetch<QuickScenariosResponse>('/quick-scenarios', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (data) => {
+      // Write through to cache so other open tabs see the change immediately
+      // (homepage's QuickScenarios re-renders without a refetch).
+      qc.setQueryData(queryKeys.quickScenarios, data);
     },
   });
 }

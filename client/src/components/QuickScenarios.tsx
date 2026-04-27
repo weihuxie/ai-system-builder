@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react';
 
 import { DEFAULT_QUICK_OPTIONS } from '@asb/shared';
 
+import { useQuickScenariosQuery } from '../lib/queries';
 import { useAppStore } from '../lib/store';
 import { t } from '../lib/translations';
 
@@ -13,7 +14,11 @@ export default function QuickScenarios({ onPick }: { onPick?: () => void }) {
   const resetForNewQuery = useAppStore((s) => s.resetForNewQuery);
   const solution = useAppStore((s) => s.solution);
   const ui = t(lang);
-  const options = DEFAULT_QUICK_OPTIONS[lang];
+  // Pull from server (admin-editable). React Query's initialData is the
+  // bundled defaults so first paint never empty even before the network
+  // round-trip. Failed fetch keeps the defaults in place.
+  const scenariosQuery = useQuickScenariosQuery();
+  const options = scenariosQuery.data?.scenarios[lang] ?? DEFAULT_QUICK_OPTIONS[lang];
 
   // Auto-collapse once a recommendation is on screen so the 3 result cards
   // stay above the fold. User can still click the header to re-expand.
