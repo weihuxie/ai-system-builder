@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Loader2, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, Loader2, Plus, RotateCcw, Trash2 } from 'lucide-react';
 
 import { ALL_LANGS, DEFAULT_QUICK_OPTIONS, type Lang, type QuickOption } from '@asb/shared';
 
-import { useQuickScenariosQuery, useUpdateQuickScenariosMutation } from '../../lib/queries';
+import {
+  useAdminProductsQuery,
+  useQuickScenariosQuery,
+  useUpdateQuickScenariosMutation,
+} from '../../lib/queries';
 import { useAppStore } from '../../lib/store';
 import { t } from '../../lib/translations';
 import ErrorBanner from '../ErrorBanner';
@@ -33,6 +37,8 @@ export default function QuickScenariosPanel() {
   const ui = t(lang);
   const query = useQuickScenariosQuery();
   const update = useUpdateQuickScenariosMutation();
+  // Pull product list to render the productIds multi-select + compute coverage.
+  const productsQuery = useAdminProductsQuery(true);
 
   const [editing, setEditing] = useState<Lang>(lang);
   // Local draft so edits don't fire the network on every keystroke.
@@ -50,6 +56,41 @@ export default function QuickScenariosPanel() {
       setDirty(false);
     }
   }, [query.data?.scenarios]);
+
+  // Coverage = which active products are referenced by AT LEAST ONE scenario
+  // in the CURRENT lang's draft. Lecturer cares about per-lang coverage
+  // because they demo in one lang at a time. Products = is_participating
+  // products that the lecturer actually intends to surface; non-participating
+  // ones are off-stage and don't need a scenario. Computed live from draft so
+  // the warning updates as you type.
+  const activeProducts = useMemo(
+    () => (productsQuery.data ?? []).filter((p) => p.isParticipating),
+    [productsQuery.data],
+  );
+  const coverage = useMemo(() => {
+    const covered = new Set<string>();
+    for (const opt of draft[editing]) {
+      for (const id of opt.productIds ?? []) covered.add(id);
+    }
+    const missing = activeProducts.filter((p) => !covered.has(p.id)).map((p) => p.id);
+    return { missing, total: activeProducts.length };
+  }, [draft, editing, activeProducts]);
+
+  const toggleProductId = (i: number, productId: string) => {
+    setDraft((prev) => {
+      const list = prev[editing];
+      const cur = list[i]?.productIds ?? [];
+      const has = cur.includes(productId);
+      const nextIds = has ? cur.filter((x) => x !== productId) : [...cur, productId];
+      return {
+        ...prev,
+        [editing]: list.map((o, idx) =>
+          idx === i ? { ...o, productIds: nextIds.length > 0 ? nextIds : undefined } : o,
+        ),
+      };
+    });
+    setDirty(true);
+  };
 
   const updateOne = (i: number, patch: Partial<QuickOption>) => {
     setDraft((prev) => ({
@@ -70,6 +111,9 @@ export default function QuickScenariosPanel() {
   const addOne = () => {
     setDraft((prev) => ({
       ...prev,
+      // New row: blank text, no productIds tagged yet — admin assigns them
+      // after writing the prompt. Coverage warning will flag products still
+      // missing immediately so the panel guides you toward a covered set.
       [editing]: [...prev[editing], { role: '', industry: '', challenge: '' }],
     }));
     setDirty(true);
@@ -153,6 +197,41 @@ export default function QuickScenariosPanel() {
         </p>
       )}
 
+      {/* Coverage health: lecturer's smell test that every active product has
+          at least one scenario in the current lang tagged to surface it.
+          Pure metadata signal — does NOT alter AI behaviour. */}
+      {coverage.total > 0 && (
+        <div
+          className={[
+            'mt-3 flex items-start gap-2 rounded-lg border p-2.5 text-[11px] leading-relaxed',
+            coverage.missing.length === 0
+              ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-200'
+              : 'border-amber-500/20 bg-amber-500/5 text-amber-200',
+          ].join(' ')}
+          role="status"
+        >
+          {coverage.missing.length === 0 ? (
+            <span>
+              {ui.adminQuickScenariosCoverageOk
+                .replace('{covered}', String(coverage.total))
+                .replace('{total}', String(coverage.total))
+                .replace('{lang}', LANG_LABEL[editing])}
+            </span>
+          ) : (
+            <>
+              <AlertTriangle size={12} className="mt-0.5 shrink-0" />
+              <span>
+                {ui.adminQuickScenariosCoverageMissing
+                  .replace('{covered}', String(coverage.total - coverage.missing.length))
+                  .replace('{total}', String(coverage.total))
+                  .replace('{lang}', LANG_LABEL[editing])
+                  .replace('{missing}', coverage.missing.join(', '))}
+              </span>
+            </>
+          )}
+        </div>
+      )}
+
       <ErrorBanner
         error={query.error ?? update.error}
         lang={lang}
@@ -204,6 +283,42 @@ export default function QuickScenariosPanel() {
                 className="mt-0.5 w-full resize-y rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm outline-none focus:border-[var(--accent-muted)]"
               />
             </div>
+
+            {/* Product chips — toggleable. Pure metadata: does not affect AI
+                prompt or recommendations. Used by coverage banner above to
+                count which products have at least one scenario tagged. */}
+            <div className="mt-2">
+              <label className="block text-[10px] uppercase tracking-wide text-white/40">
+                {ui.adminQuickScenariosFieldProducts}
+              </label>
+              {activeProducts.length === 0 ? (
+                <p className="mt-1 text-[11px] text-white/40">
+                  {ui.adminQuickScenariosNoProducts}
+                </p>
+              ) : (
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {activeProducts.map((p) => {
+                    const checked = (opt.productIds ?? []).includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => toggleProductId(i, p.id)}
+                        className={[
+                          'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] transition-colors',
+                          checked
+                            ? 'border-[var(--accent-muted)] bg-[var(--accent)]/15 text-white'
+                            : 'border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/5',
+                        ].join(' ')}
+                      >
+                        {p.id}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <div className="mt-2 flex justify-end">
               <button
                 type="button"

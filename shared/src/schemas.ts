@@ -71,6 +71,7 @@ export const QuickOptionSchema = z.object({
   role: z.string().min(1).max(80),
   industry: z.string().min(1).max(80),
   challenge: z.string().min(1).max(500),
+  productIds: z.array(z.string().min(1).max(64)).max(8).optional(),
 });
 export const QuickOptionsByLangSchema = z.object({
   'zh-CN': z.array(QuickOptionSchema).max(20),

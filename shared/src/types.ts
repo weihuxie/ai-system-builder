@@ -48,6 +48,14 @@ export interface QuickOption {
   role: string;
   industry: string;
   challenge: string;
+  /**
+   * Optional metadata: product IDs this scenario is *intended* to demonstrate.
+   * Pure annotation — does NOT affect AI prompts or recommendations (the AI
+   * still picks freely from the active product catalog). Used by the admin
+   * panel's coverage warning to flag products that no scenario surfaces.
+   * Empty / missing array = unlabelled (counts as "no coverage" for warning).
+   */
+  productIds?: string[];
 }
 
 // ───────────────────────────────────────────

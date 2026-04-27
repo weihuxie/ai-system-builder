@@ -117,6 +117,16 @@ export interface UiStrings {
   adminQuickScenariosFieldIndustryPlaceholder: string;
   adminQuickScenariosFieldChallenge: string;
   adminQuickScenariosFieldChallengePlaceholder: string;
+  /** Label for the product-tag chip row. */
+  adminQuickScenariosFieldProducts: string;
+  /** Shown when there are zero participating products to tag. */
+  adminQuickScenariosNoProducts: string;
+  /** Coverage banner when every active product has at least one scenario.
+   *  Args: {covered}, {total}, {lang} */
+  adminQuickScenariosCoverageOk: string;
+  /** Coverage banner when some products are not tagged by any scenario.
+   *  Args: {covered}, {total}, {lang}, {missing} (comma-separated IDs) */
+  adminQuickScenariosCoverageMissing: string;
   adminQuickScenariosAdd: string;
   adminQuickScenariosEmpty: string;
   adminQuickScenariosMaxReached: string;
@@ -242,6 +252,10 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminQuickScenariosFieldIndustryPlaceholder: '科技公司',
     adminQuickScenariosFieldChallenge: '痛点',
     adminQuickScenariosFieldChallengePlaceholder: '销售与法务协作慢，合同审批周期长。',
+    adminQuickScenariosFieldProducts: '主要演示产品（标记，不影响 AI 推荐）',
+    adminQuickScenariosNoProducts: '当前没有参与推荐的产品。',
+    adminQuickScenariosCoverageOk: '✓ {lang} 下 {covered}/{total} 个参与产品都有场景覆盖',
+    adminQuickScenariosCoverageMissing: '{lang} 下 {covered}/{total} 个参与产品有场景覆盖。未覆盖：{missing}（建议加场景或调整标记）',
     adminQuickScenariosAdd: '添加场景',
     adminQuickScenariosEmpty: '此语言暂无场景，点下方添加',
     adminQuickScenariosMaxReached: '已达上限 (20)',
@@ -345,6 +359,10 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminQuickScenariosFieldIndustryPlaceholder: '科技公司',
     adminQuickScenariosFieldChallenge: '痛點',
     adminQuickScenariosFieldChallengePlaceholder: '銷售與法務協作慢，合同審批週期長。',
+    adminQuickScenariosFieldProducts: '主要演示產品（標記，不影響 AI 推薦）',
+    adminQuickScenariosNoProducts: '目前沒有參與推薦的產品。',
+    adminQuickScenariosCoverageOk: '✓ {lang} 下 {covered}/{total} 個參與產品都有場景覆蓋',
+    adminQuickScenariosCoverageMissing: '{lang} 下 {covered}/{total} 個參與產品有場景覆蓋。未覆蓋：{missing}（建議加場景或調整標記）',
     adminQuickScenariosAdd: '加入場景',
     adminQuickScenariosEmpty: '此語言暫無場景，點下方加入',
     adminQuickScenariosMaxReached: '已達上限 (20)',
@@ -448,6 +466,10 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminQuickScenariosFieldIndustryPlaceholder: 'Tech Company',
     adminQuickScenariosFieldChallenge: 'Challenge',
     adminQuickScenariosFieldChallengePlaceholder: 'Sales-legal collaboration is slow, contract approvals drag.',
+    adminQuickScenariosFieldProducts: 'Products this scenario demonstrates (metadata only, does not affect AI)',
+    adminQuickScenariosNoProducts: 'No participating products yet.',
+    adminQuickScenariosCoverageOk: '✓ All {covered}/{total} participating products covered in {lang}',
+    adminQuickScenariosCoverageMissing: '{covered}/{total} participating products covered in {lang}. Missing: {missing} (consider adding a scenario or tagging existing ones)',
     adminQuickScenariosAdd: 'Add scenario',
     adminQuickScenariosEmpty: 'No scenarios for this language. Add one below.',
     adminQuickScenariosMaxReached: 'Limit reached (20)',
@@ -551,6 +573,10 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminQuickScenariosFieldIndustryPlaceholder: 'テクノロジー企業',
     adminQuickScenariosFieldChallenge: '課題',
     adminQuickScenariosFieldChallengePlaceholder: '営業と法務の連携が遅く、契約承認に時間がかかる。',
+    adminQuickScenariosFieldProducts: 'メインで紹介する製品（タグのみ、AI推奨には影響しません）',
+    adminQuickScenariosNoProducts: '現在、推奨対象の製品がありません。',
+    adminQuickScenariosCoverageOk: '✓ {lang} で {covered}/{total} の参加製品すべてにシナリオあり',
+    adminQuickScenariosCoverageMissing: '{lang} で {covered}/{total} の参加製品にシナリオあり。未カバー：{missing}（シナリオ追加またはタグ調整を検討）',
     adminQuickScenariosAdd: 'シナリオを追加',
     adminQuickScenariosEmpty: 'この言語のシナリオはありません。下のボタンから追加してください。',
     adminQuickScenariosMaxReached: '上限到達 (20)',
