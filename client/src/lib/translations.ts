@@ -66,6 +66,22 @@ export interface UiStrings {
   adminProductBadgeMine: string;
   /** Badge on platform-seeded rows shown to editors as read-only reference. */
   adminProductBadgePlatform: string;
+  /** ARIA + tooltip text for the expand chevron (collapsed → click to open). */
+  adminProductExpand: string;
+  /** ARIA + tooltip text for the expand chevron (expanded → click to close). */
+  adminProductCollapse: string;
+  /** Editor onboarding tour heading shown above the products list. */
+  adminEditorTourTitle: string;
+  /** Editor onboarding tour step 1 — identity strip. */
+  adminEditorTourStep1: string;
+  /** Editor onboarding tour step 2 — platform reference vs yours. */
+  adminEditorTourStep2: string;
+  /** Editor onboarding tour step 3 — clone-as-template / new product. */
+  adminEditorTourStep3: string;
+  /** Editor onboarding tour step 4 — expand row to see full info. */
+  adminEditorTourStep4: string;
+  /** ARIA label / tooltip for the X button that dismisses the tour. */
+  adminEditorTourDismiss: string;
   adminAddProduct: string;
   adminEditProduct: string;
   adminDeleteProduct: string;
@@ -216,6 +232,14 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductsEditorHint: '我的产品 {my} 个 · 平台参考 {platform} 个（仅查看，不可编辑）',
     adminProductBadgeMine: '我的',
     adminProductBadgePlatform: '平台',
+    adminProductExpand: '展开详情',
+    adminProductCollapse: '收起',
+    adminEditorTourTitle: '👋 第一次进来？快速上手',
+    adminEditorTourStep1: '左上能看到你的邮箱和角色（编辑者）',
+    adminEditorTourStep2: '标「平台」的是参考模板，仅查看；标「我的」的可以随时改',
+    adminEditorTourStep3: '想试试？点任意行的「复制」即可基于平台模板建一份你的副本，再按右上「+ 新增产品」改名定制',
+    adminEditorTourStep4: '点每行右侧 ⌄ 可展开看完整描述、适用人群和落地页 URL',
+    adminEditorTourDismiss: '不再显示',
     adminAddProduct: '新增产品',
     adminEditProduct: '编辑',
     adminDeleteProduct: '删除',
@@ -326,6 +350,14 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductsEditorHint: '我的產品 {my} 個 · 平台參考 {platform} 個（僅檢視，不可編輯）',
     adminProductBadgeMine: '我的',
     adminProductBadgePlatform: '平台',
+    adminProductExpand: '展開詳情',
+    adminProductCollapse: '收起',
+    adminEditorTourTitle: '👋 第一次進來？快速上手',
+    adminEditorTourStep1: '左上能看到你的郵箱和角色（編輯者）',
+    adminEditorTourStep2: '標「平台」的是參考模板，僅檢視；標「我的」的可以隨時改',
+    adminEditorTourStep3: '想試試？點任意行的「複製」即可基於平台模板建一份你的副本，再按右上「+ 新增產品」改名訂製',
+    adminEditorTourStep4: '點每行右側 ⌄ 可展開看完整描述、適用人群和落地頁 URL',
+    adminEditorTourDismiss: '不再顯示',
     adminAddProduct: '新增產品',
     adminEditProduct: '編輯',
     adminDeleteProduct: '刪除',
@@ -436,6 +468,14 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductsEditorHint: '{my} of yours · {platform} platform reference (read-only)',
     adminProductBadgeMine: 'Yours',
     adminProductBadgePlatform: 'Platform',
+    adminProductExpand: 'Show full details',
+    adminProductCollapse: 'Collapse',
+    adminEditorTourTitle: '👋 New here? Quick tour',
+    adminEditorTourStep1: 'Your email + role badge live in the top-left header',
+    adminEditorTourStep2: 'Rows badged "Platform" are read-only references; "Yours" rows you can edit any time',
+    adminEditorTourStep3: 'Want to try? Click "Copy" on any row to spin up your own variant of a platform template, then "+ Add product" in the top-right for a blank one',
+    adminEditorTourStep4: 'Click ⌄ on any row to expand its full description, audience, and landing-page URLs',
+    adminEditorTourDismiss: 'Don\'t show again',
     adminAddProduct: 'Add product',
     adminEditProduct: 'Edit',
     adminDeleteProduct: 'Delete',
@@ -546,6 +586,14 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductsEditorHint: '自分の製品 {my} 件 · プラットフォーム参照 {platform} 件（閲覧のみ、編集不可）',
     adminProductBadgeMine: '自分',
     adminProductBadgePlatform: 'プラットフォーム',
+    adminProductExpand: '詳細を表示',
+    adminProductCollapse: '閉じる',
+    adminEditorTourTitle: '👋 はじめての方へ — クイックガイド',
+    adminEditorTourStep1: '左上にあなたのメールとロール（編集者）が表示されます',
+    adminEditorTourStep2: '「プラットフォーム」バッジは参照テンプレート（閲覧のみ）、「自分」バッジはいつでも編集できます',
+    adminEditorTourStep3: '試してみたい？任意の行の「コピー」をクリックでテンプレートを自分のものとして複製、右上「+ 製品追加」で新規作成',
+    adminEditorTourStep4: '行右の ⌄ をクリックすると、完全な説明・対象ユーザー・ランディング URL が展開します',
+    adminEditorTourDismiss: '今後表示しない',
     adminAddProduct: '製品を追加',
     adminEditProduct: '編集',
     adminDeleteProduct: '削除',

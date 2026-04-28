@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
-import { Copy, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, Copy, ExternalLink, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { pickLang, type AuthedUser, type ProductItem } from '@asb/shared';
+import { ALL_BRANDS, pickLang, type AuthedUser, type Brand, type ProductItem } from '@asb/shared';
 
 import {
   useAdminProductsQuery,
@@ -14,6 +14,13 @@ import { t } from '../../lib/translations';
 import { useAppStore } from '../../lib/store';
 import ErrorBanner from '../ErrorBanner';
 import ProductEditor from './ProductEditor';
+
+// localStorage key for dismissing the editor onboarding tour. Set when the
+// editor clicks the X. Stays per-browser (per-machine) so a fresh editor on a
+// different demo laptop sees the tour again.
+const TOUR_DISMISS_KEY = 'asb.editor-tour-dismissed.v1';
+
+const BRAND_LABEL: Record<Brand, string> = { google: 'Google', aws: 'AWS' };
 
 type Filter = 'mine' | 'all' | 'orphan';
 
@@ -30,6 +37,40 @@ export default function ProductList({ me }: { me: AuthedUser }) {
   const [editing, setEditing] = useState<ProductItem | null | undefined>(undefined);
   // undefined = editor closed; null = creating; ProductItem = editing that item
   const [filter, setFilter] = useState<Filter>(me.role === 'editor' ? 'mine' : 'all');
+
+  // Inline-expand state: a Set of product IDs currently showing their full
+  // detail block (description / audience / URLs). Click chevron toggles.
+  // Plain Set for no extra deps; localStorage is overkill for view-only state.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpand = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Editor onboarding tour visibility — true when the localStorage flag is
+  // absent (fresh browser / fresh laptop). Init lazily so SSR doesn't crash
+  // on undefined window. super_admin doesn't see it.
+  const [tourVisible, setTourVisible] = useState<boolean>(false);
+  useEffect(() => {
+    if (me.role !== 'editor') return;
+    try {
+      setTourVisible(localStorage.getItem(TOUR_DISMISS_KEY) !== '1');
+    } catch {
+      // Private mode / storage blocked — tour stays hidden, low cost
+    }
+  }, [me.role]);
+  const dismissTour = () => {
+    try {
+      localStorage.setItem(TOUR_DISMISS_KEY, '1');
+    } catch {
+      // ignore
+    }
+    setTourVisible(false);
+  };
 
   const all = productsQuery.data ?? [];
 
@@ -145,6 +186,36 @@ export default function ProductList({ me }: { me: AuthedUser }) {
         </p>
       )}
 
+      {/* Editor onboarding tour — first-time landing aid. Dismissed via the
+          X button (localStorage flag, sticky per browser). super_admin sees
+          the full panel toolset already and doesn't need this. */}
+      {me.role === 'editor' && tourVisible && (
+        <div className="mt-4 rounded-xl border border-blue-500/20 bg-blue-500/[0.06] p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="text-xs leading-relaxed">
+              <p className="text-sm font-medium text-blue-100 mb-2">
+                {ui.adminEditorTourTitle}
+              </p>
+              <ol className="list-decimal pl-4 space-y-1 text-white/75">
+                <li>{ui.adminEditorTourStep1}</li>
+                <li>{ui.adminEditorTourStep2}</li>
+                <li>{ui.adminEditorTourStep3}</li>
+                <li>{ui.adminEditorTourStep4}</li>
+              </ol>
+            </div>
+            <button
+              type="button"
+              onClick={dismissTour}
+              aria-label={ui.adminEditorTourDismiss}
+              title={ui.adminEditorTourDismiss}
+              className="shrink-0 rounded-md p-1 text-white/50 hover:bg-white/5 hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <ErrorBanner
         error={productsQuery.error ?? del.error ?? clone.error ?? upsert.error}
         lang={lang}
@@ -154,91 +225,161 @@ export default function ProductList({ me }: { me: AuthedUser }) {
         {visible.map((p) => {
           const mutable = canMutate(p);
           const platformRow = me.role === 'editor' && isPlatform(p);
+          const isOpen = expanded.has(p.id);
           return (
             <li
               key={p.id}
               className={[
-                'flex items-center justify-between gap-3 py-3',
+                'py-3',
                 platformRow && 'opacity-70', // visually fade read-only reference rows
               ]
                 .filter(Boolean)
                 .join(' ')}
             >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium">{pickLang(p.name, lang)}</span>
-                  <code className="text-[10px] text-white/40">{p.id}</code>
+              {/* Header row — title + meta + actions */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium">{pickLang(p.name, lang)}</span>
+                    <code className="text-[10px] text-white/40">{p.id}</code>
+                    <button
+                      type="button"
+                      onClick={() => onTogglePublish(p)}
+                      disabled={!mutable || upsert.isPending}
+                      className={[
+                        'rounded-full px-2 py-0.5 text-[10px] transition-colors',
+                        p.isParticipating
+                          ? 'bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25'
+                          : 'bg-white/5 text-white/50 hover:bg-white/10',
+                        !mutable && 'cursor-not-allowed opacity-60',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
+                      {p.isParticipating ? 'on' : 'off'}
+                    </button>
+                    {me.role === 'super_admin' && (
+                      <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] text-white/50">
+                        {p.ownerEmail ?? ui.adminProductUnowned}
+                      </span>
+                    )}
+                    {/* Editor-side ownership badge:
+                        "我的" → editable
+                        "平台" → read-only reference (super_admin curated) */}
+                    {me.role === 'editor' && (
+                      <span
+                        className={[
+                          'rounded-full border px-2 py-0.5 text-[10px]',
+                          platformRow
+                            ? 'border-white/10 bg-white/[0.03] text-white/50'
+                            : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200',
+                        ].join(' ')}
+                      >
+                        {platformRow ? ui.adminProductBadgePlatform : ui.adminProductBadgeMine}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-white/50 line-clamp-1">
+                    {pickLang(p.audience, lang)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {/* Expand chevron — toggle full-detail view inline. Always
+                      shown (own + platform rows) since "see full info" is
+                      always useful, even if you can't edit. */}
                   <button
                     type="button"
-                    onClick={() => onTogglePublish(p)}
-                    disabled={!mutable || upsert.isPending}
-                    className={[
-                      'rounded-full px-2 py-0.5 text-[10px] transition-colors',
-                      p.isParticipating
-                        ? 'bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25'
-                        : 'bg-white/5 text-white/50 hover:bg-white/10',
-                      !mutable && 'cursor-not-allowed opacity-60',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
+                    onClick={() => toggleExpand(p.id)}
+                    aria-label={isOpen ? ui.adminProductCollapse : ui.adminProductExpand}
+                    title={isOpen ? ui.adminProductCollapse : ui.adminProductExpand}
+                    aria-expanded={isOpen}
+                    className="rounded-lg p-2 text-white/70 hover:bg-white/5 hover:text-white"
                   >
-                    {p.isParticipating ? 'on' : 'off'}
+                    <ChevronDown
+                      size={14}
+                      className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
-                  {me.role === 'super_admin' && (
-                    <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] text-white/50">
-                      {p.ownerEmail ?? ui.adminProductUnowned}
-                    </span>
-                  )}
-                  {/* Editor-side ownership badge:
-                      "我的" → editable
-                      "平台" → read-only reference (super_admin curated) */}
-                  {me.role === 'editor' && (
-                    <span
-                      className={[
-                        'rounded-full border px-2 py-0.5 text-[10px]',
-                        platformRow
-                          ? 'border-white/10 bg-white/[0.03] text-white/50'
-                          : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200',
-                      ].join(' ')}
-                    >
-                      {platformRow ? ui.adminProductBadgePlatform : ui.adminProductBadgeMine}
-                    </span>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => onClone(p)}
+                    disabled={clone.isPending}
+                    aria-label={ui.adminProductClone}
+                    title={ui.adminProductClone}
+                    className="rounded-lg p-2 text-white/70 hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Copy size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(p)}
+                    disabled={!mutable}
+                    aria-label={ui.adminEditProduct}
+                    className="rounded-lg p-2 text-white/70 hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(p)}
+                    disabled={!mutable}
+                    aria-label={ui.adminDeleteProduct}
+                    className="rounded-lg p-2 text-white/70 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-                <p className="mt-1 text-xs text-white/50 line-clamp-1">
-                  {pickLang(p.audience, lang)}
-                </p>
               </div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => onClone(p)}
-                  disabled={clone.isPending}
-                  aria-label={ui.adminProductClone}
-                  title={ui.adminProductClone}
-                  className="rounded-lg p-2 text-white/70 hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Copy size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditing(p)}
-                  disabled={!mutable}
-                  aria-label={ui.adminEditProduct}
-                  className="rounded-lg p-2 text-white/70 hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Pencil size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDelete(p)}
-                  disabled={!mutable}
-                  aria-label={ui.adminDeleteProduct}
-                  className="rounded-lg p-2 text-white/70 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
+
+              {/* Expanded detail block — current-lang only (lang switch at
+                  page top changes what shows here). Read-only render; mutating
+                  must go through the modal editor like before. */}
+              {isOpen && (
+                <div className="mt-3 ml-1 rounded-lg border border-white/5 bg-white/[0.02] p-3 space-y-2.5 text-xs">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wide text-white/40">
+                      {ui.adminFieldDescription}
+                    </span>
+                    <p className="mt-0.5 text-white/80 leading-relaxed whitespace-pre-wrap">
+                      {pickLang(p.description, lang) || '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wide text-white/40">
+                      {ui.adminFieldAudience}
+                    </span>
+                    <p className="mt-0.5 text-white/80 leading-relaxed">
+                      {pickLang(p.audience, lang) || '—'}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {ALL_BRANDS.map((b) => {
+                      const url = pickLang(p.url[b], lang) || '';
+                      return (
+                        <div key={b}>
+                          <span className="text-[10px] uppercase tracking-wide text-white/40">
+                            {ui.adminFieldUrl} · {BRAND_LABEL[b]}
+                          </span>
+                          {url ? (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-0.5 flex items-center gap-1 text-white/80 hover:text-white truncate"
+                              title={url}
+                            >
+                              <span className="truncate font-mono text-[11px]">{url}</span>
+                              <ExternalLink size={10} className="shrink-0" />
+                            </a>
+                          ) : (
+                            <p className="mt-0.5 text-white/40">—</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </li>
           );
         })}
