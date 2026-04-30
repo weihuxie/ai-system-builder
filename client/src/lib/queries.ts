@@ -329,12 +329,8 @@ export function useAdminUsersQuery(enabled: boolean): UseQueryResult<AdminUser[]
 // POST /admin/users returns AdminUser + a one-time invite/login URL the
 // super_admin shares manually (Lark/WeChat/SMS — see server/src/routes/admin.ts
 // for why no email). `inviteLink` is null when APP_URL is unset (local dev).
-// `inviteEmailSent` retained as deprecated alias (always false) so older cached
-// clients don't crash; remove next refactor.
 export type InviteUserResult = AdminUser & {
   inviteLink: string | null;
-  /** @deprecated Always false now — link is returned via inviteLink instead. */
-  inviteEmailSent: boolean;
 };
 
 export function useInviteUserMutation(): UseMutationResult<InviteUserResult, Error, InviteUserRequest> {

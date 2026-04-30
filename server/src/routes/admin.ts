@@ -170,9 +170,6 @@ adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
     res.status(201).json({
       ...rowToAdminUser(healedRow),
       inviteLink,
-      // Kept for one release as a deprecated alias so any older client cached
-      // by the browser doesn't crash on a missing field. Always false now.
-      inviteEmailSent: false,
     });
   } catch (err) {
     next(err);
