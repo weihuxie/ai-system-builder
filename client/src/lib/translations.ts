@@ -169,6 +169,15 @@ export interface UiStrings {
   adminUsersInviteLinkCopy: string;
   /** Button label after a successful copy (transient, ~2s). */
   adminUsersInviteLinkCopied: string;
+  /** Role bucket labels for the products filter chips. Keyed by AudienceBucket. */
+  audienceBucketLabel: Record<
+    'sales' | 'legal' | 'finance' | 'it' | 'ops' | 'marketing' | 'procurement' | 'supply',
+    string
+  >;
+  /** Clear-all button on the filter chip row. */
+  audienceBucketClear: string;
+  /** Shown when filter selection eliminates all products (defensive). */
+  audienceBucketEmpty: string;
   // Lang labels (in own lang)
   langLabels: Record<Lang, string>;
 }
@@ -206,6 +215,18 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     rationaleCollapse: '收起',
     productCtaLearnMore: '了解更多 →',
     allProductsTitle: '全部产品',
+    audienceBucketLabel: {
+      sales: '销售',
+      legal: '法务',
+      finance: '财务',
+      it: 'IT / 技术',
+      ops: '运营',
+      marketing: '市场',
+      procurement: '采购',
+      supply: '供应链',
+    },
+    audienceBucketClear: '清空筛选',
+    audienceBucketEmpty: '当前筛选下没有匹配产品，试试别的角色或清空筛选。',
     errorLlmRequired: 'AI 密钥未配置，请联系管理员。',
     errorLlmCallFailed: 'AI 调用失败，请稍后重试。',
     errorAiInvalid: 'AI 返回数据异常，请重试。',
@@ -325,6 +346,18 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     rationaleCollapse: '收起',
     productCtaLearnMore: '了解更多 →',
     allProductsTitle: '全部產品',
+    audienceBucketLabel: {
+      sales: '銷售',
+      legal: '法務',
+      finance: '財務',
+      it: 'IT / 技術',
+      ops: '運營',
+      marketing: '市場',
+      procurement: '採購',
+      supply: '供應鏈',
+    },
+    audienceBucketClear: '清空篩選',
+    audienceBucketEmpty: '目前篩選下沒有相符產品，試試其他角色或清空篩選。',
     errorLlmRequired: 'AI 密鑰未配置，請聯繫管理員。',
     errorLlmCallFailed: 'AI 調用失敗，請稍後重試。',
     errorAiInvalid: 'AI 返回數據異常，請重試。',
@@ -444,6 +477,18 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     rationaleCollapse: 'Show less',
     productCtaLearnMore: 'Learn more →',
     allProductsTitle: 'All products',
+    audienceBucketLabel: {
+      sales: 'Sales',
+      legal: 'Legal',
+      finance: 'Finance',
+      it: 'IT / Tech',
+      ops: 'Ops',
+      marketing: 'Marketing',
+      procurement: 'Procurement',
+      supply: 'Supply Chain',
+    },
+    audienceBucketClear: 'Clear filter',
+    audienceBucketEmpty: 'No products match the current filter. Try other roles or clear it.',
     errorLlmRequired: 'AI key not configured. Please contact the administrator.',
     errorLlmCallFailed: 'AI call failed. Please try again.',
     errorAiInvalid: 'AI returned invalid data. Please retry.',
@@ -563,6 +608,18 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     rationaleCollapse: '閉じる',
     productCtaLearnMore: '詳しく見る →',
     allProductsTitle: 'すべての製品',
+    audienceBucketLabel: {
+      sales: '営業',
+      legal: '法務',
+      finance: '財務',
+      it: 'IT / 技術',
+      ops: 'オペレーション',
+      marketing: 'マーケティング',
+      procurement: '調達',
+      supply: 'サプライチェーン',
+    },
+    audienceBucketClear: 'フィルター解除',
+    audienceBucketEmpty: '現在のフィルターに該当する製品がありません。他のロールを試すか解除してください。',
     errorLlmRequired: 'AIキーが未設定です。管理者にお問い合わせください。',
     errorLlmCallFailed: 'AI呼び出しに失敗しました。再試行してください。',
     errorAiInvalid: 'AIの返答が不正です。再試行してください。',
