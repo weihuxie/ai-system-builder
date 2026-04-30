@@ -152,7 +152,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4 py-8 overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-6 my-auto">
+      <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-6 my-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">
             {mode === 'create' ? ui.adminAddProduct : ui.adminEditProduct}
@@ -161,7 +161,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="text-white/60 hover:text-white"
+            className="text-slate-500 hover:text-slate-900"
           >
             <X size={18} />
           </button>
@@ -172,7 +172,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
             never hides this product. Cards in the public catalog use these
             to power the industry filter chip row. */}
         <div className="mt-5">
-          <label className="block text-xs text-white/60 mb-1.5">{ui.adminFieldIndustries}</label>
+          <label className="block text-xs text-slate-500 mb-1.5">{ui.adminFieldIndustries}</label>
           <div className="flex flex-wrap gap-1.5">
             {ALL_INDUSTRIES.map((ind) => {
               const selected = (draft.industries ?? []).includes(ind);
@@ -188,8 +188,8 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
                   className={[
                     'rounded-full border px-2.5 py-1 text-[11px] transition-colors',
                     selected
-                      ? 'accent-bg text-black border-transparent font-medium'
-                      : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white',
+                      ? 'accent-bg text-white border-transparent font-medium'
+                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900',
                   ].join(' ')}
                   aria-pressed={selected}
                 >
@@ -198,7 +198,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
               );
             })}
           </div>
-          <p className="mt-1 text-[10px] text-white/40 leading-relaxed">
+          <p className="mt-1 text-[10px] text-slate-400 leading-relaxed">
             {(draft.industries ?? []).length === 0
               ? ui.adminFieldIndustriesEmptyHint
               : ui.adminFieldIndustriesHint}
@@ -206,7 +206,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
         </div>
 
         {/* Lang tabs (no separate ID field — identity = name.en, derived at save) */}
-        <div className="mt-5 inline-flex rounded-full border border-white/10 bg-white/5 p-0.5 text-xs">
+        <div className="mt-5 inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5 text-xs">
           {ALL_LANGS.map((l) => (
             <button
               key={l}
@@ -215,8 +215,8 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
               className={[
                 'rounded-full px-3 py-1 transition-colors',
                 l === editingLang
-                  ? 'accent-bg text-black font-medium'
-                  : 'text-white/70 hover:text-white',
+                  ? 'accent-bg text-white font-medium'
+                  : 'text-slate-600 hover:text-slate-900',
               ].join(' ')}
             >
               {LANG_LABEL[l]}
@@ -236,7 +236,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
             field === 'name' && editingLang === 'en' && mode === 'create';
           return (
             <div key={field} className="mt-4">
-              <label className="block text-xs text-white/60">{label}</label>
+              <label className="block text-xs text-slate-500">{label}</label>
               {field === 'description' ? (
                 <textarea
                   rows={3}
@@ -247,7 +247,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
                       [field]: { ...draft[field], [editingLang]: e.target.value },
                     })
                   }
-                  className="mt-1 w-full resize-y rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
+                  className="mt-1 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
                 />
               ) : (
                 <input
@@ -261,10 +261,10 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
                   }
                   placeholder={showNameMeta ? 'Customer Relationship Management' : undefined}
                   className={[
-                    'mt-1 w-full rounded-lg border bg-white/5 px-3 py-2 text-sm outline-none transition-colors',
+                    'mt-1 w-full rounded-lg border bg-slate-50 px-3 py-2 text-sm outline-none transition-colors',
                     showNameMeta && idCollision
                       ? 'border-red-500/50 focus:border-red-500/70'
-                      : 'border-white/10 focus:border-[var(--accent-muted)]',
+                      : 'border-slate-200 focus:border-[var(--accent-muted)]',
                   ].join(' ')}
                 />
               )}
@@ -277,7 +277,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
                 <p
                   className={[
                     'mt-1 text-[11px] leading-relaxed',
-                    idCollision ? 'text-red-300' : 'text-white/40',
+                    idCollision ? 'text-red-300' : 'text-slate-400',
                   ].join(' ')}
                 >
                   {idCollision
@@ -297,7 +297,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {ALL_BRANDS.map((b) => (
             <div key={b}>
-              <label className="block text-xs text-white/60">
+              <label className="block text-xs text-slate-500">
                 {ui.adminFieldUrl} — {BRAND_LABEL[b]} · {LANG_LABEL[editingLang]}
               </label>
               <input
@@ -313,7 +313,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
                   })
                 }
                 placeholder="https://…"
-                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
               />
             </div>
           ))}
@@ -344,7 +344,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
+            className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm hover:bg-slate-100"
           >
             {ui.adminCancel}
           </button>
@@ -352,7 +352,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
             type="button"
             onClick={submit}
             disabled={enNameMissing || idCollision || upsert.isPending}
-            className="inline-flex items-center gap-2 rounded-full accent-bg text-black px-4 py-2 text-sm font-medium disabled:opacity-40 hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-full accent-bg text-white px-4 py-2 text-sm font-medium disabled:opacity-40 hover:brightness-110"
           >
             {upsert.isPending && <Loader2 size={16} className="animate-spin" />}
             {ui.adminSave}

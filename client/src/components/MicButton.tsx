@@ -135,7 +135,7 @@ export default function MicButton() {
         'inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors',
         phase === 'recording'
           ? 'bg-red-500/20 text-red-300 ring-1 ring-red-400/40'
-          : 'bg-white/5 text-white/80 hover:bg-white/10 ring-1 ring-white/10',
+          : 'bg-slate-50 text-slate-700 hover:bg-slate-100 ring-1 ring-slate-200',
         busy ? 'cursor-progress' : 'cursor-pointer',
       ].join(' ')}
     >

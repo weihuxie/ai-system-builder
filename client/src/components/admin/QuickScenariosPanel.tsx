@@ -142,15 +142,15 @@ export default function QuickScenariosPanel() {
   const list = draft[editing];
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-5">
+    <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium text-white/70">{ui.adminQuickScenariosTitle}</h2>
+        <h2 className="text-sm font-medium text-slate-600">{ui.adminQuickScenariosTitle}</h2>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={reset}
             disabled={update.isPending}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs hover:bg-slate-100 disabled:opacity-40"
             title={ui.adminQuickScenariosReset}
           >
             <RotateCcw size={12} />
@@ -160,7 +160,7 @@ export default function QuickScenariosPanel() {
             type="button"
             onClick={save}
             disabled={!dirty || update.isPending}
-            className="inline-flex items-center gap-2 rounded-full accent-bg text-black px-4 py-1.5 text-xs font-medium disabled:opacity-40 hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-full accent-bg text-white px-4 py-1.5 text-xs font-medium disabled:opacity-40 hover:brightness-110"
           >
             {update.isPending && <Loader2 size={12} className="animate-spin" />}
             {ui.adminSave}
@@ -168,12 +168,12 @@ export default function QuickScenariosPanel() {
         </div>
       </div>
 
-      <p className="mt-2 text-[11px] text-white/40 leading-relaxed">
+      <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">
         {ui.adminQuickScenariosHint}
       </p>
 
       {/* Lang tabs — same pattern as ProductEditor for muscle memory */}
-      <div className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 p-0.5 text-xs">
+      <div className="mt-3 inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5 text-xs">
         {ALL_LANGS.map((l) => (
           <button
             key={l}
@@ -182,8 +182,8 @@ export default function QuickScenariosPanel() {
             className={[
               'rounded-full px-3 py-1 transition-colors',
               l === editing
-                ? 'accent-bg text-black font-medium'
-                : 'text-white/70 hover:text-white',
+                ? 'accent-bg text-white font-medium'
+                : 'text-slate-600 hover:text-slate-900',
             ].join(' ')}
           >
             {LANG_LABEL[l]} <span className="opacity-60">· {draft[l].length}</span>
@@ -243,11 +243,11 @@ export default function QuickScenariosPanel() {
         {list.map((opt, i) => (
           <li
             key={i}
-            className="rounded-xl border border-white/5 bg-white/[0.02] p-3"
+            className="rounded-xl border border-slate-200 bg-slate-50/50 p-3"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label className="block text-[10px] uppercase tracking-wide text-white/40">
+                <label className="block text-[10px] uppercase tracking-wide text-slate-400">
                   {ui.adminQuickScenariosFieldRole}
                 </label>
                 <input
@@ -255,11 +255,11 @@ export default function QuickScenariosPanel() {
                   value={opt.role}
                   onChange={(e) => updateOne(i, { role: e.target.value })}
                   placeholder={ui.adminQuickScenariosFieldRolePlaceholder}
-                  className="mt-0.5 w-full rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm outline-none focus:border-[var(--accent-muted)]"
+                  className="mt-0.5 w-full rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm outline-none focus:border-[var(--accent-muted)]"
                 />
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-wide text-white/40">
+                <label className="block text-[10px] uppercase tracking-wide text-slate-400">
                   {ui.adminQuickScenariosFieldIndustry}
                 </label>
                 <input
@@ -267,12 +267,12 @@ export default function QuickScenariosPanel() {
                   value={opt.industry}
                   onChange={(e) => updateOne(i, { industry: e.target.value })}
                   placeholder={ui.adminQuickScenariosFieldIndustryPlaceholder}
-                  className="mt-0.5 w-full rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm outline-none focus:border-[var(--accent-muted)]"
+                  className="mt-0.5 w-full rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm outline-none focus:border-[var(--accent-muted)]"
                 />
               </div>
             </div>
             <div className="mt-2">
-              <label className="block text-[10px] uppercase tracking-wide text-white/40">
+              <label className="block text-[10px] uppercase tracking-wide text-slate-400">
                 {ui.adminQuickScenariosFieldChallenge}
               </label>
               <textarea
@@ -280,7 +280,7 @@ export default function QuickScenariosPanel() {
                 value={opt.challenge}
                 onChange={(e) => updateOne(i, { challenge: e.target.value })}
                 placeholder={ui.adminQuickScenariosFieldChallengePlaceholder}
-                className="mt-0.5 w-full resize-y rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm outline-none focus:border-[var(--accent-muted)]"
+                className="mt-0.5 w-full resize-y rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm outline-none focus:border-[var(--accent-muted)]"
               />
             </div>
 
@@ -288,11 +288,11 @@ export default function QuickScenariosPanel() {
                 prompt or recommendations. Used by coverage banner above to
                 count which products have at least one scenario tagged. */}
             <div className="mt-2">
-              <label className="block text-[10px] uppercase tracking-wide text-white/40">
+              <label className="block text-[10px] uppercase tracking-wide text-slate-400">
                 {ui.adminQuickScenariosFieldProducts}
               </label>
               {activeProducts.length === 0 ? (
-                <p className="mt-1 text-[11px] text-white/40">
+                <p className="mt-1 text-[11px] text-slate-400">
                   {ui.adminQuickScenariosNoProducts}
                 </p>
               ) : (
@@ -308,7 +308,7 @@ export default function QuickScenariosPanel() {
                           'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] transition-colors',
                           checked
                             ? 'border-[var(--accent-muted)] bg-[var(--accent)]/15 text-white'
-                            : 'border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/5',
+                            : 'border-slate-200 bg-slate-50/50 text-slate-500 hover:bg-slate-50',
                         ].join(' ')}
                       >
                         {p.id}
@@ -324,7 +324,7 @@ export default function QuickScenariosPanel() {
                 type="button"
                 onClick={() => removeOne(i)}
                 aria-label="delete"
-                className="inline-flex items-center gap-1 rounded-md p-1.5 text-white/50 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                className="inline-flex items-center gap-1 rounded-md p-1.5 text-slate-500 hover:bg-red-500/10 hover:text-red-300 transition-colors"
               >
                 <Trash2 size={12} />
               </button>
@@ -333,7 +333,7 @@ export default function QuickScenariosPanel() {
         ))}
 
         {list.length === 0 && (
-          <li className="py-4 text-center text-xs text-white/40">
+          <li className="py-4 text-center text-xs text-slate-400">
             {ui.adminQuickScenariosEmpty}
           </li>
         )}
@@ -343,12 +343,12 @@ export default function QuickScenariosPanel() {
             type="button"
             onClick={addOne}
             disabled={list.length >= 20}
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-white/60 hover:bg-white/5 hover:text-white/80 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Plus size={12} />
             {ui.adminQuickScenariosAdd}
             {list.length >= 20 && (
-              <span className="text-white/40">· {ui.adminQuickScenariosMaxReached}</span>
+              <span className="text-slate-400">· {ui.adminQuickScenariosMaxReached}</span>
             )}
           </button>
         </li>

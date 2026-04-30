@@ -66,8 +66,8 @@ export default function RecommendationGrid({ products }: { products: ProductItem
     return (
       <section className="mt-10" aria-busy="true" aria-live="polite">
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 className="text-sm font-medium text-white/70">{ui.recommendationsTitle}</h2>
-          <span className="text-[11px] text-white/40 tabular-nums">
+          <h2 className="text-sm font-medium text-slate-700">{ui.recommendationsTitle}</h2>
+          <span className="text-[11px] text-slate-500 tabular-nums">
             {ui[STATUS_PHASES[phaseIdx]!] as string}
           </span>
         </div>
@@ -75,14 +75,14 @@ export default function RecommendationGrid({ products }: { products: ProductItem
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-5 min-h-[14rem] animate-pulse"
+              className="rounded-2xl border border-slate-200 bg-white p-5 min-h-[14rem] shadow-sm animate-pulse"
               aria-hidden="true"
             >
-              <div className="h-5 w-2/3 rounded bg-white/10" />
-              <div className="mt-3 h-3 w-full rounded bg-white/5" />
-              <div className="mt-2 h-3 w-5/6 rounded bg-white/5" />
-              <div className="mt-2 h-3 w-3/4 rounded bg-white/5" />
-              <div className="mt-6 h-8 w-24 rounded-full bg-white/10" />
+              <div className="h-5 w-2/3 rounded bg-slate-200" />
+              <div className="mt-3 h-3 w-full rounded bg-slate-100" />
+              <div className="mt-2 h-3 w-5/6 rounded bg-slate-100" />
+              <div className="mt-2 h-3 w-3/4 rounded bg-slate-100" />
+              <div className="mt-6 h-8 w-24 rounded-full bg-slate-200" />
             </div>
           ))}
         </div>
@@ -106,9 +106,9 @@ export default function RecommendationGrid({ products }: { products: ProductItem
   return (
     <section className="mt-10">
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-medium text-white/70">{ui.recommendationsTitle}</h2>
+        <h2 className="text-sm font-medium text-slate-600">{ui.recommendationsTitle}</h2>
         {meta && (
-          <span className="text-[11px] text-white/40 tabular-nums" title={solution.provider}>
+          <span className="text-[11px] text-slate-500 tabular-nums" title={solution.provider}>
             {meta}
           </span>
         )}

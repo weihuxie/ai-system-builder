@@ -179,10 +179,10 @@ export default function ProductBottomList({ products }: { products: ProductItem[
   if (participating.length === 0) return null;
 
   return (
-    <section id="all-products" className="mt-12 border-t border-white/5 pt-8 scroll-mt-20">
+    <section id="all-products" className="mt-12 border-t border-slate-200 pt-8 scroll-mt-20">
       <div className="mb-4 flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-medium text-white/70">{ui.allProductsTitle}</h2>
-        <span className="text-[11px] text-white/40 tabular-nums">
+        <h2 className="text-sm font-medium text-slate-700">{ui.allProductsTitle}</h2>
+        <span className="text-[11px] text-slate-500 tabular-nums">
           {visible.length} / {participating.length}
         </span>
       </div>
@@ -197,7 +197,7 @@ export default function ProductBottomList({ products }: { products: ProductItem[
           {/* Industry row */}
           {availableIndustries.length > 0 && (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
-              <span className="shrink-0 text-[10px] uppercase tracking-wide text-white/40 mr-1">
+              <span className="shrink-0 text-[10px] uppercase tracking-wide text-slate-500 mr-1">
                 {ui.filterByIndustry}
               </span>
               {availableIndustries.map((i) => {
@@ -211,13 +211,13 @@ export default function ProductBottomList({ products }: { products: ProductItem[
                     className={[
                       'inline-flex items-center gap-1 rounded-full border px-3 py-1 transition-colors',
                       isOn
-                        ? 'accent-bg text-black border-transparent font-medium'
-                        : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white',
+                        ? 'accent-bg text-white border-transparent font-medium shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50',
                     ].join(' ')}
                     aria-pressed={isOn}
                   >
                     <span>{ui.industryLabel[i]}</span>
-                    <span className={isOn ? 'text-black/60' : 'text-white/40'}>·{count}</span>
+                    <span className={isOn ? 'text-slate-600' : 'text-slate-400'}>·{count}</span>
                   </button>
                 );
               })}
@@ -227,7 +227,7 @@ export default function ProductBottomList({ products }: { products: ProductItem[
           {/* Role row */}
           {availableBuckets.length > 0 && (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
-              <span className="shrink-0 text-[10px] uppercase tracking-wide text-white/40 mr-1">
+              <span className="shrink-0 text-[10px] uppercase tracking-wide text-slate-500 mr-1">
                 {ui.filterByRole}
               </span>
               {availableBuckets.map((b) => {
@@ -241,13 +241,13 @@ export default function ProductBottomList({ products }: { products: ProductItem[
                     className={[
                       'inline-flex items-center gap-1 rounded-full border px-3 py-1 transition-colors',
                       isOn
-                        ? 'accent-bg text-black border-transparent font-medium'
-                        : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white',
+                        ? 'accent-bg text-white border-transparent font-medium shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50',
                     ].join(' ')}
                     aria-pressed={isOn}
                   >
                     <span>{ui.audienceBucketLabel[b]}</span>
-                    <span className={isOn ? 'text-black/60' : 'text-white/40'}>·{count}</span>
+                    <span className={isOn ? 'text-slate-600' : 'text-slate-400'}>·{count}</span>
                   </button>
                 );
               })}
@@ -255,7 +255,7 @@ export default function ProductBottomList({ products }: { products: ProductItem[
                 <button
                   type="button"
                   onClick={clear}
-                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-white/60 hover:text-white"
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-slate-500 hover:text-slate-700"
                 >
                   <X size={11} />
                   {ui.audienceBucketClear}
@@ -273,38 +273,37 @@ export default function ProductBottomList({ products }: { products: ProductItem[
           const description = pickLang(p.description, lang);
           const audience = pickLang(p.audience, lang);
           const body = (
-            <div className="group h-full flex flex-col gap-3 rounded-xl border border-white/5 bg-[var(--bg-surface)] p-5 transition-all hover:bg-[var(--bg-surface-hover)] hover:border-[var(--accent-muted)] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30">
-              {/* Header: icon + name + arrow. Name bumped to base size for readability
-                  on big-screen Summit displays — prior text-sm was too small. */}
+            <div className="group h-full flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-[var(--accent-muted)] hover:-translate-y-0.5 hover:shadow-lg">
+              {/* Header: icon + name + arrow. Name in slate-900 for high contrast
+                  against the white card; on Summit big-screen this stays legible. */}
               <div className="flex items-start gap-3">
-                <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/12 text-[var(--accent)] group-hover:bg-[var(--accent)]/20 transition-colors">
+                <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] group-hover:bg-[var(--accent)]/15 transition-colors">
                   <Icon size={20} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-base font-semibold text-white leading-snug truncate">
+                  <p className="text-base font-semibold text-slate-900 leading-snug truncate">
                     {pickLang(p.name, lang)}
                   </p>
                 </div>
                 {url && (
                   <ArrowUpRight
                     size={16}
-                    className="mt-1 shrink-0 text-white/40 group-hover:text-[var(--accent)] transition-colors"
+                    className="mt-1 shrink-0 text-slate-400 group-hover:text-[var(--accent)] transition-colors"
                   />
                 )}
               </div>
 
-              {/* Description preview — bumped from text-xs/60 to text-sm/75 so it's
-                  legible without leaning in. Still 2-line clamped to bound height. */}
+              {/* Description preview — slate-600 keeps it as supporting body
+                  copy without competing with the bolder product name above. */}
               {description && (
-                <p className="text-sm text-white/75 leading-relaxed line-clamp-2">
+                <p className="text-sm text-slate-600 leading-relaxed line-clamp-2">
                   {description}
                 </p>
               )}
 
-              {/* Audience footer — promoted from uppercase tiny grey to a normal-case
-                  text-xs slate; stays secondary but no longer requires squinting. */}
+              {/* Audience footer — slate-500 secondary, lowest contrast tier */}
               {audience && (
-                <p className="mt-auto text-xs text-white/55 leading-snug truncate">
+                <p className="mt-auto text-xs text-slate-500 leading-snug truncate">
                   {audience}
                 </p>
               )}
@@ -327,7 +326,7 @@ export default function ProductBottomList({ products }: { products: ProductItem[
       {/* Empty filter result — happens when industry × role intersection
           excludes all products. */}
       {visible.length === 0 && hasAnyFilter && (
-        <p className="mt-4 text-center text-xs text-white/40">
+        <p className="mt-4 text-center text-xs text-slate-500">
           {ui.audienceBucketEmpty}
         </p>
       )}

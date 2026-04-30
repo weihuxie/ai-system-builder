@@ -138,13 +138,13 @@ export default function ProductList({ me }: { me: AuthedUser }) {
   };
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-5">
+    <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-sm font-medium text-white/70">{ui.adminProductsTitle}</h2>
+        <h2 className="text-sm font-medium text-slate-600">{ui.adminProductsTitle}</h2>
         <button
           type="button"
           onClick={() => setEditing(null)}
-          className="inline-flex items-center gap-1 rounded-full accent-bg text-black px-3 py-1.5 text-xs font-medium hover:brightness-110"
+          className="inline-flex items-center gap-1 rounded-full accent-bg text-white px-3 py-1.5 text-xs font-medium hover:brightness-110"
         >
           <Plus size={14} />
           {ui.adminAddProduct}
@@ -152,7 +152,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
       </div>
 
       {me.role === 'super_admin' && (
-        <div className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 p-0.5 text-xs">
+        <div className="mt-3 inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5 text-xs">
           {(['all', 'mine', 'orphan'] as Filter[]).map((f) => (
             <button
               key={f}
@@ -161,8 +161,8 @@ export default function ProductList({ me }: { me: AuthedUser }) {
               className={[
                 'rounded-full px-3 py-1 transition-colors',
                 filter === f
-                  ? 'accent-bg text-black font-medium'
-                  : 'text-white/70 hover:text-white',
+                  ? 'accent-bg text-white font-medium'
+                  : 'text-slate-600 hover:text-slate-900',
               ].join(' ')}
             >
               {f === 'all'
@@ -179,7 +179,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
           read-only reference. Onboarding aid for fresh editors who'd otherwise
           see a single empty row and not know what to do. */}
       {me.role === 'editor' && (
-        <p className="mt-2 text-[11px] text-white/40 leading-relaxed">
+        <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">
           {ui.adminProductsEditorHint
             .replace('{my}', String(myCount))
             .replace('{platform}', String(platformCount))}
@@ -196,7 +196,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
               <p className="text-sm font-medium text-blue-100 mb-2">
                 {ui.adminEditorTourTitle}
               </p>
-              <ol className="list-decimal pl-4 space-y-1 text-white/75">
+              <ol className="list-decimal pl-4 space-y-1 text-slate-700">
                 <li>{ui.adminEditorTourStep1}</li>
                 <li>{ui.adminEditorTourStep2}</li>
                 <li>{ui.adminEditorTourStep3}</li>
@@ -208,7 +208,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
               onClick={dismissTour}
               aria-label={ui.adminEditorTourDismiss}
               title={ui.adminEditorTourDismiss}
-              className="shrink-0 rounded-md p-1 text-white/50 hover:bg-white/5 hover:text-white"
+              className="shrink-0 rounded-md p-1 text-slate-500 hover:bg-slate-50 hover:text-slate-900"
             >
               <X size={14} />
             </button>
@@ -221,7 +221,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
         lang={lang}
       />
 
-      <ul className="mt-4 divide-y divide-white/5">
+      <ul className="mt-4 divide-y divide-slate-200">
         {visible.map((p) => {
           const mutable = canMutate(p);
           const platformRow = me.role === 'editor' && isPlatform(p);
@@ -241,7 +241,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium">{pickLang(p.name, lang)}</span>
-                    <code className="text-[10px] text-white/40">{p.id}</code>
+                    <code className="text-[10px] text-slate-400">{p.id}</code>
                     <button
                       type="button"
                       onClick={() => onTogglePublish(p)}
@@ -250,7 +250,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                         'rounded-full px-2 py-0.5 text-[10px] transition-colors',
                         p.isParticipating
                           ? 'bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25'
-                          : 'bg-white/5 text-white/50 hover:bg-white/10',
+                          : 'bg-slate-50 text-slate-500 hover:bg-slate-100',
                         !mutable && 'cursor-not-allowed opacity-60',
                       ]
                         .filter(Boolean)
@@ -259,7 +259,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                       {p.isParticipating ? 'on' : 'off'}
                     </button>
                     {me.role === 'super_admin' && (
-                      <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] text-white/50">
+                      <span className="rounded-full border border-slate-200 bg-slate-50/70 px-2 py-0.5 text-[10px] text-slate-500">
                         {p.ownerEmail ?? ui.adminProductUnowned}
                       </span>
                     )}
@@ -271,7 +271,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                         className={[
                           'rounded-full border px-2 py-0.5 text-[10px]',
                           platformRow
-                            ? 'border-white/10 bg-white/[0.03] text-white/50'
+                            ? 'border-slate-200 bg-slate-50/70 text-slate-500'
                             : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200',
                         ].join(' ')}
                       >
@@ -279,7 +279,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-white/50 line-clamp-1">
+                  <p className="mt-1 text-xs text-slate-500 line-clamp-1">
                     {pickLang(p.audience, lang)}
                   </p>
                 </div>
@@ -293,7 +293,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                     aria-label={isOpen ? ui.adminProductCollapse : ui.adminProductExpand}
                     title={isOpen ? ui.adminProductCollapse : ui.adminProductExpand}
                     aria-expanded={isOpen}
-                    className="rounded-lg p-2 text-white/70 hover:bg-white/5 hover:text-white"
+                    className="rounded-lg p-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   >
                     <ChevronDown
                       size={14}
@@ -306,7 +306,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                     disabled={clone.isPending}
                     aria-label={ui.adminProductClone}
                     title={ui.adminProductClone}
-                    className="rounded-lg p-2 text-white/70 hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="rounded-lg p-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Copy size={14} />
                   </button>
@@ -315,7 +315,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                     onClick={() => setEditing(p)}
                     disabled={!mutable}
                     aria-label={ui.adminEditProduct}
-                    className="rounded-lg p-2 text-white/70 hover:bg-white/5 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="rounded-lg p-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Pencil size={14} />
                   </button>
@@ -324,7 +324,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                     onClick={() => onDelete(p)}
                     disabled={!mutable}
                     aria-label={ui.adminDeleteProduct}
-                    className="rounded-lg p-2 text-white/70 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="rounded-lg p-2 text-slate-600 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -335,20 +335,20 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                   page top changes what shows here). Read-only render; mutating
                   must go through the modal editor like before. */}
               {isOpen && (
-                <div className="mt-3 ml-1 rounded-lg border border-white/5 bg-white/[0.02] p-3 space-y-2.5 text-xs">
+                <div className="mt-3 ml-1 rounded-lg border border-slate-200 bg-slate-50/50 p-3 space-y-2.5 text-xs">
                   <div>
-                    <span className="text-[10px] uppercase tracking-wide text-white/40">
+                    <span className="text-[10px] uppercase tracking-wide text-slate-400">
                       {ui.adminFieldDescription}
                     </span>
-                    <p className="mt-0.5 text-white/80 leading-relaxed whitespace-pre-wrap">
+                    <p className="mt-0.5 text-slate-700 leading-relaxed whitespace-pre-wrap">
                       {pickLang(p.description, lang) || '—'}
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wide text-white/40">
+                    <span className="text-[10px] uppercase tracking-wide text-slate-400">
                       {ui.adminFieldAudience}
                     </span>
-                    <p className="mt-0.5 text-white/80 leading-relaxed">
+                    <p className="mt-0.5 text-slate-700 leading-relaxed">
                       {pickLang(p.audience, lang) || '—'}
                     </p>
                   </div>
@@ -357,7 +357,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                       const url = pickLang(p.url[b], lang) || '';
                       return (
                         <div key={b}>
-                          <span className="text-[10px] uppercase tracking-wide text-white/40">
+                          <span className="text-[10px] uppercase tracking-wide text-slate-400">
                             {ui.adminFieldUrl} · {BRAND_LABEL[b]}
                           </span>
                           {url ? (
@@ -365,14 +365,14 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="mt-0.5 flex items-center gap-1 text-white/80 hover:text-white truncate"
+                              className="mt-0.5 flex items-center gap-1 text-slate-700 hover:text-slate-900 truncate"
                               title={url}
                             >
                               <span className="truncate font-mono text-[11px]">{url}</span>
                               <ExternalLink size={10} className="shrink-0" />
                             </a>
                           ) : (
-                            <p className="mt-0.5 text-white/40">—</p>
+                            <p className="mt-0.5 text-slate-400">—</p>
                           )}
                         </div>
                       );
@@ -384,7 +384,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
           );
         })}
         {visible.length === 0 && !productsQuery.isLoading && (
-          <li className="py-6 text-center text-sm text-white/40">—</li>
+          <li className="py-6 text-center text-sm text-slate-400">—</li>
         )}
       </ul>
 

@@ -48,7 +48,7 @@ const InputArea = forwardRef<HTMLTextAreaElement>(function InputArea(_, external
 
   return (
     <section className="mt-6">
-      <div className="rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-4 focus-within:border-[var(--accent-muted)] transition-colors">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm focus-within:border-[var(--accent-muted)] focus-within:shadow-md transition-all">
         <textarea
           ref={(el) => {
             localRef.current = el;
@@ -60,17 +60,17 @@ const InputArea = forwardRef<HTMLTextAreaElement>(function InputArea(_, external
           placeholder={ui.inputPlaceholder}
           rows={4}
           maxLength={2000}
-          className="w-full resize-none bg-transparent outline-none text-sm sm:text-base leading-relaxed placeholder:text-white/40"
+          className="w-full resize-none bg-transparent outline-none text-sm sm:text-base leading-relaxed text-slate-900 placeholder:text-slate-400"
         />
         <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-white/50 hidden sm:block">{ui.inputHint}</p>
+          <p className="text-xs text-slate-500 hidden sm:block">{ui.inputHint}</p>
           <div className="flex items-center gap-2 ml-auto">
             <MicButton />
             <button
               type="button"
               onClick={submit}
               disabled={!userInput.trim() || gen.isPending}
-              className="inline-flex items-center gap-2 rounded-full accent-bg text-black px-4 py-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition"
+              className="inline-flex items-center gap-2 rounded-full accent-bg text-white px-4 py-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 shadow-sm transition"
             >
               {gen.isPending ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -102,7 +102,7 @@ const InputArea = forwardRef<HTMLTextAreaElement>(function InputArea(_, external
           const target = document.getElementById('all-products');
           if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }}
-        className="mt-3 inline-flex items-center gap-1 text-[11px] text-white/40 hover:text-white/70 transition-colors"
+        className="mt-3 inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700 transition-colors"
       >
         {ui.inputSkipToProducts}
         <ArrowDown size={11} />

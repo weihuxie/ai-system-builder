@@ -88,7 +88,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-dvh bg-[var(--bg-base)] text-[var(--text-primary)]">
-      <header className="sticky top-0 z-20 border-b border-white/5 backdrop-blur bg-[var(--bg-base)]/80">
+      <header className="sticky top-0 z-20 border-b border-slate-200 backdrop-blur bg-[var(--bg-base)]/80">
         <div className="mx-auto max-w-4xl flex items-center justify-between gap-3 px-4 sm:px-6 py-3">
           <div className="flex items-baseline gap-3 min-w-0">
             <h1 className="text-sm sm:text-base font-semibold shrink-0">{ui.adminTitle}</h1>
@@ -97,7 +97,7 @@ export default function AdminPage() {
                 avoids the "光秃秃" first impression and helps super_admin
                 eyeball who's logged in across multiple devices/sessions. */}
             {me.data && (
-              <div className="hidden sm:flex items-center gap-1.5 text-xs text-white/50 truncate">
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 truncate">
                 <span className="truncate" title={me.data.email}>
                   {me.data.email}
                 </span>
@@ -106,7 +106,7 @@ export default function AdminPage() {
                     'shrink-0 rounded-full px-1.5 py-0.5 text-[10px]',
                     me.data.role === 'super_admin'
                       ? 'bg-amber-500/10 text-amber-200'
-                      : 'bg-white/5 text-white/60',
+                      : 'bg-slate-50 text-slate-500',
                   ].join(' ')}
                 >
                   {me.data.role === 'super_admin'
@@ -122,7 +122,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={signOut}
-                className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
+                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100"
               >
                 <LogOut size={12} />
                 {ui.adminLogout}
@@ -133,7 +133,7 @@ export default function AdminPage() {
         {/* Mobile fallback: identity below the title row when the inline
             version above gets hidden (sm:flex hidden on mobile). */}
         {me.data && (
-          <div className="sm:hidden mx-auto max-w-4xl px-4 pb-2 flex items-center gap-1.5 text-xs text-white/50">
+          <div className="sm:hidden mx-auto max-w-4xl px-4 pb-2 flex items-center gap-1.5 text-xs text-slate-500">
             <span className="truncate" title={me.data.email}>
               {me.data.email}
             </span>
@@ -142,7 +142,7 @@ export default function AdminPage() {
                 'shrink-0 rounded-full px-1.5 py-0.5 text-[10px]',
                 me.data.role === 'super_admin'
                   ? 'bg-amber-500/10 text-amber-200'
-                  : 'bg-white/5 text-white/60',
+                  : 'bg-slate-50 text-slate-500',
               ].join(' ')}
             >
               {me.data.role === 'super_admin'
@@ -155,22 +155,22 @@ export default function AdminPage() {
 
       <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
         {session === undefined || (session && me.isLoading) ? (
-          <p className="mt-20 text-center text-sm text-white/60">…</p>
+          <p className="mt-20 text-center text-sm text-slate-500">…</p>
         ) : !session ? (
           <LoginForm lang={lang} />
         ) : !me.data ? (
           <div className="mx-auto mt-20 w-full max-w-md rounded-2xl border border-amber-400/20 bg-amber-500/5 p-6">
             <h2 className="text-lg font-semibold text-amber-200">{ui.adminNotWhitelistedTitle}</h2>
-            <p className="mt-3 text-sm text-white/80">
+            <p className="mt-3 text-sm text-slate-700">
               {session.user.email && (
-                <span className="font-mono text-white">{session.user.email}</span>
+                <span className="font-mono text-slate-900">{session.user.email}</span>
               )}
             </p>
-            <p className="mt-3 text-sm text-white/70">{ui.adminNotWhitelistedHint}</p>
+            <p className="mt-3 text-sm text-slate-600">{ui.adminNotWhitelistedHint}</p>
             <button
               type="button"
               onClick={signOut}
-              className="mt-6 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
+              className="mt-6 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100"
             >
               {ui.adminSwitchAccount}
             </button>

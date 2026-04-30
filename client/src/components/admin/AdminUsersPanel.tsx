@@ -84,26 +84,26 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
   const users = usersQuery.data ?? [];
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-5">
-      <h2 className="text-sm font-medium text-white/70">{ui.adminUsersTitle}</h2>
+    <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
+      <h2 className="text-sm font-medium text-slate-600">{ui.adminUsersTitle}</h2>
 
       <form onSubmit={submitInvite} className="mt-4 flex flex-wrap items-end gap-3">
         <div className="flex-1 min-w-[220px]">
-          <label className="block text-xs text-white/60">{ui.adminUsersInviteEmail}</label>
+          <label className="block text-xs text-slate-500">{ui.adminUsersInviteEmail}</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@gmail.com"
-            className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
+            className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
           />
         </div>
         <div>
-          <label className="block text-xs text-white/60">{ui.adminUsersInviteRole}</label>
+          <label className="block text-xs text-slate-500">{ui.adminUsersInviteRole}</label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as UserRole)}
-            className="mt-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
+            className="mt-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
           >
             {ALL_USER_ROLES.map((r) => (
               <option key={r} value={r}>
@@ -115,7 +115,7 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
         <button
           type="submit"
           disabled={!email.trim() || invite.isPending}
-          className="rounded-full accent-bg text-black px-4 py-2 text-sm font-medium disabled:opacity-40 hover:brightness-110"
+          className="rounded-full accent-bg text-white px-4 py-2 text-sm font-medium disabled:opacity-40 hover:brightness-110"
         >
           {ui.adminUsersInviteButton}
         </button>
@@ -139,7 +139,7 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
                   : ui.adminUsersInviteLinkSkipped.replace('{email}', inviteResult.email)}
               </p>
               {inviteResult.link && (
-                <p className="mt-1 text-[11px] text-white/50">
+                <p className="mt-1 text-[11px] text-slate-500">
                   {ui.adminUsersInviteLinkHint}
                 </p>
               )}
@@ -161,7 +161,7 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
                 readOnly
                 value={inviteResult.link}
                 onFocus={(e) => e.currentTarget.select()}
-                className="flex-1 min-w-0 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[11px] font-mono text-white/80 outline-none"
+                className="flex-1 min-w-0 rounded-lg border border-slate-200 bg-black/30 px-3 py-2 text-[11px] font-mono text-slate-700 outline-none"
               />
               <button
                 type="button"
@@ -170,7 +170,7 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
                   'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition shrink-0',
                   copied
                     ? 'bg-emerald-500/20 text-emerald-200'
-                    : 'accent-bg text-black hover:brightness-110',
+                    : 'accent-bg text-white hover:brightness-110',
                 ].join(' ')}
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -190,7 +190,7 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
         }}
       />
 
-      <ul className="mt-5 divide-y divide-white/5">
+      <ul className="mt-5 divide-y divide-slate-200">
         {users.map((u) => {
           const isSelf = u.email === me.email;
           return (
@@ -203,12 +203,12 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
                       'rounded-full px-2 py-0.5 text-[10px]',
                       u.role === 'super_admin'
                         ? 'bg-amber-500/10 text-amber-200'
-                        : 'bg-white/5 text-white/60',
+                        : 'bg-slate-50 text-slate-500',
                     ].join(' ')}
                   >
                     {roleLabel(u.role)}
                   </span>
-                  <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-white/50">
+                  <span className="rounded-full bg-slate-50 px-2 py-0.5 text-[10px] text-slate-500">
                     {u.activatedAt ? ui.adminUsersStatusActivated : ui.adminUsersStatusPending}
                   </span>
                 </div>
@@ -218,7 +218,7 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
                 onClick={() => onRevoke(u)}
                 disabled={isSelf || revoke.isPending}
                 aria-label={ui.adminUsersRevokeButton}
-                className="rounded-lg p-2 text-white/70 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="rounded-lg p-2 text-slate-600 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <Trash2 size={14} />
               </button>
@@ -226,7 +226,7 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
           );
         })}
         {users.length === 0 && !usersQuery.isLoading && (
-          <li className="py-6 text-center text-sm text-white/40">—</li>
+          <li className="py-6 text-center text-sm text-slate-400">—</li>
         )}
       </ul>
     </section>

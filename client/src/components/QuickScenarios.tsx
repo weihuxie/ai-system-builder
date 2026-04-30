@@ -32,7 +32,7 @@ export default function QuickScenarios({ onPick }: { onPick?: () => void }) {
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex items-center gap-1.5 text-sm font-medium text-white/70 hover:text-white transition-colors mb-3"
+        className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors mb-3"
         aria-expanded={expanded}
       >
         <span>{ui.quickScenariosTitle}</span>
@@ -66,16 +66,16 @@ export default function QuickScenarios({ onPick }: { onPick?: () => void }) {
                     resetForNewQuery();
                     onPick?.();
                   }}
-                  className="text-left rounded-xl border border-white/10 bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] p-4 transition-colors"
+                  className="text-left rounded-xl border border-slate-200 bg-white hover:border-[var(--accent-muted)] hover:shadow-md p-4 transition-all"
                 >
                   <div className="flex items-baseline gap-2">
                     <span className="accent-text text-xs font-semibold uppercase tracking-wide">
                       {opt.industry}
                     </span>
-                    <span className="text-xs text-white/40">·</span>
-                    <span className="text-xs text-white/60">{opt.role}</span>
+                    <span className="text-xs text-slate-400">·</span>
+                    <span className="text-xs text-slate-500">{opt.role}</span>
                   </div>
-                  <p className="mt-2 text-sm text-white/80 leading-relaxed line-clamp-4">
+                  <p className="mt-2 text-sm text-slate-700 leading-relaxed line-clamp-4">
                     {opt.challenge}
                   </p>
                 </motion.button>

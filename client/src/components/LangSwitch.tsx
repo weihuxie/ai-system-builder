@@ -17,7 +17,7 @@ export default function LangSwitch() {
     <div
       role="group"
       aria-label="Language"
-      className="inline-flex rounded-full border border-white/10 bg-white/5 p-0.5 text-xs"
+      className="inline-flex rounded-full border border-slate-200 bg-white p-0.5 text-xs shadow-sm"
     >
       {ALL_LANGS.map((code) => {
         const active = code === lang;
@@ -29,8 +29,8 @@ export default function LangSwitch() {
             className={[
               'rounded-full px-3 py-1 transition-colors',
               active
-                ? 'accent-bg text-black font-medium'
-                : 'text-white/70 hover:text-white hover:bg-white/5',
+                ? 'accent-bg text-white font-medium'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50',
             ].join(' ')}
             aria-pressed={active}
           >

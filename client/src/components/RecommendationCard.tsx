@@ -46,25 +46,25 @@ export default function RecommendationCard({ product, rationale, lang, brand, ra
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.08, duration: 0.35 }}
-      className="flex flex-col rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-5 shadow-sm hover:shadow-lg hover:shadow-black/20 hover:border-[var(--accent-muted)] hover:-translate-y-0.5 transition-all"
+      className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-lg hover:border-[var(--accent-muted)] hover:-translate-y-0.5 transition-all"
     >
       {/* Header: rank + name + audience */}
       <div className="flex items-baseline gap-2">
         <span className="text-xs accent-text font-semibold tabular-nums">
           {`#${rank + 1}`}
         </span>
-        <h3 className="text-lg font-semibold text-white leading-tight flex-1 min-w-0">
+        <h3 className="text-lg font-semibold text-slate-900 leading-tight flex-1 min-w-0">
           {name}
         </h3>
       </div>
       {audience && (
-        <p className="mt-1 text-sm text-white/60 leading-relaxed">{audience}</p>
+        <p className="mt-1 text-sm text-slate-600 leading-relaxed">{audience}</p>
       )}
 
-      {/* Rationale callout — the visual hero. AI's pitch lives here.
-          Accent left border + tinted bg + sparkles icon → "this came from AI". */}
+      {/* Rationale callout — visual hero. Accent left border + soft tinted bg
+          using accent at 6% opacity (Tailwind's bg-[color]/X works on hex with v4). */}
       {rationale && (
-        <div className="mt-4 flex-1 rounded-xl border-l-2 border-l-[var(--accent)] bg-[var(--bg-surface-elevated)] py-3 pl-3 pr-4">
+        <div className="mt-4 flex-1 rounded-xl border-l-2 border-l-[var(--accent)] bg-[var(--accent)]/[0.06] py-3 pl-3 pr-4">
           <div className="flex items-baseline gap-1.5 mb-1.5">
             <Sparkles size={12} className="accent-text shrink-0 translate-y-[1px]" />
             <span className="text-[11px] accent-text font-semibold uppercase tracking-wider">
@@ -74,7 +74,7 @@ export default function RecommendationCard({ product, rationale, lang, brand, ra
           <p
             ref={textRef}
             className={[
-              'text-sm leading-relaxed text-white/85 whitespace-pre-wrap',
+              'text-sm leading-relaxed text-slate-800 whitespace-pre-wrap',
               expanded ? '' : 'line-clamp-5',
             ].join(' ')}
           >
@@ -94,7 +94,7 @@ export default function RecommendationCard({ product, rationale, lang, brand, ra
 
       {/* Fallback: if no rationale (e.g. AI returned empty), show description */}
       {!rationale && (
-        <p className="mt-4 flex-1 text-sm leading-relaxed text-white/75">
+        <p className="mt-4 flex-1 text-sm leading-relaxed text-slate-700">
           {pickLang(product.description, lang)}
         </p>
       )}
@@ -104,7 +104,7 @@ export default function RecommendationCard({ product, rationale, lang, brand, ra
           href={url}
           target="_blank"
           rel="noreferrer noopener"
-          className="mt-4 inline-flex items-center gap-1 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 hover:border-[var(--accent-muted)] transition-colors"
+          className="mt-4 inline-flex items-center gap-1 self-start rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 hover:border-[var(--accent-muted)] transition-colors"
         >
           {ui.productCtaLearnMore}
           <ArrowUpRight size={12} />

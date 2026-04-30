@@ -104,12 +104,12 @@ export default function LoginForm({ lang }: { lang: Lang }) {
   };
 
   return (
-    <div className="mx-auto mt-20 w-full max-w-sm rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-6">
+    <div className="mx-auto mt-20 w-full max-w-sm rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-6">
       <h2 className="text-xl font-semibold">{ui.adminLoginTitle}</h2>
-      <p className="mt-2 text-xs text-white/50 leading-relaxed">{ui.adminLoginInviteHint}</p>
+      <p className="mt-2 text-xs text-slate-500 leading-relaxed">{ui.adminLoginInviteHint}</p>
 
       <form onSubmit={sendMagicLink} className="mt-5">
-        <label className="block text-xs text-white/60">{ui.adminLoginOtpLabel}</label>
+        <label className="block text-xs text-slate-500">{ui.adminLoginOtpLabel}</label>
         <input
           type="email"
           value={otpEmail}
@@ -119,7 +119,7 @@ export default function LoginForm({ lang }: { lang: Lang }) {
           }}
           placeholder="name@company.com"
           disabled={otpBusy}
-          className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
+          className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
         />
 
         {riskyDomain && (
@@ -131,7 +131,7 @@ export default function LoginForm({ lang }: { lang: Lang }) {
         <button
           type="submit"
           disabled={!otpEmail.trim() || otpBusy}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full accent-bg text-black py-2 text-sm font-medium disabled:opacity-40 hover:brightness-110 transition"
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full accent-bg text-white py-2 text-sm font-medium disabled:opacity-40 hover:brightness-110 transition"
         >
           {otpBusy && <Loader2 size={16} className="animate-spin" />}
           {otpBusy ? ui.adminLoginOtpSending : ui.adminLoginOtpSend}
@@ -144,17 +144,17 @@ export default function LoginForm({ lang }: { lang: Lang }) {
         </p>
       )}
 
-      <div className="my-6 flex items-center gap-3 text-xs text-white/40">
-        <div className="flex-1 h-px bg-white/10" />
+      <div className="my-6 flex items-center gap-3 text-xs text-slate-400">
+        <div className="flex-1 h-px bg-slate-100" />
         <span>{ui.adminLoginOr}</span>
-        <div className="flex-1 h-px bg-white/10" />
+        <div className="flex-1 h-px bg-slate-100" />
       </div>
 
       <button
         type="button"
         onClick={signInGoogle}
         disabled={googleBusy}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 py-2 text-sm font-medium text-white/90 disabled:opacity-40 hover:bg-white/10 transition"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 py-2 text-sm font-medium text-slate-800 disabled:opacity-40 hover:bg-slate-100 transition"
       >
         {googleBusy && <Loader2 size={16} className="animate-spin" />}
         {googleBusy ? ui.adminSigningIn : ui.adminSignInWithGoogle}

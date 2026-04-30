@@ -5,28 +5,36 @@
    Brand-specific --accent / --accent-muted set at runtime by applyTheme().
    ─────────────────────────────────────────── */
 :root {
-  /* Background tiers — palette shifted from near-black (#0f1115) to a softer
-     slate, taking cues from Material You / Google Stitch dark dynamic. Same
-     theme family but more breathable on big-screen Summit displays.
-       base     = page background
-       surface  = card / panel base
-       surface-elevated = hover / inner-card / callout (3 dp)
-       surface-hover    = card hover state */
-  --bg-base: #14171f;
-  --bg-surface: #1d212c;
-  --bg-surface-elevated: #232733;
-  --bg-surface-hover: #262b37;
+  /* 2026-05 主题方向调整: 从 dark "AI default" 切到 light "SaaS / Material You"。
+     用户反馈："暗沉"、"压抑"、"不显得高级"。Light 模式靠 elevation/shadow 而非
+     "更亮的 surface" 来表达层次，更适合 Summit 公开展示场景。
 
-  --border-subtle: rgba(255, 255, 255, 0.10);
+     base               = 页面背景（off-white，比纯白柔和不刺眼）
+     surface            = 卡片 / 面板（纯白 + soft shadow）
+     surface-elevated   = 卡片内 callout / inner panel（slate-50，浅 tint）
+     surface-hover      = 卡片悬停（slate-100） */
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f8fafc;
+  --bg-surface-hover: #f1f5f9;
 
-  /* Text — text-secondary bumped from 72% → 78% to improve legibility on
-     descriptions and audience strings (the original cards leaned too dim). */
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.78);
+  /* 边框 - light mode 用 slate-900 低 alpha 而非 black，避免硬切 */
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.12);
+
+  /* 文字层级 - 显式 slate 色阶
+       primary   = slate-900 标题/主要内容
+       secondary = slate-600 描述/正文次要
+       tertiary  = slate-500 标签/辅助
+       muted     = slate-400 placeholder/极次要 */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
 
   /* Defaults = Google brand; overridden by applyTheme() */
   --accent: #3b82f6;
-  --accent-muted: rgba(59, 130, 246, 0.40);
+  --accent-muted: rgba(59, 130, 246, 0.32);
 }
 
 html, body, #root {

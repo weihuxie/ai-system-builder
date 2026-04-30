@@ -41,14 +41,14 @@ export default function LlmChainConfig() {
 
   if (query.isLoading) {
     return (
-      <section className="rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-5">
-        <div className="text-sm text-white/50">加载中…</div>
+      <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
+        <div className="text-sm text-slate-500">加载中…</div>
       </section>
     );
   }
   if (query.error) {
     return (
-      <section className="rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-5">
+      <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
         <ErrorBanner error={query.error} lang={lang} onDismiss={() => query.refetch()} />
       </section>
     );
@@ -95,14 +95,14 @@ export default function LlmChainConfig() {
       initial.temperature !== localTemp);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-5">
+    <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-medium text-white/70">AI 模型链</h2>
+        <h2 className="text-sm font-medium text-slate-600">AI 模型链</h2>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={resetDefaults}
-            className="text-xs text-white/50 hover:text-white/80"
+            className="text-xs text-slate-500 hover:text-slate-700"
           >
             恢复默认
           </button>
@@ -117,7 +117,7 @@ export default function LlmChainConfig() {
         </div>
       </div>
 
-      <p className="text-xs text-white/40 mb-3">
+      <p className="text-xs text-slate-400 mb-3">
         从上到下依次尝试，前一个失败（配额/超载）自动切到下一个。拖拽 <GripVertical className="inline" size={12}/> 调整顺序。
       </p>
 
@@ -133,10 +133,10 @@ export default function LlmChainConfig() {
               onDragStart={() => handleDragStart(idx)}
               onDragOver={handleDragOver}
               onDrop={() => handleDrop(idx)}
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-2.5"
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5"
             >
-              <GripVertical size={14} className="text-white/30 cursor-grab shrink-0" />
-              <span className="text-xs text-white/40 w-4 shrink-0">{idx + 1}</span>
+              <GripVertical size={14} className="text-slate-400 cursor-grab shrink-0" />
+              <span className="text-xs text-slate-400 w-4 shrink-0">{idx + 1}</span>
 
               <select
                 value={item.providerId}
@@ -146,7 +146,7 @@ export default function LlmChainConfig() {
                     model: LLM_MODEL_PRESETS[e.target.value as LlmProviderId][0] ?? item.model,
                   })
                 }
-                className="bg-transparent border border-white/10 rounded-md px-2 py-1 text-sm text-white/80 focus:outline-none focus:border-white/30"
+                className="bg-transparent border border-slate-200 rounded-md px-2 py-1 text-sm text-slate-700 focus:outline-none focus:border-[var(--accent-muted)]"
               >
                 {ALL_LLM_PROVIDERS.map((p) => (
                   <option key={p} value={p} className="bg-[var(--bg-surface)]">
@@ -163,7 +163,7 @@ export default function LlmChainConfig() {
                 placeholder="model ID"
                 spellCheck={false}
                 autoCapitalize="off"
-                className="bg-transparent border border-white/10 rounded-md px-2 py-1 text-sm text-white/80 focus:outline-none focus:border-white/30 flex-1 min-w-0 font-mono"
+                className="bg-transparent border border-slate-200 rounded-md px-2 py-1 text-sm text-slate-700 focus:outline-none focus:border-[var(--accent-muted)] flex-1 min-w-0 font-mono"
               />
               <datalist id={datalistId}>
                 {presets.map((m) => (
@@ -187,13 +187,13 @@ export default function LlmChainConfig() {
                   onChange={(e) => updateRow(idx, { enabled: e.target.checked })}
                   className="accent-[color:var(--accent)]"
                 />
-                <span className="text-xs text-white/60">启用</span>
+                <span className="text-xs text-slate-500">启用</span>
               </label>
 
               <button
                 type="button"
                 onClick={() => removeRow(idx)}
-                className="text-white/30 hover:text-red-400 p-1"
+                className="text-slate-400 hover:text-red-400 p-1"
                 aria-label="remove"
               >
                 <Trash2 size={14} />
@@ -206,14 +206,14 @@ export default function LlmChainConfig() {
       <button
         type="button"
         onClick={addRow}
-        className="mt-3 inline-flex items-center gap-1 text-sm text-white/60 hover:text-white/90"
+        className="mt-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"
       >
         <Plus size={14} />
         添加一项
       </button>
 
-      <div className="mt-5 pt-4 border-t border-white/5">
-        <label className="flex items-center gap-3 text-sm text-white/70">
+      <div className="mt-5 pt-4 border-t border-slate-200">
+        <label className="flex items-center gap-3 text-sm text-slate-600">
           <span className="w-20 shrink-0">Temperature</span>
           <input
             type="range"
@@ -224,7 +224,7 @@ export default function LlmChainConfig() {
             onChange={(e) => setLocalTemp(Number(e.target.value))}
             className="flex-1 accent-[color:var(--accent)]"
           />
-          <span className="w-10 text-right tabular-nums text-white/60">{localTemp.toFixed(1)}</span>
+          <span className="w-10 text-right tabular-nums text-slate-500">{localTemp.toFixed(1)}</span>
         </label>
       </div>
 
