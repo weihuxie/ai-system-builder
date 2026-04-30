@@ -273,33 +273,38 @@ export default function ProductBottomList({ products }: { products: ProductItem[
           const description = pickLang(p.description, lang);
           const audience = pickLang(p.audience, lang);
           const body = (
-            <div className="group h-full flex flex-col gap-3 rounded-xl border border-white/5 bg-[var(--bg-surface)]/60 p-4 transition-all hover:bg-[var(--bg-surface)] hover:border-[var(--accent-muted)] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30">
-              {/* Header: icon + name + arrow */}
+            <div className="group h-full flex flex-col gap-3 rounded-xl border border-white/5 bg-[var(--bg-surface)] p-5 transition-all hover:bg-[var(--bg-surface-hover)] hover:border-[var(--accent-muted)] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30">
+              {/* Header: icon + name + arrow. Name bumped to base size for readability
+                  on big-screen Summit displays — prior text-sm was too small. */}
               <div className="flex items-start gap-3">
-                <span className="shrink-0 flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] group-hover:bg-[var(--accent)]/20 transition-colors">
-                  <Icon size={18} />
+                <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/12 text-[var(--accent)] group-hover:bg-[var(--accent)]/20 transition-colors">
+                  <Icon size={20} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white truncate">{pickLang(p.name, lang)}</p>
+                  <p className="text-base font-semibold text-white leading-snug truncate">
+                    {pickLang(p.name, lang)}
+                  </p>
                 </div>
                 {url && (
                   <ArrowUpRight
-                    size={14}
-                    className="mt-1 shrink-0 text-white/30 group-hover:text-[var(--accent)] transition-colors"
+                    size={16}
+                    className="mt-1 shrink-0 text-white/40 group-hover:text-[var(--accent)] transition-colors"
                   />
                 )}
               </div>
 
-              {/* Description preview — 2 lines max so card height stays bounded */}
+              {/* Description preview — bumped from text-xs/60 to text-sm/75 so it's
+                  legible without leaning in. Still 2-line clamped to bound height. */}
               {description && (
-                <p className="text-xs text-white/60 leading-relaxed line-clamp-2">
+                <p className="text-sm text-white/75 leading-relaxed line-clamp-2">
                   {description}
                 </p>
               )}
 
-              {/* Audience as a small footer chip — secondary info, not the headline */}
+              {/* Audience footer — promoted from uppercase tiny grey to a normal-case
+                  text-xs slate; stays secondary but no longer requires squinting. */}
               {audience && (
-                <p className="mt-auto text-[10px] text-white/40 uppercase tracking-wide truncate">
+                <p className="mt-auto text-xs text-white/55 leading-snug truncate">
                   {audience}
                 </p>
               )}

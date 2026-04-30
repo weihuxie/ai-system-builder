@@ -1,16 +1,28 @@
 @import "tailwindcss";
 
 /* ───────────────────────────────────────────
-   Design tokens (dark mode, glassmorphism)
-   Brand-specific --accent / --accent-muted are set at runtime by applyTheme().
+   Design tokens — dark theme, brightened 2026-05 round.
+   Brand-specific --accent / --accent-muted set at runtime by applyTheme().
    ─────────────────────────────────────────── */
 :root {
-  --bg-base: #0f1115;
-  --bg-surface: #1a1d24;
-  --bg-surface-hover: #1e222a;
+  /* Background tiers — palette shifted from near-black (#0f1115) to a softer
+     slate, taking cues from Material You / Google Stitch dark dynamic. Same
+     theme family but more breathable on big-screen Summit displays.
+       base     = page background
+       surface  = card / panel base
+       surface-elevated = hover / inner-card / callout (3 dp)
+       surface-hover    = card hover state */
+  --bg-base: #14171f;
+  --bg-surface: #1d212c;
+  --bg-surface-elevated: #232733;
+  --bg-surface-hover: #262b37;
+
   --border-subtle: rgba(255, 255, 255, 0.10);
+
+  /* Text — text-secondary bumped from 72% → 78% to improve legibility on
+     descriptions and audience strings (the original cards leaned too dim). */
   --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.72);
+  --text-secondary: rgba(255, 255, 255, 0.78);
 
   /* Defaults = Google brand; overridden by applyTheme() */
   --accent: #3b82f6;
