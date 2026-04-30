@@ -14,10 +14,12 @@ import {
 
 import {
   ALL_AUDIENCE_BUCKETS,
+  ALL_INDUSTRIES,
   audienceBucketsFor,
   pickBrandLang,
   pickLang,
   type AudienceBucket,
+  type Industry,
   type ProductItem,
 } from '@asb/shared';
 
@@ -94,30 +96,85 @@ export default function ProductBottomList({ products }: { products: ProductItem[
   // Only render chips for buckets that have ≥ 1 product. Avoids dead chips.
   const availableBuckets = ALL_AUDIENCE_BUCKETS.filter((b) => (bucketCounts.get(b) ?? 0) > 0);
 
-  // Multi-select bucket filter. OR semantics: a product passes the filter if
-  // it matches ANY selected bucket. Empty set = no filter (show all).
-  const [selected, setSelected] = useState<Set<AudienceBucket>>(new Set());
-  const toggle = (b: AudienceBucket) => {
-    setSelected((prev) => {
+  // Multi-select role filter. OR within row: a product matches if it covers
+  // ANY selected bucket. Empty = no role filter (show all).
+  const [selectedRoles, setSelectedRoles] = useState<Set<AudienceBucket>>(new Set());
+  const toggleRole = (b: AudienceBucket) => {
+    setSelectedRoles((prev) => {
       const next = new Set(prev);
       if (next.has(b)) next.delete(b);
       else next.add(b);
       return next;
     });
   };
-  const clear = () => setSelected(new Set());
+
+  // Multi-select industry filter. OR within row, AND with role filter (cross-row).
+  // KEY decision: products with empty industries[] are treated as "applies to
+  // all industries" — they match every industry filter. Maximises hit rate
+  // for cross-cutting tools (CLM, Expense, CRM) so they don't disappear when
+  // visitor narrows by industry. Editor-side hint tells admins this semantic.
+  const [selectedIndustries, setSelectedIndustries] = useState<Set<Industry>>(new Set());
+  const toggleIndustry = (i: Industry) => {
+    setSelectedIndustries((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  };
+
+  const clear = () => {
+    setSelectedRoles(new Set());
+    setSelectedIndustries(new Set());
+  };
+
+  // Industry → product count, only counting products that actually tag this
+  // industry (cross-cutting [] products are not counted toward any specific
+  // industry's badge — they show up via the wildcard fallback at filter time).
+  const industryCounts = useMemo(() => {
+    const counts = new Map<Industry, number>();
+    for (const p of participating) {
+      const inds = (p.industries ?? []) as Industry[];
+      for (const i of inds) counts.set(i, (counts.get(i) ?? 0) + 1);
+    }
+    return counts;
+  }, [participating]);
+  const availableIndustries = ALL_INDUSTRIES.filter((i) => (industryCounts.get(i) ?? 0) > 0);
 
   const visible = useMemo(() => {
-    if (selected.size === 0) return participating;
     return participating.filter((p) => {
-      const buckets = productBuckets.get(p.id);
-      if (!buckets) return false;
-      for (const b of selected) {
-        if (buckets.has(b)) return true;
+      // Role filter (OR within row, skip if empty)
+      if (selectedRoles.size > 0) {
+        const buckets = productBuckets.get(p.id);
+        if (!buckets) return false;
+        let roleMatch = false;
+        for (const b of selectedRoles) {
+          if (buckets.has(b)) {
+            roleMatch = true;
+            break;
+          }
+        }
+        if (!roleMatch) return false;
       }
-      return false;
+      // Industry filter (OR within row, AND with role filter, with wildcard semantics)
+      if (selectedIndustries.size > 0) {
+        const inds = (p.industries ?? []) as Industry[];
+        // Wildcard: empty product industries = applies to all → always match
+        if (inds.length === 0) return true;
+        let industryMatch = false;
+        for (const i of selectedIndustries) {
+          if (inds.includes(i)) {
+            industryMatch = true;
+            break;
+          }
+        }
+        if (!industryMatch) return false;
+      }
+      return true;
     });
-  }, [participating, productBuckets, selected]);
+  }, [participating, productBuckets, selectedRoles, selectedIndustries]);
+
+  const hasAnyFilter = selectedRoles.size > 0 || selectedIndustries.size > 0;
 
   if (participating.length === 0) return null;
 
@@ -130,42 +187,81 @@ export default function ProductBottomList({ products }: { products: ProductItem[
         </span>
       </div>
 
-      {/* Role-bucket filter chips — staff-led demo affordance:
-          - Visitor says "I'm in legal at a bank" → staff clicks 法务 chip
-          - Multiple chips OR-merged so cross-functional searches work too
-          - Chips with 0 matches are hidden so the bar stays clean */}
-      {availableBuckets.length > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-1.5 text-xs">
-          {availableBuckets.map((b) => {
-            const isOn = selected.has(b);
-            const count = bucketCounts.get(b) ?? 0;
-            return (
-              <button
-                key={b}
-                type="button"
-                onClick={() => toggle(b)}
-                className={[
-                  'inline-flex items-center gap-1 rounded-full border px-3 py-1 transition-colors',
-                  isOn
-                    ? 'accent-bg text-black border-transparent font-medium'
-                    : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white',
-                ].join(' ')}
-                aria-pressed={isOn}
-              >
-                <span>{ui.audienceBucketLabel[b]}</span>
-                <span className={isOn ? 'text-black/60' : 'text-white/40'}>·{count}</span>
-              </button>
-            );
-          })}
-          {selected.size > 0 && (
-            <button
-              type="button"
-              onClick={clear}
-              className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-white/60 hover:text-white"
-            >
-              <X size={11} />
-              {ui.audienceBucketClear}
-            </button>
+      {/* Filter rows. Two stacked rows:
+          - 行业 (industry) — explicit metadata; wildcard fallback for products
+            tagged with empty industries (CLM/Expense type cross-cutting tools)
+          - 角色 (role bucket) — derived heuristically from product.audience text
+          Cross-row semantics is AND (must match both); within-row is OR. */}
+      {(availableIndustries.length > 0 || availableBuckets.length > 0) && (
+        <div className="mb-5 space-y-2">
+          {/* Industry row */}
+          {availableIndustries.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
+              <span className="shrink-0 text-[10px] uppercase tracking-wide text-white/40 mr-1">
+                {ui.filterByIndustry}
+              </span>
+              {availableIndustries.map((i) => {
+                const isOn = selectedIndustries.has(i);
+                const count = industryCounts.get(i) ?? 0;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => toggleIndustry(i)}
+                    className={[
+                      'inline-flex items-center gap-1 rounded-full border px-3 py-1 transition-colors',
+                      isOn
+                        ? 'accent-bg text-black border-transparent font-medium'
+                        : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white',
+                    ].join(' ')}
+                    aria-pressed={isOn}
+                  >
+                    <span>{ui.industryLabel[i]}</span>
+                    <span className={isOn ? 'text-black/60' : 'text-white/40'}>·{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Role row */}
+          {availableBuckets.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs">
+              <span className="shrink-0 text-[10px] uppercase tracking-wide text-white/40 mr-1">
+                {ui.filterByRole}
+              </span>
+              {availableBuckets.map((b) => {
+                const isOn = selectedRoles.has(b);
+                const count = bucketCounts.get(b) ?? 0;
+                return (
+                  <button
+                    key={b}
+                    type="button"
+                    onClick={() => toggleRole(b)}
+                    className={[
+                      'inline-flex items-center gap-1 rounded-full border px-3 py-1 transition-colors',
+                      isOn
+                        ? 'accent-bg text-black border-transparent font-medium'
+                        : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white',
+                    ].join(' ')}
+                    aria-pressed={isOn}
+                  >
+                    <span>{ui.audienceBucketLabel[b]}</span>
+                    <span className={isOn ? 'text-black/60' : 'text-white/40'}>·{count}</span>
+                  </button>
+                );
+              })}
+              {hasAnyFilter && (
+                <button
+                  type="button"
+                  onClick={clear}
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-white/60 hover:text-white"
+                >
+                  <X size={11} />
+                  {ui.audienceBucketClear}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -223,10 +319,9 @@ export default function ProductBottomList({ products }: { products: ProductItem[
         })}
       </ul>
 
-      {/* Empty filter result — only happens if user toggles a chip whose
-          products all got hidden by some other condition. Defensive guard;
-          unlikely in normal use since chips are derived from visible set. */}
-      {visible.length === 0 && selected.size > 0 && (
+      {/* Empty filter result — happens when industry × role intersection
+          excludes all products. */}
+      {visible.length === 0 && hasAnyFilter && (
         <p className="mt-4 text-center text-xs text-white/40">
           {ui.audienceBucketEmpty}
         </p>

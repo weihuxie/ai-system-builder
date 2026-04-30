@@ -231,6 +231,14 @@ alter table public.global_config
 
 
 -- ═══════════════════════════════════════════════════════════════
+-- ── 0005_product_industries.sql ──
+-- ═══════════════════════════════════════════════════════════════
+
+alter table public.products
+  add column if not exists industries jsonb not null default '[]'::jsonb;
+
+
+-- ═══════════════════════════════════════════════════════════════
 -- ── 完成 ──
 -- 下一步：在本地 repo 根目录创建 .env.test（见 README / .env.test.example），
 -- 填上这个项目的 URL / service key / JWT secret / anon key。

@@ -29,6 +29,9 @@ export interface ProductRow {
   created_at: string;
   updated_at: string;
   owner_id: string | null;
+  /** jsonb array of industry IDs (migration 0005). May be missing on rows
+   *  inserted before the migration ran — normalised to [] on read. */
+  industries?: unknown;
 }
 
 function emptyLangMap(): LangMap {
@@ -68,6 +71,12 @@ function normaliseUrl(raw: unknown): BrandLangMap {
  * We don't embed via PostgREST because there's no FK between products and
  * admin_users (both reference auth.users, not each other).
  */
+/** Coerce DB `industries` jsonb (may be undefined / null / non-array) to string[]. */
+function normaliseIndustries(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((x): x is string => typeof x === 'string' && x.length > 0);
+}
+
 export function rowToProduct(row: ProductRow, ownerEmail: string | null = null): ProductItem {
   return {
     id: row.id,
@@ -80,6 +89,7 @@ export function rowToProduct(row: ProductRow, ownerEmail: string | null = null):
     updatedAt: row.updated_at,
     ownerId: row.owner_id,
     ownerEmail,
+    industries: normaliseIndustries(row.industries),
   };
 }
 
@@ -99,5 +109,6 @@ export function productToRow(
   if (p.url !== undefined) row.url = p.url;
   if (p.isParticipating !== undefined) row.is_participating = p.isParticipating;
   if (p.ownerId !== undefined) row.owner_id = p.ownerId;
+  if (p.industries !== undefined) row.industries = p.industries;
   return row;
 }

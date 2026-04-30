@@ -3,6 +3,7 @@ import { Loader2, X } from 'lucide-react';
 
 import {
   ALL_BRANDS,
+  ALL_INDUSTRIES,
   ALL_LANGS,
   type Brand,
   type BrandLangMap,
@@ -71,10 +72,13 @@ function toDraft(p?: ProductItem | null): Draft {
       url: emptyBrandLangMap(),
       isParticipating: true,
       ownerId: null,
+      industries: [],
     };
   }
   const { createdAt: _c, updatedAt: _u, ownerEmail: _oe, ...rest } = p;
-  return rest;
+  // Backfill industries=[] for legacy products created before migration 0005
+  // so the editor's chip-toggle helpers don't have to handle undefined.
+  return { industries: [], ...rest };
 }
 
 const LANG_LABEL: Record<Lang, string> = {
@@ -161,6 +165,44 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
           >
             <X size={18} />
           </button>
+        </div>
+
+        {/* Industry tags — multi-select chips. Cross-cutting (not per lang),
+            empty array = "applies to all industries" so the homepage filter
+            never hides this product. Cards in the public catalog use these
+            to power the industry filter chip row. */}
+        <div className="mt-5">
+          <label className="block text-xs text-white/60 mb-1.5">{ui.adminFieldIndustries}</label>
+          <div className="flex flex-wrap gap-1.5">
+            {ALL_INDUSTRIES.map((ind) => {
+              const selected = (draft.industries ?? []).includes(ind);
+              return (
+                <button
+                  key={ind}
+                  type="button"
+                  onClick={() => {
+                    const cur = draft.industries ?? [];
+                    const next = selected ? cur.filter((x) => x !== ind) : [...cur, ind];
+                    setDraft({ ...draft, industries: next });
+                  }}
+                  className={[
+                    'rounded-full border px-2.5 py-1 text-[11px] transition-colors',
+                    selected
+                      ? 'accent-bg text-black border-transparent font-medium'
+                      : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white',
+                  ].join(' ')}
+                  aria-pressed={selected}
+                >
+                  {ui.industryLabel[ind]}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-1 text-[10px] text-white/40 leading-relaxed">
+            {(draft.industries ?? []).length === 0
+              ? ui.adminFieldIndustriesEmptyHint
+              : ui.adminFieldIndustriesHint}
+          </p>
         </div>
 
         {/* Lang tabs (no separate ID field — identity = name.en, derived at save) */}

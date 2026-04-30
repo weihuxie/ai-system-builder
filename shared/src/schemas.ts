@@ -41,6 +41,11 @@ export const ProductItemSchema = z.object({
   updatedAt: z.string(),
   ownerId: z.string().uuid().nullable(),
   ownerEmail: z.string().email().nullable(),
+  // Industry tags (migration 0005). Loose validation: array of short strings,
+  // up to 20 entries. UI suggests from ALL_INDUSTRIES dictionary but the
+  // schema doesn't z.enum() it — lets editors add new IDs without a code
+  // change while keeping basic shape integrity.
+  industries: z.array(z.string().min(1).max(50)).max(20).optional(),
 });
 
 // ownerEmail is server-computed (left-join admin_users); never accepted from client.

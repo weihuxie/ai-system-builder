@@ -38,6 +38,12 @@ export interface ProductItem {
   // (super_admin only). ownerEmail is denormalized on read via left-join.
   ownerId: string | null;
   ownerEmail: string | null;
+  // Industry tags for the homepage filter (0005 migration). Free-form string[]
+  // (UI suggests from `ALL_INDUSTRIES` but doesn't enforce — future industries
+  // can be added without code change). Empty array = "all industries"
+  // (cross-cutting products like CLM/Expense surface in every industry filter).
+  // Optional in type for backward compat with rows created before migration 0005.
+  industries?: string[];
 }
 
 // ───────────────────────────────────────────

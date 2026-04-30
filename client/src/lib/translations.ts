@@ -178,6 +178,22 @@ export interface UiStrings {
   audienceBucketClear: string;
   /** Shown when filter selection eliminates all products (defensive). */
   audienceBucketEmpty: string;
+  /** Industry chip labels — keyed by Industry ID from shared/industries.ts. */
+  industryLabel: Record<
+    'manufacturing' | 'finance' | 'retail' | 'ecommerce' | 'tech' |
+    'automotive' | 'logistics' | 'healthcare' | 'education' | 'services',
+    string
+  >;
+  /** Row header on ProductBottomList filter banner (industry row). */
+  filterByIndustry: string;
+  /** Row header on ProductBottomList filter banner (role row). */
+  filterByRole: string;
+  /** ProductEditor: industries field label. */
+  adminFieldIndustries: string;
+  /** Hint shown when at least one industry chip is selected. */
+  adminFieldIndustriesHint: string;
+  /** Hint shown when no industry is selected (= applies to all). */
+  adminFieldIndustriesEmptyHint: string;
   // Lang labels (in own lang)
   langLabels: Record<Lang, string>;
 }
@@ -227,6 +243,23 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     },
     audienceBucketClear: '清空筛选',
     audienceBucketEmpty: '当前筛选下没有匹配产品，试试别的角色或清空筛选。',
+    industryLabel: {
+      manufacturing: '制造业',
+      finance: '金融',
+      retail: '零售',
+      ecommerce: '电商',
+      tech: '科技/互联网',
+      automotive: '汽车',
+      logistics: '物流',
+      healthcare: '医疗',
+      education: '教育',
+      services: '专业服务',
+    },
+    filterByIndustry: '按行业',
+    filterByRole: '按角色',
+    adminFieldIndustries: '所属行业',
+    adminFieldIndustriesHint: '此产品仅在所选行业的筛选中出现。',
+    adminFieldIndustriesEmptyHint: '未选 = 通用产品，在任何行业筛选下都展示。',
     errorLlmRequired: 'AI 密钥未配置，请联系管理员。',
     errorLlmCallFailed: 'AI 调用失败，请稍后重试。',
     errorAiInvalid: 'AI 返回数据异常，请重试。',
@@ -358,6 +391,23 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     },
     audienceBucketClear: '清空篩選',
     audienceBucketEmpty: '目前篩選下沒有相符產品，試試其他角色或清空篩選。',
+    industryLabel: {
+      manufacturing: '製造業',
+      finance: '金融',
+      retail: '零售',
+      ecommerce: '電商',
+      tech: '科技/互聯網',
+      automotive: '汽車',
+      logistics: '物流',
+      healthcare: '醫療',
+      education: '教育',
+      services: '專業服務',
+    },
+    filterByIndustry: '按行業',
+    filterByRole: '按角色',
+    adminFieldIndustries: '所屬行業',
+    adminFieldIndustriesHint: '此產品僅在所選行業的篩選中出現。',
+    adminFieldIndustriesEmptyHint: '未選 = 通用產品，在任何行業篩選下都展示。',
     errorLlmRequired: 'AI 密鑰未配置，請聯繫管理員。',
     errorLlmCallFailed: 'AI 調用失敗，請稍後重試。',
     errorAiInvalid: 'AI 返回數據異常，請重試。',
@@ -489,6 +539,23 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     },
     audienceBucketClear: 'Clear filter',
     audienceBucketEmpty: 'No products match the current filter. Try other roles or clear it.',
+    industryLabel: {
+      manufacturing: 'Manufacturing',
+      finance: 'Finance',
+      retail: 'Retail',
+      ecommerce: 'E-commerce',
+      tech: 'Tech / Internet',
+      automotive: 'Automotive',
+      logistics: 'Logistics',
+      healthcare: 'Healthcare',
+      education: 'Education',
+      services: 'Pro Services',
+    },
+    filterByIndustry: 'Industry',
+    filterByRole: 'Role',
+    adminFieldIndustries: 'Industries',
+    adminFieldIndustriesHint: 'This product surfaces only in the selected-industry filters.',
+    adminFieldIndustriesEmptyHint: 'None selected = cross-industry; shows in every industry filter.',
     errorLlmRequired: 'AI key not configured. Please contact the administrator.',
     errorLlmCallFailed: 'AI call failed. Please try again.',
     errorAiInvalid: 'AI returned invalid data. Please retry.',
@@ -620,6 +687,23 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     },
     audienceBucketClear: 'フィルター解除',
     audienceBucketEmpty: '現在のフィルターに該当する製品がありません。他のロールを試すか解除してください。',
+    industryLabel: {
+      manufacturing: '製造業',
+      finance: '金融',
+      retail: '小売',
+      ecommerce: 'EC',
+      tech: 'テック/インターネット',
+      automotive: '自動車',
+      logistics: '物流',
+      healthcare: '医療',
+      education: '教育',
+      services: '専門サービス',
+    },
+    filterByIndustry: '業界',
+    filterByRole: '役割',
+    adminFieldIndustries: '対象業界',
+    adminFieldIndustriesHint: 'この製品は選択された業界フィルターでのみ表示されます。',
+    adminFieldIndustriesEmptyHint: '未選択 = 業界横断、すべての業界フィルターで表示されます。',
     errorLlmRequired: 'AIキーが未設定です。管理者にお問い合わせください。',
     errorLlmCallFailed: 'AI呼び出しに失敗しました。再試行してください。',
     errorAiInvalid: 'AIの返答が不正です。再試行してください。',

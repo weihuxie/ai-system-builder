@@ -62,6 +62,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: [],
   },
   {
     id: 'CLM',
@@ -102,6 +103,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: [],
   },
   {
     id: 'ERP',
@@ -142,6 +144,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: [],
   },
   {
     id: 'Translation',
@@ -182,6 +185,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: [],
   },
   {
     id: 'IDCompliance',
@@ -222,6 +226,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: [],
   },
   {
     id: 'GDPR',
@@ -262,6 +267,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: [],
   },
   {
     id: 'AgentBuilder',
@@ -302,6 +308,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: [],
   },
   {
     id: 'SRM',
@@ -342,6 +349,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: ['manufacturing', 'automotive', 'retail'],
   },
   {
     id: 'Settlement',
@@ -382,6 +390,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: ['finance', 'ecommerce', 'retail'],
   },
   {
     id: 'SCP',
@@ -422,6 +431,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: ['manufacturing', 'retail', 'logistics', 'automotive'],
   },
   {
     id: 'OMS',
@@ -462,6 +472,7 @@ export const DEFAULT_PRODUCTS: ProductItem[] = [
     updatedAt: now,
     ownerId: null,
     ownerEmail: null,
+    industries: ['ecommerce', 'retail'],
   },
 ];
 
