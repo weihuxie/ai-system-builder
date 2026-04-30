@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import { DEFAULT_LLM_CHAIN, LlmChainSchema, type LlmChain } from '@asb/shared';
 
+import { clearGenerateCache } from '../lib/generateCache.js';
 import { providers } from '../lib/providers.js';
 import { getSupabase } from '../lib/supabase.js';
 import { adminChain, superAdminChain } from '../middleware/auth.js';
@@ -75,6 +76,9 @@ llmRouter.put('/', ...superAdminChain, async (req, res, next) => {
       .select('llm_chain, temperature, updated_at')
       .single();
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
+
+    // Chain reorder / model change / temperature change all change AI output. Invalidate.
+    clearGenerateCache();
 
     res.json({
       chain: data.llm_chain as LlmChain,

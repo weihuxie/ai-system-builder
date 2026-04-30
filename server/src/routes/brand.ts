@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { BrandSchema, type Brand } from '@asb/shared';
+import { clearGenerateCache } from '../lib/generateCache.js';
 import { getSupabase } from '../lib/supabase.js';
 import { superAdminChain } from '../middleware/auth.js';
 import { HttpError } from '../middleware/errors.js';
@@ -54,6 +55,9 @@ brandRouter.put('/', ...superAdminChain, async (req, res, next) => {
       .single();
 
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
+
+    // Brand change → AI rationale tone changes (Google vs AWS narrative). Invalidate.
+    clearGenerateCache();
 
     res.json({ brand: data.brand as Brand, updatedAt: data.updated_at });
   } catch (err) {

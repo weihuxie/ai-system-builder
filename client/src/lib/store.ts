@@ -17,11 +17,16 @@ interface AppStore {
   brand: Brand;
   userInput: string;
   solution: GenerateResponse | null;
+  /** True between submit click and response (success or error). RecommendationGrid
+   *  uses this to render skeleton cards + status text rotation so the audience
+   *  has visible feedback during the 2-4s LLM call instead of staring at a spinner. */
+  isGenerating: boolean;
 
   setLang: (lang: Lang) => void;
   setBrand: (brand: Brand) => void;
   setUserInput: (v: string) => void;
   setSolution: (s: GenerateResponse | null) => void;
+  setIsGenerating: (v: boolean) => void;
   resetForNewQuery: () => void;
 }
 
@@ -30,6 +35,7 @@ export const useAppStore = create<AppStore>((set) => ({
   brand: 'google',
   userInput: '',
   solution: null,
+  isGenerating: false,
 
   setLang: (lang) => {
     try {
@@ -42,5 +48,7 @@ export const useAppStore = create<AppStore>((set) => ({
   setBrand: (brand) => set({ brand }),
   setUserInput: (userInput) => set({ userInput }),
   setSolution: (solution) => set({ solution }),
-  resetForNewQuery: () => set({ solution: null }),
+  setIsGenerating: (isGenerating) => set({ isGenerating }),
+  // Clear last result + reset progress flag so a re-submit starts clean.
+  resetForNewQuery: () => set({ solution: null, isGenerating: false }),
 }));

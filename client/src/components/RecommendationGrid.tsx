@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { ProductItem } from '@asb/shared';
 
@@ -7,14 +7,47 @@ import { t } from '../lib/translations';
 import RecommendationCard from './RecommendationCard';
 
 /**
- * Renders 3 cards when store.solution is set. Returns null otherwise (so the
- * section disappears on new queries — no stale content flash).
+ * Renders the recommendations section.
+ *
+ * Three states:
+ *   1. idle (no submit yet, or query reset) → return null, section hidden
+ *   2. generating (isGenerating=true) → 3 skeleton cards + rotating status text
+ *      so the audience sees visible work happening during the 2-4s LLM call
+ *   3. resolved (solution set) → real cards with provider/latency meta subtitle
+ *
+ * The skeleton lives here (not RecommendationCard) because the layout
+ * dimensions need to match — same 3-col grid, same min-height — to avoid
+ * layout shift when real cards land.
  */
 export default function RecommendationGrid({ products }: { products: ProductItem[] }) {
   const lang = useAppStore((s) => s.lang);
   const brand = useAppStore((s) => s.brand);
   const solution = useAppStore((s) => s.solution);
+  const isGenerating = useAppStore((s) => s.isGenerating);
   const ui = t(lang);
+
+  // Status text rotation during loading. Each phase ~800ms; if the actual
+  // network call finishes faster we just see "analysing" briefly. If slower,
+  // the rotation gives the audience a sense of progressive work even though
+  // the underlying LLM call is one shot.
+  const STATUS_PHASES: ReadonlyArray<keyof typeof ui> = [
+    'recommendationsLoadingPhase1',
+    'recommendationsLoadingPhase2',
+    'recommendationsLoadingPhase3',
+  ] as const;
+  const [phaseIdx, setPhaseIdx] = useState(0);
+  useEffect(() => {
+    if (!isGenerating) {
+      setPhaseIdx(0);
+      return;
+    }
+    const id = window.setInterval(() => {
+      // Don't loop past last phase; stay on phase 3 ("generating recommendations")
+      // so a long call doesn't keep restarting at "analysing".
+      setPhaseIdx((prev) => Math.min(prev + 1, STATUS_PHASES.length - 1));
+    }, 900);
+    return () => window.clearInterval(id);
+  }, [isGenerating, STATUS_PHASES.length]);
 
   const picks = useMemo(() => {
     if (!solution) return [] as Array<{ product: ProductItem; rationale: string }>;
@@ -27,6 +60,35 @@ export default function RecommendationGrid({ products }: { products: ProductItem
       })
       .filter((x): x is { product: ProductItem; rationale: string } => x !== null);
   }, [solution, products]);
+
+  // ── Loading skeleton — 3 placeholder cards while the API is in flight ──
+  if (isGenerating && !solution) {
+    return (
+      <section className="mt-10" aria-busy="true" aria-live="polite">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 className="text-sm font-medium text-white/70">{ui.recommendationsTitle}</h2>
+          <span className="text-[11px] text-white/40 tabular-nums">
+            {ui[STATUS_PHASES[phaseIdx]!] as string}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-white/10 bg-[var(--bg-surface)] p-5 min-h-[14rem] animate-pulse"
+              aria-hidden="true"
+            >
+              <div className="h-5 w-2/3 rounded bg-white/10" />
+              <div className="mt-3 h-3 w-full rounded bg-white/5" />
+              <div className="mt-2 h-3 w-5/6 rounded bg-white/5" />
+              <div className="mt-2 h-3 w-3/4 rounded bg-white/5" />
+              <div className="mt-6 h-8 w-24 rounded-full bg-white/10" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   if (!solution || picks.length === 0) return null;
 

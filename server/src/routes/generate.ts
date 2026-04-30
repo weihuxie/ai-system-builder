@@ -10,6 +10,7 @@ import {
   type LlmChain,
 } from '@asb/shared';
 
+import { buildCacheKey, readGenerateCache, writeGenerateCache } from '../lib/generateCache.js';
 import { logEvent, newTraceId } from '../lib/logger.js';
 import { rowToProduct, type ProductRow } from '../lib/mappers.js';
 import { providers } from '../lib/providers.js';
@@ -53,6 +54,38 @@ generateRouter.post('/', async (req, res, next) => {
 
     const prompt = buildRecommendationPrompt({ products, userInput, lang, brand });
     const activeProductIds = products.map((p) => p.id);
+
+    // Cache lookup — same userInput/lang/brand/products/chain/temperature
+    // → return cached response in <100ms. Quick Scenario reclick path
+    // dominates Summit demo so this is the biggest perceived speedup.
+    const cacheKey = buildCacheKey({
+      userInput,
+      lang,
+      brand,
+      activeProductIds,
+      llmChain: chain,
+      temperature,
+    });
+    const cached = readGenerateCache(cacheKey);
+    if (cached) {
+      const latencyMs = Math.round(performance.now() - startedAt);
+      logEvent('generate_cache_hit', {
+        traceId,
+        latencyMs,
+        brand,
+        lang,
+        inputLen: userInput.length,
+        activeCount: products.length,
+        cacheKey,
+      });
+      // Override latency to reflect THIS request, not the cached one's original
+      // call time. Provider/model stay as the original — the "by gemini-2.5-pro"
+      // label still makes sense as the AI that produced this answer.
+      res.setHeader('x-cache', 'hit');
+      res.json({ ...cached, latencyMs });
+      return;
+    }
+    res.setHeader('x-cache', 'miss');
 
     // Walk the chain top → bottom. Each item gets one shot; overload/quota falls through.
     // Skipped: disabled items, providers with no API key in env, known fatal errors.
@@ -150,6 +183,8 @@ generateRouter.post('/', async (req, res, next) => {
       trace,
       outputIds: ids,
     });
+    // Cache the fresh response so the next identical request short-circuits.
+    writeGenerateCache(cacheKey, response);
     res.json(response);
   } catch (err) {
     const latencyMs = Math.round(performance.now() - startedAt);

@@ -19,6 +19,7 @@ const InputArea = forwardRef<HTMLTextAreaElement>(function InputArea(_, external
   const userInput = useAppStore((s) => s.userInput);
   const setUserInput = useAppStore((s) => s.setUserInput);
   const setSolution = useAppStore((s) => s.setSolution);
+  const setIsGenerating = useAppStore((s) => s.setIsGenerating);
   const resetForNewQuery = useAppStore((s) => s.resetForNewQuery);
   const ui = t(lang);
 
@@ -28,7 +29,11 @@ const InputArea = forwardRef<HTMLTextAreaElement>(function InputArea(_, external
   const submit = async () => {
     const input = userInput.trim();
     if (!input || gen.isPending) return;
+    // resetForNewQuery clears solution; flip isGenerating on so RecommendationGrid
+    // immediately renders 3 skeleton cards + rotating status text. The audience
+    // sees activity instead of blank space during the 2-4s LLM call.
     resetForNewQuery();
+    setIsGenerating(true);
     try {
       const resp = await gen.mutateAsync({ userInput: input, lang });
       // Pass the whole response (incl. provider/model/latencyMs meta) into the
@@ -36,6 +41,8 @@ const InputArea = forwardRef<HTMLTextAreaElement>(function InputArea(_, external
       setSolution(resp);
     } catch {
       // banner will render via gen.error
+    } finally {
+      setIsGenerating(false);
     }
   };
 

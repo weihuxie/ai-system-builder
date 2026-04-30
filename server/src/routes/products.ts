@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 
 import { ProductItemInputSchema, withCopySuffix } from '@asb/shared';
+import { clearGenerateCache } from '../lib/generateCache.js';
 import { getSupabase } from '../lib/supabase.js';
 import { productToRow, rowToProduct, type ProductRow } from '../lib/mappers.js';
 import { adminChain, canEditProduct } from '../middleware/auth.js';
@@ -117,6 +118,8 @@ productsRouter.post('/', ...adminChain, async (req, res, next) => {
 
     const row = data as ProductRow;
     const emailMap = await buildOwnerEmailMap([row.owner_id]);
+    // Catalog changed → invalidate /api/generate cache so next call recomputes.
+    clearGenerateCache();
     res.status(201).json(rowToProduct(row, row.owner_id ? (emailMap.get(row.owner_id) ?? null) : null));
   } catch (err) {
     next(err);
@@ -179,6 +182,8 @@ productsRouter.put('/:id', ...adminChain, async (req, res, next) => {
 
     const row = data as ProductRow;
     const emailMap = await buildOwnerEmailMap([row.owner_id]);
+    // Product update → catalog content changed → invalidate generate cache.
+    clearGenerateCache();
     res.json(rowToProduct(row, row.owner_id ? (emailMap.get(row.owner_id) ?? null) : null));
   } catch (err) {
     next(err);
@@ -240,6 +245,8 @@ productsRouter.post('/:id/clone', ...adminChain, async (req, res, next) => {
       if (!error && data) {
         const row = data as ProductRow;
         const emailMap = await buildOwnerEmailMap([row.owner_id]);
+        // New cloned product → catalog grew → invalidate.
+        clearGenerateCache();
         res.status(201).json(rowToProduct(row, row.owner_id ? (emailMap.get(row.owner_id) ?? null) : null));
         return;
       }
@@ -267,6 +274,8 @@ productsRouter.delete('/:id', ...adminChain, async (req, res, next) => {
 
     const { error } = await getSupabase().from('products').delete().eq('id', idParsed.data);
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
+    // Product gone → catalog shrunk → invalidate.
+    clearGenerateCache();
     res.status(204).end();
   } catch (err) {
     next(err);
