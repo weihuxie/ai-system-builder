@@ -10,6 +10,9 @@ export interface UiStrings {
   // Input surface
   inputPlaceholder: string;
   inputHint: string;
+  /** Subtle text-link shown below the input area; click jumps to #all-products.
+   *  Fallback path for visitors who don't want to engage AI / staff-led walkthrough. */
+  inputSkipToProducts: string;
   generateButton: string;
   generating: string;
   micStart: string;
@@ -183,6 +186,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
   'zh-CN': {
     inputPlaceholder: '我是跨国制造业的CFO，跨国团队差旅报销混乱，财务对账困难……',
     inputHint: '描述你的业务痛点，AI 会推荐 3 个最合适的系统',
+    inputSkipToProducts: '或直接浏览全部产品',
     generateButton: '开始推荐',
     generating: '生成中…',
     micStart: '语音输入',
@@ -301,6 +305,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
   'zh-HK': {
     inputPlaceholder: '我是跨國製造業的CFO，跨國團隊差旅報銷混亂，財務對賬困難……',
     inputHint: '描述你的業務痛點，AI 會推薦 3 個最合適的系統',
+    inputSkipToProducts: '或直接瀏覽全部產品',
     generateButton: '開始推薦',
     generating: '生成中…',
     micStart: '語音輸入',
@@ -419,6 +424,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
   en: {
     inputPlaceholder: "I'm the CFO of a multinational manufacturer — cross-border expenses are chaotic…",
     inputHint: 'Describe your business pain points. AI will recommend 3 best-fit systems.',
+    inputSkipToProducts: 'Or browse all products',
     generateButton: 'Generate',
     generating: 'Generating…',
     micStart: 'Voice input',
@@ -537,6 +543,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
   ja: {
     inputPlaceholder: '私は多国籍製造業のCFOです。国境を越えた出張経費は混乱しており…',
     inputHint: '業務上の課題を記述すると、AIが最適な3つのシステムを推薦します。',
+    inputSkipToProducts: 'または全製品を直接閲覧',
     generateButton: '推薦を生成',
     generating: '生成中…',
     micStart: '音声入力',

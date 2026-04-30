@@ -1,5 +1,5 @@
 import { forwardRef, useRef } from 'react';
-import { Loader2, Send } from 'lucide-react';
+import { ArrowDown, Loader2, Send } from 'lucide-react';
 
 import { useGenerateMutation } from '../lib/queries';
 import { useAppStore } from '../lib/store';
@@ -91,6 +91,22 @@ const InputArea = forwardRef<HTMLTextAreaElement>(function InputArea(_, external
         }}
         onDismiss={() => gen.reset()}
       />
+
+      {/* Fallback path: when the visitor doesn't want to engage the AI flow
+          (or staff is doing a guided walkthrough), this skip-link smooth-scrolls
+          to the full product catalog at #all-products. Subtle, doesn't compete
+          with the primary AI affordance. */}
+      <button
+        type="button"
+        onClick={() => {
+          const target = document.getElementById('all-products');
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
+        className="mt-3 inline-flex items-center gap-1 text-[11px] text-white/40 hover:text-white/70 transition-colors"
+      >
+        {ui.inputSkipToProducts}
+        <ArrowDown size={11} />
+      </button>
     </section>
   );
 });
