@@ -19,7 +19,7 @@ export default function Header() {
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={theme.logoUrl}
-            alt={`${brand.toUpperCase()} Summit`}
+            alt="HAND"
             data-brand-logo={brand}
             className="h-7 w-auto max-w-[120px] shrink-0 object-contain"
           />
