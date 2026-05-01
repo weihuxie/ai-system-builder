@@ -67,32 +67,42 @@ export default function App() {
   const products = productsQuery.data ?? [];
 
   return (
-    <div className="min-h-dvh bg-[var(--bg-base)] text-[var(--text-primary)]">
-      <Header />
-      <OfflineBanner />
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 pb-20">
-        <section className="pt-8 sm:pt-12">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-            {t(lang).inputHint}
-          </h2>
-        </section>
+    <div className="relative min-h-dvh bg-[var(--bg-base)] text-[var(--text-primary)] overflow-x-hidden">
+      {/* Ambient gradient blobs — décor, behind everything. See index.css
+          .hero-ambient. They give the page a "morning light" warmth that flat
+          off-white couldn't, without distracting from content (heavy blur,
+          low opacity). Tinted by --accent so brand switch carries through. */}
+      <div className="hero-ambient" aria-hidden="true" />
+      <div className="hero-ambient-secondary" aria-hidden="true" />
 
-        <InputArea ref={inputRef} />
+      <div className="relative z-10">
+        <Header />
+        <OfflineBanner />
+        <main className="mx-auto max-w-6xl px-4 sm:px-6 pb-20">
+          <section className="pt-12 sm:pt-20">
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight leading-tight max-w-3xl">
+              {t(lang).inputHint}
+              <span className="ml-2 inline-block text-2xl sm:text-3xl">✨</span>
+            </h2>
+          </section>
 
-        <QuickScenarios
-          onPick={() => {
-            // Focus textarea + scroll it into view so users see their filled input
-            requestAnimationFrame(() => {
-              inputRef.current?.focus();
-              inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            });
-          }}
-        />
+          <InputArea ref={inputRef} />
 
-        <RecommendationGrid products={products} />
+          <QuickScenarios
+            onPick={() => {
+              // Focus textarea + scroll it into view so users see their filled input
+              requestAnimationFrame(() => {
+                inputRef.current?.focus();
+                inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              });
+            }}
+          />
 
-        <ProductBottomList products={products} />
-      </main>
+          <RecommendationGrid products={products} />
+
+          <ProductBottomList products={products} />
+        </main>
+      </div>
     </div>
   );
 }

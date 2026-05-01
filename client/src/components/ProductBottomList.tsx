@@ -273,11 +273,11 @@ export default function ProductBottomList({ products }: { products: ProductItem[
           const description = pickLang(p.description, lang);
           const audience = pickLang(p.audience, lang);
           const body = (
-            <div className="group h-full flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-[var(--accent-muted)] hover:-translate-y-0.5 hover:shadow-lg">
+            <div className="group h-full flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:border-[var(--accent-muted)] hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/60">
               {/* Header: icon + name + arrow. Name in slate-900 for high contrast
                   against the white card; on Summit big-screen this stays legible. */}
               <div className="flex items-start gap-3">
-                <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] group-hover:bg-[var(--accent)]/15 transition-colors">
+                <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] group-hover:bg-[var(--accent)]/15 group-hover:scale-110 transition-all duration-300">
                   <Icon size={20} />
                 </span>
                 <div className="min-w-0 flex-1">

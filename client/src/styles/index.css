@@ -9,11 +9,12 @@
      用户反馈："暗沉"、"压抑"、"不显得高级"。Light 模式靠 elevation/shadow 而非
      "更亮的 surface" 来表达层次，更适合 Summit 公开展示场景。
 
-     base               = 页面背景（off-white，比纯白柔和不刺眼）
+     base               = 页面背景（暖米色 #fafaf7 替代 slate-50；用户反馈
+                          "更放松、愉悦"——细微暖调差异感官明显但不破干净）
      surface            = 卡片 / 面板（纯白 + soft shadow）
      surface-elevated   = 卡片内 callout / inner panel（slate-50，浅 tint）
      surface-hover      = 卡片悬停（slate-100） */
-  --bg-base: #f8fafc;
+  --bg-base: #fafaf7;
   --bg-surface: #ffffff;
   --bg-surface-elevated: #f8fafc;
   --bg-surface-hover: #f1f5f9;
@@ -62,4 +63,41 @@ body {
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ───────────────────────────────────────────
+   Hero ambient blob — soft accent-colored spotlight in the top-right
+   corner of the page. Sits behind everything (z-index -1) and gives the
+   homepage a "morning light" feel that pure white couldn't deliver alone.
+   Low blur + low opacity so it never competes with content; tinted by
+   --accent so brand switch (Google blue / AWS orange) flows through.
+   ─────────────────────────────────────────── */
+.hero-ambient {
+  position: absolute;
+  top: -120px;
+  right: -180px;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+  opacity: 0.10;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(40px);
+}
+.hero-ambient-secondary {
+  position: absolute;
+  top: 100px;
+  left: -200px;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  /* Warm amber blob on the opposite side — pure decorative warmth, separate
+     from brand accent so it doesn't clash. Low opacity + heavy blur =
+     barely registers consciously but makes the page feel "lived in". */
+  background: radial-gradient(circle, #fbbf24 0%, transparent 70%);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(60px);
 }

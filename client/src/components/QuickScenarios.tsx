@@ -59,14 +59,15 @@ export default function QuickScenarios({ onPick }: { onPick?: () => void }) {
                   key={`${opt.role}-${i}`}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  whileHover={{ y: -2 }}
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  transition={{ delay: i * 0.04, type: 'spring', stiffness: 400, damping: 25 }}
                   onClick={() => {
                     setUserInput(ui.quickScenarioTemplate(opt.role, opt.industry, opt.challenge));
                     resetForNewQuery();
                     onPick?.();
                   }}
-                  className="text-left rounded-xl border border-slate-200 bg-white hover:border-[var(--accent-muted)] hover:shadow-md p-4 transition-all"
+                  className="text-left rounded-2xl border border-slate-200 bg-white hover:border-[var(--accent-muted)] hover:shadow-lg hover:shadow-slate-200/60 p-4 transition-shadow"
                 >
                   <div className="flex items-baseline gap-2">
                     <span className="accent-text text-xs font-semibold uppercase tracking-wide">

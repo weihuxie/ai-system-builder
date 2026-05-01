@@ -46,7 +46,7 @@ export default function RecommendationCard({ product, rationale, lang, brand, ra
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.08, duration: 0.35 }}
-      className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-lg hover:border-[var(--accent-muted)] hover:-translate-y-0.5 transition-all"
+      className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 hover:border-[var(--accent-muted)] hover:-translate-y-1 transition-all duration-300"
     >
       {/* Header: rank + name + audience */}
       <div className="flex items-baseline gap-2">
