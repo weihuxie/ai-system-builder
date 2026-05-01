@@ -68,12 +68,13 @@ export default function App() {
 
   return (
     <div className="relative min-h-dvh bg-[var(--bg-base)] text-[var(--text-primary)] overflow-x-hidden">
-      {/* Ambient gradient blobs — décor, behind everything. See index.css
-          .hero-ambient. They give the page a "morning light" warmth that flat
-          off-white couldn't, without distracting from content (heavy blur,
-          low opacity). Tinted by --accent so brand switch carries through. */}
-      <div className="hero-ambient" aria-hidden="true" />
-      <div className="hero-ambient-secondary" aria-hidden="true" />
+      {/* Stripe-style multi-color gradient ribbon. See index.css .hero-ribbon
+          for the layered radial-gradient stack — magenta / orange / violet /
+          brand-accent / rose blended via heavy blur. Pointer events disabled,
+          sits at z-0 behind content. brand-accent layer flows through the
+          --accent CSS var so Google ↔ AWS switch blends naturally. */}
+      <div className="hero-ribbon" aria-hidden="true" />
+      <div className="hero-ribbon-left" aria-hidden="true" />
 
       <div className="relative z-10">
         <Header />

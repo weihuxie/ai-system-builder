@@ -9,12 +9,13 @@
      用户反馈："暗沉"、"压抑"、"不显得高级"。Light 模式靠 elevation/shadow 而非
      "更亮的 surface" 来表达层次，更适合 Summit 公开展示场景。
 
-     base               = 页面背景（暖米色 #fafaf7 替代 slate-50；用户反馈
-                          "更放松、愉悦"——细微暖调差异感官明显但不破干净）
+     base               = 页面背景（纯白，Stripe 风。原 #fafaf7 暖米被参考图
+                          替换：Stripe 主页是纯白 + 右侧大面积多色流光，
+                          底色越纯白多色渐变越有"存在感"）
      surface            = 卡片 / 面板（纯白 + soft shadow）
      surface-elevated   = 卡片内 callout / inner panel（slate-50，浅 tint）
      surface-hover      = 卡片悬停（slate-100） */
-  --bg-base: #fafaf7;
+  --bg-base: #ffffff;
   --bg-surface: #ffffff;
   --bg-surface-elevated: #f8fafc;
   --bg-surface-hover: #f1f5f9;
@@ -66,38 +67,49 @@ body {
 }
 
 /* ───────────────────────────────────────────
-   Hero ambient blob — soft accent-colored spotlight in the top-right
-   corner of the page. Sits behind everything (z-index -1) and gives the
-   homepage a "morning light" feel that pure white couldn't deliver alone.
-   Low blur + low opacity so it never competes with content; tinted by
-   --accent so brand switch (Google blue / AWS orange) flows through.
+   Hero gradient ribbon — Stripe-style multi-color flowing decoration.
+   Stack of 4 radial-gradient blobs on the right ~half of the viewport,
+   each a different pastel hue + one tinted by var(--accent) so brand
+   switch (Google blue / AWS orange) blends in naturally. Heavy blur
+   (80px) + mid opacity blends the blobs into a "ribbon" without needing
+   an SVG path. Sits at z-0 behind content; pointer-events: none.
    ─────────────────────────────────────────── */
-.hero-ambient {
+.hero-ribbon {
   position: absolute;
-  top: -120px;
-  right: -180px;
-  width: 600px;
-  height: 600px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-  opacity: 0.10;
+  top: -10%;
+  right: -10%;
+  width: 70%;
+  height: 90%;
   pointer-events: none;
   z-index: 0;
-  filter: blur(40px);
+  background:
+    /* magenta — top right corner */
+    radial-gradient(circle at 80% 15%, #ec4899 0%, transparent 28%),
+    /* orange — middle */
+    radial-gradient(circle at 65% 45%, #fb923c 0%, transparent 32%),
+    /* violet — lower right */
+    radial-gradient(circle at 90% 70%, #a78bfa 0%, transparent 30%),
+    /* brand accent — center, anchors the multi-color to the active brand */
+    radial-gradient(circle at 50% 60%, var(--accent) 0%, transparent 30%),
+    /* rose — bottom-left of the ribbon */
+    radial-gradient(circle at 40% 85%, #fb7185 0%, transparent 28%);
+  opacity: 0.45;
+  filter: blur(80px);
 }
-.hero-ambient-secondary {
+
+/* Secondary smaller swirl on the left — balances the right ribbon so the
+   page doesn't feel lopsided, but stays subtler (lower opacity). */
+.hero-ribbon-left {
   position: absolute;
-  top: 100px;
-  left: -200px;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  /* Warm amber blob on the opposite side — pure decorative warmth, separate
-     from brand accent so it doesn't clash. Low opacity + heavy blur =
-     barely registers consciously but makes the page feel "lived in". */
-  background: radial-gradient(circle, #fbbf24 0%, transparent 70%);
-  opacity: 0.07;
+  top: 250px;
+  left: -8%;
+  width: 35%;
+  height: 50%;
   pointer-events: none;
   z-index: 0;
-  filter: blur(60px);
+  background:
+    radial-gradient(circle at 30% 30%, #f472b6 0%, transparent 35%),
+    radial-gradient(circle at 60% 60%, #818cf8 0%, transparent 35%);
+  opacity: 0.20;
+  filter: blur(70px);
 }
