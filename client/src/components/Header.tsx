@@ -21,7 +21,7 @@ export default function Header() {
             src={theme.logoUrl}
             alt="HAND"
             data-brand-logo={brand}
-            className="h-10 sm:h-12 w-auto max-w-[180px] shrink-0 object-contain"
+            className="h-14 sm:h-16 w-auto max-w-[200px] shrink-0 object-contain"
           />
           <h1 className="truncate text-sm sm:text-base font-semibold tracking-tight">
             {pickLang(theme.headerTitle, lang)}
