@@ -25,7 +25,19 @@ export const notFoundHandler: RequestHandler = (req, res) => {
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof HttpError) {
-    res.status(err.status).json(err.toJSON());
+    const body = err.toJSON();
+    // F6: in production, strip `details` from the response. Some routes
+    // throw HttpError with details = { rawText, trace, ... } for in-process
+    // logging convenience (see generate.ts AI_PARSE / AI_INVALID branches),
+    // but those payloads can leak the model's raw output and shouldn't
+    // reach Network tab on a public-facing demo. Dev still sees full
+    // details so debugging stays first-class.
+    if (process.env.NODE_ENV === 'production' && body.details !== undefined) {
+      const { details: _details, ...rest } = body;
+      res.status(err.status).json(rest);
+      return;
+    }
+    res.status(err.status).json(body);
     return;
   }
   // Unknown: route-level handler didn't catch. Log enough to triage post-mortem.

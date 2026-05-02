@@ -29,7 +29,7 @@ export function logEvent(event: string, fields: Record<string, unknown> = {}): v
     event,
     ...fields,
   };
-  // eslint-disable-next-line no-console
+   
   console.log(JSON.stringify(line));
 }
 
