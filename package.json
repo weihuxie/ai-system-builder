@@ -16,13 +16,19 @@
     "build": "npm --workspace shared run build && npm --workspace client run build && npm --workspace server run build",
     "build:client": "npm --workspace client run build",
     "build:server": "npm --workspace server run build",
-    "lint": "npm --workspace client run lint && npm --workspace server run lint",
+    "lint": "eslint . --max-warnings=20",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "npm --workspace shared run build && npm --workspace client run lint && npm --workspace server run lint",
     "test": "npm --workspace server run test",
     "e2e": "npm --workspace client run e2e",
     "db:migrate": "echo 'Run supabase/migrations/*.sql via Supabase dashboard or CLI'"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "npm-run-all": "^4.1.5",
-    "typescript": "~5.8.2"
+    "typescript": "~5.8.2",
+    "typescript-eslint": "^8.59.1"
   }
 }

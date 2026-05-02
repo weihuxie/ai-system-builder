@@ -52,6 +52,7 @@
 | `global_config.llm_chain` (jsonb) | LLM 调用链（providerId / model / enabled 数组） | super_admin |
 | `global_config.temperature` (real) | 全局温度，0-2 | super_admin |
 | `global_config.quick_scenarios` (jsonb, 0004) | 首页快速场景（4 lang × N 条），null 走 bundled defaults | super_admin |
+| `products.industries` (jsonb, 0005) | 产品行业标签 string[]（manufacturing/finance/...），空 = 通用 wildcard | super_admin / editor 自己产品 |
 
 **约束**：
 - RLS 开启：前端用 anon key 只能读 `is_participating=true` 的产品；写操作走后端 service key
@@ -65,7 +66,8 @@
 - `0002_auth_and_ownership.sql` — admin_users + auth trigger + products.owner_id + RLS
 - `0003_llm_chain.sql` — global_config 加 llm_chain / temperature 列
 - `0004_quick_scenarios.sql` — global_config 加 quick_scenarios 列
-- 一键脚本：`scripts/test-setup.sql` 把 0001+0002+0003+0004 拼起来贴 Supabase SQL Editor 即可
+- `0005_product_industries.sql` — products 加 industries jsonb default '[]'
+- 一键脚本：`scripts/test-setup.sql` 把 0001-0005 拼起来贴 Supabase SQL Editor 即可
 
 #### 2.3.1 邀请 editor 的当前流程（whitelist + 一次性链接）
 

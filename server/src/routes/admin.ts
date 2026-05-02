@@ -133,14 +133,14 @@ adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
           options: { redirectTo: `${appUrl}/admin` },
         });
         if (linkErr) {
-          // eslint-disable-next-line no-console
+           
           console.warn(`[invite] magiclink fallback for existing ${email} failed: ${linkErr.message}`);
         } else {
           inviteLink = linkData?.properties?.action_link ?? null;
           authUserId = linkData?.user?.id ?? null;
         }
       } else {
-        // eslint-disable-next-line no-console
+         
         console.warn(`[invite] generateLink(invite) for ${email} failed: ${inviteErr.message}`);
       }
     }
@@ -160,7 +160,7 @@ adminRouter.post('/users', ...superAdminChain, async (req, res, next) => {
         .select()
         .single();
       if (linkErr) {
-        // eslint-disable-next-line no-console
+         
         console.warn(`[invite] self-heal admin_users.user_id for ${email} failed: ${linkErr.message}`);
       } else if (updated) {
         healedRow = updated as AdminUserRow;
