@@ -58,6 +58,13 @@ export default function App() {
     applyTheme(brand);
   }, [brand]);
 
+  // 3.5. Sync <html lang="..."> to current UI lang. Without this, screen readers
+  // announce all 4 languages as zh-CN (the static index.html default), and
+  // browsers' built-in translation prompts misfire. F11 a11y fix.
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   // 4. Realtime subscription (products + global_config)
   useEffect(() => {
     const unsub = subscribeToConfig(qc);
