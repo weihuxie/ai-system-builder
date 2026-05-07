@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Loader2, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Loader2, Plus, RotateCcw, Trash2 } from 'lucide-react';
 
 import { ALL_LANGS, DEFAULT_QUICK_OPTIONS, type Lang, type QuickOption } from '@asb/shared';
 
@@ -43,6 +43,13 @@ export default function QuickScenariosPanel() {
   const [editing, setEditing] = useState<Lang>(lang);
   // Local draft so edits don't fire the network on every keystroke.
   // Save button writes the whole bag back.
+  // Quick scenarios is a low-frequency super_admin task (Summit 4 stops 改一两次).
+  // Default collapsed so it doesn't crowd the more-used ProductList / LlmChain
+  // panels above it. Force-expand when dirty so unsaved edits + the save
+  // button stay visible after the user types. Not persisted — fresh fold on
+  // every reload is the expected behavior.
+  const [collapsed, setCollapsed] = useState(true);
+
   const [draft, setDraft] = useState<Record<Lang, QuickOption[]>>(
     query.data?.scenarios ?? DEFAULT_QUICK_OPTIONS,
   );
@@ -140,34 +147,54 @@ export default function QuickScenariosPanel() {
   };
 
   const list = draft[editing];
+  // Force expansion when there are unsaved edits — otherwise the user can
+  // collapse mid-edit and lose track of the unsaved state + Save button.
+  const showBody = !collapsed || dirty;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium text-slate-600">{ui.adminQuickScenariosTitle}</h2>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={reset}
-            disabled={update.isPending}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs hover:bg-slate-100 disabled:opacity-40"
-            title={ui.adminQuickScenariosReset}
-          >
-            <RotateCcw size={12} />
-            {ui.adminQuickScenariosReset}
-          </button>
-          <button
-            type="button"
-            onClick={save}
-            disabled={!dirty || update.isPending}
-            className="inline-flex items-center gap-2 rounded-full accent-bg text-white px-4 py-1.5 text-xs font-medium disabled:opacity-40 hover:brightness-110"
-          >
-            {update.isPending && <Loader2 size={12} className="animate-spin" />}
-            {ui.adminSave}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setCollapsed((v) => !v)}
+          aria-expanded={showBody}
+          aria-controls="quick-scenarios-body"
+          className="flex items-center gap-2 -m-1 p-1 rounded-md text-slate-600 hover:text-slate-900"
+        >
+          <ChevronDown
+            size={14}
+            className={`transition-transform ${showBody ? '' : '-rotate-90'}`}
+          />
+          <h2 className="text-sm font-medium">{ui.adminQuickScenariosTitle}</h2>
+        </button>
+        {/* Reset / Save 仅展开时显示。折叠态下没有可视编辑区，按钮也无意义。 */}
+        {showBody && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={reset}
+              disabled={update.isPending}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs hover:bg-slate-100 disabled:opacity-40"
+              title={ui.adminQuickScenariosReset}
+            >
+              <RotateCcw size={12} />
+              {ui.adminQuickScenariosReset}
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              disabled={!dirty || update.isPending}
+              className="inline-flex items-center gap-2 rounded-full accent-bg text-white px-4 py-1.5 text-xs font-medium disabled:opacity-40 hover:brightness-110"
+            >
+              {update.isPending && <Loader2 size={12} className="animate-spin" />}
+              {ui.adminSave}
+            </button>
+          </div>
+        )}
       </div>
 
+      {showBody && (
+        <div id="quick-scenarios-body">
       <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">
         {ui.adminQuickScenariosHint}
       </p>
@@ -353,6 +380,8 @@ export default function QuickScenariosPanel() {
           </button>
         </li>
       </ul>
+        </div>
+      )}
     </section>
   );
 }

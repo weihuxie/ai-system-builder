@@ -58,6 +58,34 @@ test('super_admin can invite a new editor via the Users panel', async ({ page })
   await expect(page.getByText(email, { exact: true })).toBeVisible({ timeout: 10_000 });
 });
 
+test('quick scenarios panel is collapsed by default and expands on chevron click', async ({
+  page,
+}) => {
+  // 2026-05: super_admin 反映 admin 主页 panels 太满，QuickScenariosPanel
+  // 默认折叠（编辑频次低，Summit 4 站只改一两次）。dirty 状态会强制展开
+  // 已在组件层处理（这里不测，避免依赖编辑流程的 schema 细节）。
+  const boss = await seedE2EUser('boss-collapse', 'super_admin');
+  await signInAs(page, boss.email, boss.password);
+
+  // 标题始终可见
+  await expect(page.getByRole('heading', { name: /快速场景/ })).toBeVisible();
+
+  // body 标识：hint 文案 + Reset 按钮 — 这俩只在展开态出现
+  const hint = page.getByText(/首页底部展示给观众的预设场景/);
+  const resetBtn = page.getByRole('button', { name: /恢复默认/ });
+
+  // 默认态：折叠（hint 和 Reset 都不可见）
+  await expect(hint).toHaveCount(0);
+  await expect(resetBtn).toHaveCount(0);
+
+  // 点 chevron toggle（aria-controls 锁定到正确的按钮）
+  await page.getByRole('button', { expanded: false, name: /快速场景/ }).click();
+
+  // 展开后 body 应该出现
+  await expect(hint).toBeVisible();
+  await expect(resetBtn).toBeVisible();
+});
+
 test('super_admin can switch brand', async ({ page }) => {
   const boss = await seedE2EUser('boss-brand', 'super_admin');
   await signInAs(page, boss.email, boss.password);
