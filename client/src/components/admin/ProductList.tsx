@@ -22,7 +22,10 @@ const TOUR_DISMISS_KEY = 'asb.editor-tour-dismissed.v1';
 
 const BRAND_LABEL: Record<Brand, string> = { google: 'Google', aws: 'AWS' };
 
-type Filter = 'mine' | 'all' | 'platform';
+// 4 互斥子集 + All（superset）。语义诚实：Mine + Platform + Others = All
+// （super_admin 视角下 mine 和 others 都是 "ownerId 不为 NULL" 的子集，
+// 只是看是不是自己）。Mine 排第一（最常用），All 排最后（reset 作用）。
+type Filter = 'mine' | 'platform' | 'others' | 'all';
 
 export default function ProductList({ me }: { me: AuthedUser }) {
   const lang = useAppStore((s) => s.lang);
@@ -88,8 +91,21 @@ export default function ProductList({ me }: { me: AuthedUser }) {
     }
     if (filter === 'mine') return all.filter((p) => p.ownerId === me.id);
     if (filter === 'platform') return all.filter((p) => p.ownerId === null);
+    if (filter === 'others') return all.filter((p) => p.ownerId !== null && p.ownerId !== me.id);
     return all;
   }, [all, filter, me.id, me.role]);
+
+  // 给 super_admin 在 chip 上展示 4 个 bucket 的实时计数 — 一眼看到分布、
+  // 哪个 bucket 有未处理的 owner 漂移之类
+  const counts = useMemo(() => {
+    if (me.role !== 'super_admin') return { mine: 0, platform: 0, others: 0, all: 0 };
+    return {
+      mine: all.filter((p) => p.ownerId === me.id).length,
+      platform: all.filter((p) => p.ownerId === null).length,
+      others: all.filter((p) => p.ownerId !== null && p.ownerId !== me.id).length,
+      all: all.length,
+    };
+  }, [all, me.id, me.role]);
 
   const canMutate = (p: ProductItem) => me.role === 'super_admin' || p.ownerId === me.id;
   const isPlatform = (p: ProductItem) => p.ownerId === null;
@@ -153,7 +169,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
 
       {me.role === 'super_admin' && (
         <div className="mt-3 inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5 text-xs">
-          {(['all', 'mine', 'platform'] as Filter[]).map((f) => (
+          {(['mine', 'platform', 'others', 'all'] as Filter[]).map((f) => (
             <button
               key={f}
               type="button"
@@ -165,11 +181,13 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                   : 'text-slate-600 hover:text-slate-900',
               ].join(' ')}
             >
-              {f === 'all'
-                ? `${ui.adminProductsTitle} (${all.length})`
-                : f === 'mine'
-                  ? `${ui.adminUsersRoleEditor}/${me.email.split('@')[0]}`
-                  : ui.adminProductBadgePlatform}
+              {f === 'mine'
+                ? `${ui.adminProductFilterMine} (${counts.mine})`
+                : f === 'platform'
+                  ? `${ui.adminProductBadgePlatform} (${counts.platform})`
+                  : f === 'others'
+                    ? `${ui.adminProductFilterOthers} (${counts.others})`
+                    : `${ui.adminProductFilterAll} (${counts.all})`}
             </button>
           ))}
         </div>

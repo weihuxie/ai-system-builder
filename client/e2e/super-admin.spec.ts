@@ -17,24 +17,51 @@ test('super_admin sees all admin panels', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /产品管理/ })).toBeVisible();
 });
 
-test('super_admin sees filter tabs (all / mine / platform) and platform products show "平台" badge', async ({
-  page,
-}) => {
-  // 2026-05: 「无主（孤儿池）」 → 「平台」 重命名 — owner_id IS NULL 在系统里
-  // 实际语义就是"平台模板"，跟 editor 视角的 badge 一致。spec 锁住 super_admin
-  // 视角看到的也是 "平台"，不是 "无主（孤儿池）"。
-  const boss = await seedE2EUser('boss-platform', 'super_admin');
+test('super_admin filter chips: 4 个互斥子集 + 各自过滤生效', async ({ page }) => {
+  // 2026-05: filter 从 3 chip (All / Mine / Platform) 扩成 4 chip
+  // (Mine / Platform / Others / All)。为啥：原 3 个混着层级（All 是
+  // 全集，Mine/Platform 是子集），且没法 filter "其他 editor 的产品"。
+  // 现在 4 chip 互斥子集 + All 作为 reset，且补足"其他 editor"能力缺口。
+  const boss = await seedE2EUser('boss-filters', 'super_admin');
+  const otherEditor = await seedE2EUser('boss-filters-other', 'editor');
   await seedE2EProduct({ id: 'platform-a', ownerId: null });
   await seedE2EProduct({ id: 'mine-a', ownerId: boss.userId });
+  await seedE2EProduct({ id: 'others-a', ownerId: otherEditor.userId });
 
   await signInAs(page, boss.email, boss.password);
+
+  // 默认 filter='all'，3 行都可见
   await expect(page.locator('text=platform-a').first()).toBeVisible();
   await expect(page.locator('text=mine-a').first()).toBeVisible();
+  await expect(page.locator('text=others-a').first()).toBeVisible();
 
-  // ownerless 行的 owner badge 必须是「平台」，不能是「无主（孤儿池）」
+  // 点 Mine → 只看到 mine-a
+  await page.getByRole('button', { name: /^我的 \(\d+\)$/ }).click();
+  await expect(page.locator('text=mine-a').first()).toBeVisible();
+  await expect(page.locator('text=platform-a')).toHaveCount(0);
+  await expect(page.locator('text=others-a')).toHaveCount(0);
+
+  // 点 Platform → 只看到 platform-a
+  await page.getByRole('button', { name: /^平台 \(\d+\)$/ }).click();
+  await expect(page.locator('text=platform-a').first()).toBeVisible();
+  await expect(page.locator('text=mine-a')).toHaveCount(0);
+  await expect(page.locator('text=others-a')).toHaveCount(0);
+
+  // 点 Others → 只看到 others-a（这是新加的能力）
+  await page.getByRole('button', { name: /^其他 editor \(\d+\)$/ }).click();
+  await expect(page.locator('text=others-a').first()).toBeVisible();
+  await expect(page.locator('text=mine-a')).toHaveCount(0);
+  await expect(page.locator('text=platform-a')).toHaveCount(0);
+
+  // 回 All → 3 个都可见
+  await page.getByRole('button', { name: /^全部 \(\d+\)$/ }).click();
+  await expect(page.locator('text=platform-a').first()).toBeVisible();
+  await expect(page.locator('text=mine-a').first()).toBeVisible();
+  await expect(page.locator('text=others-a').first()).toBeVisible();
+
+  // platform 行的 owner badge 仍是「平台」（之前的契约不能丢）
   const platformRow = page.locator('li').filter({ hasText: 'platform-a' });
   await expect(platformRow.getByText('平台', { exact: true })).toBeVisible();
-  await expect(platformRow.getByText(/无主|孤儿/)).toHaveCount(0);
 
   // filter chip 不能再叫「无主（孤儿池）」
   await expect(page.getByRole('button', { name: /无主|孤儿/ })).toHaveCount(0);

@@ -74,6 +74,12 @@ export interface UiStrings {
   adminProductBadgeMine: string;
   /** Badge on platform-seeded rows shown to editors as read-only reference. */
   adminProductBadgePlatform: string;
+  /** Super_admin filter chip label: "Mine" — products owned by the viewing super_admin. */
+  adminProductFilterMine: string;
+  /** Super_admin filter chip label: "Other editors" — owned but by someone else. */
+  adminProductFilterOthers: string;
+  /** Super_admin filter chip label: "All" — full superset, reset-style. */
+  adminProductFilterAll: string;
   /** ARIA + tooltip text for the expand chevron (collapsed → click to open). */
   adminProductExpand: string;
   /** ARIA + tooltip text for the expand chevron (expanded → click to close). */
@@ -300,6 +306,9 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductsEditorHint: '我的产品 {my} 个 · 平台参考 {platform} 个（仅查看，不可编辑）',
     adminProductBadgeMine: '我的',
     adminProductBadgePlatform: '平台',
+    adminProductFilterMine: '我的',
+    adminProductFilterOthers: '其他 editor',
+    adminProductFilterAll: '全部',
     adminProductExpand: '展开详情',
     adminProductCollapse: '收起',
     adminEditorTourTitle: '👋 第一次进来？快速上手',
@@ -454,6 +463,9 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductsEditorHint: '我的產品 {my} 個 · 平台參考 {platform} 個（僅檢視，不可編輯）',
     adminProductBadgeMine: '我的',
     adminProductBadgePlatform: '平台',
+    adminProductFilterMine: '我的',
+    adminProductFilterOthers: '其他 editor',
+    adminProductFilterAll: '全部',
     adminProductExpand: '展開詳情',
     adminProductCollapse: '收起',
     adminEditorTourTitle: '👋 第一次進來？快速上手',
@@ -608,6 +620,9 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductsEditorHint: '{my} of yours · {platform} platform reference (read-only)',
     adminProductBadgeMine: 'Yours',
     adminProductBadgePlatform: 'Platform',
+    adminProductFilterMine: 'Mine',
+    adminProductFilterOthers: 'Other editors',
+    adminProductFilterAll: 'All',
     adminProductExpand: 'Show full details',
     adminProductCollapse: 'Collapse',
     adminEditorTourTitle: '👋 New here? Quick tour',
@@ -762,6 +777,9 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductsEditorHint: '自分の製品 {my} 件 · プラットフォーム参照 {platform} 件（閲覧のみ、編集不可）',
     adminProductBadgeMine: '自分',
     adminProductBadgePlatform: 'プラットフォーム',
+    adminProductFilterMine: '自分',
+    adminProductFilterOthers: '他のエディター',
+    adminProductFilterAll: 'すべて',
     adminProductExpand: '詳細を表示',
     adminProductCollapse: '閉じる',
     adminEditorTourTitle: '👋 はじめての方へ — クイックガイド',
