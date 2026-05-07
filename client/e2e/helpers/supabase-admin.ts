@@ -24,9 +24,13 @@ export async function resetTestDb(): Promise<void> {
   await db.from('products').delete().neq('id', '__never__');
   await db.from('admin_users').delete().neq('email', '__never__@example.com');
 
+  // Sequential by design — initial Promise.all attempt triggered Supabase
+  // admin API rate limits (429) on bursts of 5+ deletes, cascading test
+  // failures. Sequential is slower but stable. Most resets only have 0–2
+  // residual users so total cost is bounded.
   const { data: list } = await db.auth.admin.listUsers({ perPage: 200 });
   for (const u of list?.users ?? []) {
-    if (u.email && u.email.includes('+asbtest-e2e@')) {
+    if (u.email?.includes('+asbtest-e2e@')) {
       await db.auth.admin.deleteUser(u.id);
     }
   }

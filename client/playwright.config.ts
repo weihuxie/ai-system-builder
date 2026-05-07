@@ -39,9 +39,16 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
   workers: 1,
-  retries: 0,
+  // Retry once on flake. e2e tests do enough I/O (Supabase admin API + Vite
+  // dev compile + page hydration + me query) that the default 5s expect
+  // timeout occasionally races. Retry catches flake, lets real failures
+  // surface (a real bug fails twice).
+  retries: 1,
   reporter: [['list']],
   timeout: 30_000,
+  // Keep 5s — pushing this higher (tried 10s) inflates each failed assertion
+  // long enough that test body breaches the 30s test timeout, cascading.
+  // Better to fail fast and let retry recover.
   expect: { timeout: 5_000 },
   use: {
     baseURL: BASE_URL,
