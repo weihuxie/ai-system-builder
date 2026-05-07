@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, Sparkles, X } from 'lucide-react';
+
+// Persisted dismissal flag for the create-mode onboarding card. Bumped to
+// .v1 so we can invalidate (.v2 etc) if we materially rewrite the steps.
+const PRODUCT_EDITOR_TOUR_DISMISS_KEY = 'asb.product-editor-tour-dismissed.v1';
 
 import {
   ALL_BRANDS,
@@ -108,9 +112,35 @@ interface Props {
 export default function ProductEditor({ lang, initial, onClose }: Props) {
   const ui = t(lang);
   const [draft, setDraft] = useState<Draft>(toDraft(initial));
-  const [editingLang, setEditingLang] = useState<Lang>(lang);
   const upsert = useUpsertProductMutation();
   const mode = initial ? 'update' : 'create';
+
+  // Default lang tab: in CREATE mode start on EN (because name.en is required
+  // to derive the internal id; landing on EN avoids the "fill EN to enable
+  // save" disabled-state surprise). In EDIT mode keep the user's current UI
+  // lang tab so they edit in the language they're already reading in.
+  const [editingLang, setEditingLang] = useState<Lang>(initial ? lang : 'en');
+
+  // Onboarding card visibility — only on create + only when localStorage flag
+  // absent. Dismissal is persisted per-browser. super_admin sees this too:
+  // first time creating a product is confusing regardless of role.
+  const [tourVisible, setTourVisible] = useState<boolean>(false);
+  useEffect(() => {
+    if (mode !== 'create') return;
+    try {
+      setTourVisible(localStorage.getItem(PRODUCT_EDITOR_TOUR_DISMISS_KEY) !== '1');
+    } catch {
+      // private mode / storage blocked — silently keep tour hidden
+    }
+  }, [mode]);
+  const dismissTour = () => {
+    try {
+      localStorage.setItem(PRODUCT_EDITOR_TOUR_DISMISS_KEY, '1');
+    } catch {
+      // ignore
+    }
+    setTourVisible(false);
+  };
 
   // Existing IDs for collision validation. Hits the same react-query cache as
   // ProductList so no extra network request.
@@ -152,9 +182,14 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4 py-8 overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-6 my-auto">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-editor-title"
+        className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-6 my-auto"
+      >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
+          <h2 id="product-editor-title" className="text-lg font-semibold">
             {mode === 'create' ? ui.adminAddProduct : ui.adminEditProduct}
           </h2>
           <button
@@ -166,6 +201,39 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
             <X size={18} />
           </button>
         </div>
+
+        {/* First-time onboarding card (create mode only). 4 steps cover the
+            non-obvious mechanics: (1) EN-first because id derives from
+            name.en; (2) tabs are independent stores; (3) industries semantics;
+            (4) URL fallback rules. Dismissible via X (localStorage flag,
+            sticky per browser). */}
+        {tourVisible && (
+          <div className="mt-5 rounded-xl border border-blue-500/20 bg-blue-500/[0.06] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="text-xs leading-relaxed">
+                <p className="text-sm font-medium text-blue-200 mb-2 inline-flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-blue-300" />
+                  {ui.adminProductEditorTourTitle}
+                </p>
+                <ol className="list-decimal pl-4 space-y-1 text-slate-700">
+                  <li>{ui.adminProductEditorTourStep1}</li>
+                  <li>{ui.adminProductEditorTourStep2}</li>
+                  <li>{ui.adminProductEditorTourStep3}</li>
+                  <li>{ui.adminProductEditorTourStep4}</li>
+                </ol>
+              </div>
+              <button
+                type="button"
+                onClick={dismissTour}
+                aria-label={ui.adminEditorTourDismiss}
+                title={ui.adminEditorTourDismiss}
+                className="shrink-0 rounded-md p-1 text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Industry tags — multi-select chips. Cross-cutting (not per lang),
             empty array = "applies to all industries" so the homepage filter
@@ -247,7 +315,8 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
                       [field]: { ...draft[field], [editingLang]: e.target.value },
                     })
                   }
-                  className="mt-1 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)]"
+                  placeholder={ui.adminFieldDescriptionPlaceholder}
+                  className="mt-1 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[var(--accent-muted)] placeholder:text-slate-300"
                 />
               ) : (
                 <input
@@ -259,9 +328,15 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
                       [field]: { ...draft[field], [editingLang]: e.target.value },
                     })
                   }
-                  placeholder={showNameMeta ? 'Customer Relationship Management' : undefined}
+                  placeholder={
+                    showNameMeta
+                      ? 'Customer Relationship Management'
+                      : field === 'audience'
+                        ? ui.adminFieldAudiencePlaceholder
+                        : undefined
+                  }
                   className={[
-                    'mt-1 w-full rounded-lg border bg-slate-50 px-3 py-2 text-sm outline-none transition-colors',
+                    'mt-1 w-full rounded-lg border bg-slate-50 px-3 py-2 text-sm outline-none transition-colors placeholder:text-slate-300',
                     showNameMeta && idCollision
                       ? 'border-red-500/50 focus:border-red-500/70'
                       : 'border-slate-200 focus:border-[var(--accent-muted)]',

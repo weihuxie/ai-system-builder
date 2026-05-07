@@ -90,6 +90,17 @@ export interface UiStrings {
   adminEditorTourStep4: string;
   /** ARIA label / tooltip for the X button that dismisses the tour. */
   adminEditorTourDismiss: string;
+  /** ProductEditor (create-mode) onboarding card — heading. */
+  adminProductEditorTourTitle: string;
+  /** Steps 1-4 walking through the form: EN-first / multi-lang / industries / URL fallback. */
+  adminProductEditorTourStep1: string;
+  adminProductEditorTourStep2: string;
+  adminProductEditorTourStep3: string;
+  adminProductEditorTourStep4: string;
+  /** Placeholder for description textarea — short example. */
+  adminFieldDescriptionPlaceholder: string;
+  /** Placeholder for audience input — example roles / personas. */
+  adminFieldAudiencePlaceholder: string;
   adminAddProduct: string;
   adminEditProduct: string;
   adminDeleteProduct: string;
@@ -298,6 +309,13 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminEditorTourStep3: '想试试？点任意行的「复制」即可基于平台模板建一份你的副本，再按右上「+ 新增产品」改名定制',
     adminEditorTourStep4: '点每行右侧 ⌄ 可展开看完整描述、适用人群和落地页 URL',
     adminEditorTourDismiss: '不再显示',
+    adminProductEditorTourTitle: '📝 第一次填？4 步搞定',
+    adminProductEditorTourStep1: '先点 EN tab 填英文名（系统会自动派生内部代号 / ID）',
+    adminProductEditorTourStep2: '切回简中等其它 tab 把名称、描述、人群补全（每个 tab 内容独立）',
+    adminProductEditorTourStep3: '所属行业可空 = 通用产品；选了 = 只在选中行业的筛选下展示',
+    adminProductEditorTourStep4: '每种语言 × 每个品牌一个 URL 槽，至少填 1 个；其它槽运行时按 brand→lang 自动 fallback',
+    adminFieldDescriptionPlaceholder: '比如：帮 CFO/财务总监搞定多币种报销和 AP 自动化，覆盖出差、采购、付款全流程',
+    adminFieldAudiencePlaceholder: '比如：CFO、财务总监、采购负责人',
     adminAddProduct: '新增产品',
     adminEditProduct: '编辑',
     adminDeleteProduct: '删除',
@@ -446,6 +464,13 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminEditorTourStep3: '想試試？點任意行的「複製」即可基於平台模板建一份你的副本，再按右上「+ 新增產品」改名訂製',
     adminEditorTourStep4: '點每行右側 ⌄ 可展開看完整描述、適用人群和落地頁 URL',
     adminEditorTourDismiss: '不再顯示',
+    adminProductEditorTourTitle: '📝 第一次填？4 步搞定',
+    adminProductEditorTourStep1: '先點 EN tab 填英文名（系統會自動派生內部代號 / ID）',
+    adminProductEditorTourStep2: '切回繁中等其它 tab 把名稱、描述、人群補全（每個 tab 內容獨立）',
+    adminProductEditorTourStep3: '所屬行業可空 = 通用產品；選了 = 只在選中行業的篩選下展示',
+    adminProductEditorTourStep4: '每種語言 × 每個品牌一個 URL 槽，至少填 1 個；其它槽運行時按 brand→lang 自動 fallback',
+    adminFieldDescriptionPlaceholder: '比如：幫 CFO/財務總監搞定多幣種報銷和 AP 自動化，覆蓋出差、採購、付款全流程',
+    adminFieldAudiencePlaceholder: '比如：CFO、財務總監、採購負責人',
     adminAddProduct: '新增產品',
     adminEditProduct: '編輯',
     adminDeleteProduct: '刪除',
@@ -594,6 +619,13 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminEditorTourStep3: 'Want to try? Click "Copy" on any row to spin up your own variant of a platform template, then "+ Add product" in the top-right for a blank one',
     adminEditorTourStep4: 'Click ⌄ on any row to expand its full description, audience, and landing-page URLs',
     adminEditorTourDismiss: 'Don\'t show again',
+    adminProductEditorTourTitle: '📝 First time? Here\'s the 4-step path',
+    adminProductEditorTourStep1: 'Start on the EN tab — fill the English name (we auto-derive an internal short code / ID from it)',
+    adminProductEditorTourStep2: 'Switch to other tabs to fill name / description / audience in each language (tabs hold independent content)',
+    adminProductEditorTourStep3: 'Industries can stay empty = generic product visible under any filter; pick some = only shown under those industry filters',
+    adminProductEditorTourStep4: 'One URL slot per (language × brand). Fill at least one; others fall back at runtime via brand → lang resolution',
+    adminFieldDescriptionPlaceholder: 'e.g. Helps CFOs/Finance Directors handle multi-currency expense reports and AP automation across travel, procurement and payment',
+    adminFieldAudiencePlaceholder: 'e.g. CFO, Finance Director, Procurement Lead',
     adminAddProduct: 'Add product',
     adminEditProduct: 'Edit',
     adminDeleteProduct: 'Delete',
@@ -742,6 +774,13 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminEditorTourStep3: '試してみたい？任意の行の「コピー」をクリックでテンプレートを自分のものとして複製、右上「+ 製品追加」で新規作成',
     adminEditorTourStep4: '行右の ⌄ をクリックすると、完全な説明・対象ユーザー・ランディング URL が展開します',
     adminEditorTourDismiss: '今後表示しない',
+    adminProductEditorTourTitle: '📝 はじめての入力？4ステップで完了',
+    adminProductEditorTourStep1: 'まず EN タブで英語名を入力（システムが内部コード / ID を自動生成します）',
+    adminProductEditorTourStep2: '他のタブに切り替えて、各言語の名称・説明・対象ユーザーを入力（タブごとに内容は独立）',
+    adminProductEditorTourStep3: '業種は未選択 = 汎用製品としてどのフィルターでも表示。選択すると、その業種フィルター下でのみ表示',
+    adminProductEditorTourStep4: '言語 × ブランドごとに 1 つの URL 枠。最低 1 つ入力すれば、他は実行時に brand → lang の順でフォールバック',
+    adminFieldDescriptionPlaceholder: '例：CFO/財務責任者向け、多通貨経費精算と AP 自動化を出張・調達・支払い全工程でサポート',
+    adminFieldAudiencePlaceholder: '例：CFO、財務責任者、調達責任者',
     adminAddProduct: '製品を追加',
     adminEditProduct: '編集',
     adminDeleteProduct: '削除',

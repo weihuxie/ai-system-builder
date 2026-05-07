@@ -46,6 +46,18 @@ test('editor sees the "+ 新增产品" button + can open the editor modal', asyn
   await expect(page.getByRole('button', { name: /保存/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /取消/ })).toBeVisible();
 
+  // Tier-A onboarding 改动锁（scoped to modal via role=dialog so we don't
+  // collide with the header LangSwitch's EN button）:
+  const dialog = page.getByRole('dialog');
+  // (1) create 模式默认 tab 落在 EN（避免小白先填非必填语言后被 disabled save 卡住）
+  const enTab = dialog.getByRole('button', { name: 'EN' });
+  await expect(enTab, 'create-mode default tab must be EN per Tier-A onboarding fix').toHaveClass(
+    /accent-bg/,
+  );
+  // (2) 第一次进来必须看到 4 步小白指引卡
+  await expect(dialog.getByText(/4 步搞定/)).toBeVisible();
+  await expect(dialog.getByText(/先点 EN tab 填英文名/)).toBeVisible();
+
   // 截图 2: editor modal 弹出态
   await page.screenshot({
     path: 'test-results/editor-add-product-modal.png',
