@@ -123,7 +123,6 @@ export interface UiStrings {
   adminFieldParticipating: string;
   adminSaved: string;
   adminProductOwner: string;
-  adminProductUnowned: string;
   adminProductClone: string;
   adminProductCloned: string;
   adminProductPublished: string;
@@ -333,7 +332,6 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldParticipating: '参与推荐',
     adminSaved: '已保存',
     adminProductOwner: '所有者',
-    adminProductUnowned: '无主（孤儿池）',
     adminProductClone: '克隆',
     adminProductCloned: '已克隆',
     adminProductPublished: '已上线',
@@ -488,7 +486,6 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldParticipating: '參與推薦',
     adminSaved: '已保存',
     adminProductOwner: '擁有者',
-    adminProductUnowned: '無主（孤兒池）',
     adminProductClone: '複製',
     adminProductCloned: '已複製',
     adminProductPublished: '已上線',
@@ -643,7 +640,6 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldParticipating: 'Participating',
     adminSaved: 'Saved',
     adminProductOwner: 'Owner',
-    adminProductUnowned: 'Unowned (orphan pool)',
     adminProductClone: 'Clone',
     adminProductCloned: 'Cloned',
     adminProductPublished: 'Published',
@@ -798,7 +794,6 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminFieldParticipating: '推薦対象',
     adminSaved: '保存しました',
     adminProductOwner: 'オーナー',
-    adminProductUnowned: '未所有（孤児プール）',
     adminProductClone: '複製',
     adminProductCloned: '複製しました',
     adminProductPublished: '公開中',

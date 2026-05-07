@@ -22,7 +22,7 @@ const TOUR_DISMISS_KEY = 'asb.editor-tour-dismissed.v1';
 
 const BRAND_LABEL: Record<Brand, string> = { google: 'Google', aws: 'AWS' };
 
-type Filter = 'mine' | 'all' | 'orphan';
+type Filter = 'mine' | 'all' | 'platform';
 
 export default function ProductList({ me }: { me: AuthedUser }) {
   const lang = useAppStore((s) => s.lang);
@@ -87,7 +87,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
       });
     }
     if (filter === 'mine') return all.filter((p) => p.ownerId === me.id);
-    if (filter === 'orphan') return all.filter((p) => p.ownerId === null);
+    if (filter === 'platform') return all.filter((p) => p.ownerId === null);
     return all;
   }, [all, filter, me.id, me.role]);
 
@@ -153,7 +153,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
 
       {me.role === 'super_admin' && (
         <div className="mt-3 inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5 text-xs">
-          {(['all', 'mine', 'orphan'] as Filter[]).map((f) => (
+          {(['all', 'mine', 'platform'] as Filter[]).map((f) => (
             <button
               key={f}
               type="button"
@@ -169,7 +169,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                 ? `${ui.adminProductsTitle} (${all.length})`
                 : f === 'mine'
                   ? `${ui.adminUsersRoleEditor}/${me.email.split('@')[0]}`
-                  : ui.adminProductUnowned}
+                  : ui.adminProductBadgePlatform}
             </button>
           ))}
         </div>
@@ -260,7 +260,7 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                     </button>
                     {me.role === 'super_admin' && (
                       <span className="rounded-full border border-slate-200 bg-slate-50/70 px-2 py-0.5 text-[10px] text-slate-500">
-                        {p.ownerEmail ?? ui.adminProductUnowned}
+                        {p.ownerEmail ?? ui.adminProductBadgePlatform}
                       </span>
                     )}
                     {/* Editor-side ownership badge:

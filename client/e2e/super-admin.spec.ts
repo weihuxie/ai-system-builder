@@ -17,16 +17,27 @@ test('super_admin sees all admin panels', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /产品管理/ })).toBeVisible();
 });
 
-test('super_admin sees filter tabs (all / mine / orphan) and can see orphan products', async ({
+test('super_admin sees filter tabs (all / mine / platform) and platform products show "平台" badge', async ({
   page,
 }) => {
-  const boss = await seedE2EUser('boss-orphan', 'super_admin');
-  await seedE2EProduct({ id: 'orphan-a', ownerId: null });
+  // 2026-05: 「无主（孤儿池）」 → 「平台」 重命名 — owner_id IS NULL 在系统里
+  // 实际语义就是"平台模板"，跟 editor 视角的 badge 一致。spec 锁住 super_admin
+  // 视角看到的也是 "平台"，不是 "无主（孤儿池）"。
+  const boss = await seedE2EUser('boss-platform', 'super_admin');
+  await seedE2EProduct({ id: 'platform-a', ownerId: null });
   await seedE2EProduct({ id: 'mine-a', ownerId: boss.userId });
 
   await signInAs(page, boss.email, boss.password);
-  await expect(page.locator('text=orphan-a').first()).toBeVisible();
+  await expect(page.locator('text=platform-a').first()).toBeVisible();
   await expect(page.locator('text=mine-a').first()).toBeVisible();
+
+  // ownerless 行的 owner badge 必须是「平台」，不能是「无主（孤儿池）」
+  const platformRow = page.locator('li').filter({ hasText: 'platform-a' });
+  await expect(platformRow.getByText('平台', { exact: true })).toBeVisible();
+  await expect(platformRow.getByText(/无主|孤儿/)).toHaveCount(0);
+
+  // filter chip 不能再叫「无主（孤儿池）」
+  await expect(page.getByRole('button', { name: /无主|孤儿/ })).toHaveCount(0);
 });
 
 test('super_admin can invite a new editor via the Users panel', async ({ page }) => {
