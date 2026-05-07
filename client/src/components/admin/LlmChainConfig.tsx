@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, GripVertical, Plus, Trash2 } from 'lucide-react';
 
 import {
   ALL_LLM_PROVIDERS,
@@ -29,6 +29,9 @@ export default function LlmChainConfig() {
 
   const [localChain, setLocalChain] = useState<LlmChain>([]);
   const [localTemp, setLocalTemp] = useState<number>(0.7);
+  // 同 QuickScenariosPanel：低频任务（demo 前调一两次链顺序就锁定），默认折叠
+  // 不挤占视线。dirty 时强制展开，防止用户改一半折叠后看不到 Save。
+  const [collapsed, setCollapsed] = useState(true);
   const dragIndexRef = useRef<number | null>(null);
 
   // Sync server → local when loaded / refetched
@@ -42,6 +45,10 @@ export default function LlmChainConfig() {
   if (query.isLoading) {
     return (
       <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
+        {/* heading 保留，跟 ready/collapsed/expanded 三态视觉一致；
+            e2e 用 heading 来 locate panel，loading 时 heading 缺失会让选择器
+            落空 → 测试不稳定。 */}
+        <h2 className="text-sm font-medium text-slate-600 mb-3">AI 模型链</h2>
         <div className="text-sm text-slate-500">加载中…</div>
       </section>
     );
@@ -49,6 +56,7 @@ export default function LlmChainConfig() {
   if (query.error) {
     return (
       <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
+        <h2 className="text-sm font-medium text-slate-600 mb-3">AI 模型链</h2>
         <ErrorBanner error={query.error} lang={lang} onDismiss={() => query.refetch()} />
       </section>
     );
@@ -93,35 +101,52 @@ export default function LlmChainConfig() {
     !!initial &&
     (JSON.stringify(initial.chain) !== JSON.stringify(localChain) ||
       initial.temperature !== localTemp);
+  const showBody = !collapsed || dirty;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-medium text-slate-600">AI 模型链</h2>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={resetDefaults}
-            className="text-xs text-slate-500 hover:text-slate-700"
-          >
-            恢复默认
-          </button>
-          <button
-            type="button"
-            onClick={save}
-            disabled={!dirty || mutation.isPending}
-            className="rounded-full accent-bg px-4 py-1.5 text-sm font-medium text-black disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {mutation.isPending ? '保存中…' : '保存'}
-          </button>
-        </div>
+      <div className={`flex items-center justify-between gap-3 ${showBody ? 'mb-4' : ''}`}>
+        <button
+          type="button"
+          onClick={() => setCollapsed((v) => !v)}
+          aria-expanded={showBody}
+          aria-controls="llm-chain-body"
+          className="flex items-center gap-2 -m-1 p-1 rounded-md text-slate-600 hover:text-slate-900"
+        >
+          <ChevronDown
+            size={14}
+            className={`transition-transform ${showBody ? '' : '-rotate-90'}`}
+          />
+          <h2 className="text-sm font-medium">AI 模型链</h2>
+        </button>
+        {showBody && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={resetDefaults}
+              className="text-xs text-slate-500 hover:text-slate-700"
+            >
+              恢复默认
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              disabled={!dirty || mutation.isPending}
+              className="rounded-full accent-bg px-4 py-1.5 text-sm font-medium text-black disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {mutation.isPending ? '保存中…' : '保存'}
+            </button>
+          </div>
+        )}
       </div>
 
-      <p className="text-xs text-slate-400 mb-3">
-        从上到下依次尝试，前一个失败（配额/超载）自动切到下一个。拖拽 <GripVertical className="inline" size={12}/> 调整顺序。
-      </p>
+      {showBody && (
+        <div id="llm-chain-body">
+          <p className="text-xs text-slate-400 mb-3">
+            从上到下依次尝试，前一个失败（配额/超载）自动切到下一个。拖拽 <GripVertical className="inline" size={12}/> 调整顺序。
+          </p>
 
-      <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-2">
         {localChain.map((item, idx) => {
           const presets = LLM_MODEL_PRESETS[item.providerId];
           const hasKey = configured[item.providerId];
@@ -228,7 +253,9 @@ export default function LlmChainConfig() {
         </label>
       </div>
 
-      <ErrorBanner error={mutation.error} lang={lang} onDismiss={() => mutation.reset()} />
+          <ErrorBanner error={mutation.error} lang={lang} onDismiss={() => mutation.reset()} />
+        </div>
+      )}
     </section>
   );
 }

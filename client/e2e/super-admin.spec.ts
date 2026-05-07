@@ -44,6 +44,9 @@ test('super_admin can invite a new editor via the Users panel', async ({ page })
   const boss = await seedE2EUser('boss-invite', 'super_admin');
   await signInAs(page, boss.email, boss.password);
 
+  // Users panel 默认折叠，先展开
+  await page.getByRole('button', { expanded: false, name: /授权用户/ }).click();
+
   // Fill the invite form (email input + submit).
   const email = `invitee-${Date.now()}+asbtest-e2e@example.com`;
   await page.getByPlaceholder('name@gmail.com').fill(email);
@@ -56,6 +59,24 @@ test('super_admin can invite a new editor via the Users panel', async ({ page })
   // ambiguity. The list entries wrap each email in a <span>, the toast does
   // not, so an `exact: true` getByText pinpoints the row only.
   await expect(page.getByText(email, { exact: true })).toBeVisible({ timeout: 10_000 });
+});
+
+test('users panel is collapsed by default and force-expands after a successful invite', async ({
+  page,
+}) => {
+  // 2026-05: 跟 LlmChain / QuickScenarios 一起做的折叠 — 邀请频次低。
+  // 邀请成功后 inviteResult 不为 null → 强制展开，避免 super_admin
+  // 看不到那条一次性 URL 卡片就丢了链接。
+  const boss = await seedE2EUser('boss-users-fold', 'super_admin');
+  await signInAs(page, boss.email, boss.password);
+
+  // 标题始终可见，body 不可见
+  await expect(page.getByRole('heading', { name: /授权用户/ })).toBeVisible();
+  await expect(page.getByPlaceholder('name@gmail.com')).toHaveCount(0);
+
+  // 点 chevron 展开
+  await page.getByRole('button', { expanded: false, name: /授权用户/ }).click();
+  await expect(page.getByPlaceholder('name@gmail.com')).toBeVisible();
 });
 
 test('quick scenarios panel is collapsed by default and expands on chevron click', async ({

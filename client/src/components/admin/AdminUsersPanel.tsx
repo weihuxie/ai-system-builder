@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Copy, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, Copy, Trash2 } from 'lucide-react';
 
 import {
   ALL_USER_ROLES,
@@ -42,6 +42,11 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
   >(null);
   const [copied, setCopied] = useState(false);
 
+  // 同 LlmChain / QuickScenarios：邀请频率不高，默认折叠不挤占视线。
+  // 刚发出邀请时 (inviteResult !== null) 强制展开，避免 super_admin
+  // 看不到那条一次性 URL 卡片就丢了链接。
+  const [collapsed, setCollapsed] = useState(true);
+
   const roleLabel = (r: UserRole) =>
     r === 'super_admin' ? ui.adminUsersRoleSuperAdmin : ui.adminUsersRoleEditor;
 
@@ -82,11 +87,27 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
   };
 
   const users = usersQuery.data ?? [];
+  // 强制展开条件：刚邀请成功（要让 super_admin 看到 link 卡片）
+  const showBody = !collapsed || inviteResult !== null;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-[var(--bg-surface)] p-5">
-      <h2 className="text-sm font-medium text-slate-600">{ui.adminUsersTitle}</h2>
+      <button
+        type="button"
+        onClick={() => setCollapsed((v) => !v)}
+        aria-expanded={showBody}
+        aria-controls="admin-users-body"
+        className="flex items-center gap-2 -m-1 p-1 rounded-md text-slate-600 hover:text-slate-900"
+      >
+        <ChevronDown
+          size={14}
+          className={`transition-transform ${showBody ? '' : '-rotate-90'}`}
+        />
+        <h2 className="text-sm font-medium">{ui.adminUsersTitle}</h2>
+      </button>
 
+      {showBody && (
+        <div id="admin-users-body">
       <form onSubmit={submitInvite} className="mt-4 flex flex-wrap items-end gap-3">
         <div className="flex-1 min-w-[220px]">
           <label className="block text-xs text-slate-500">{ui.adminUsersInviteEmail}</label>
@@ -229,6 +250,8 @@ export default function AdminUsersPanel({ me }: { me: AuthedUser }) {
           <li className="py-6 text-center text-sm text-slate-400">—</li>
         )}
       </ul>
+        </div>
+      )}
     </section>
   );
 }

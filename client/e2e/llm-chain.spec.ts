@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page, type Locator } from '@playwright/test';
 
 import { resetTestDb, seedE2EUser } from './helpers/supabase-admin';
 import { signInAs } from './helpers/session';
@@ -21,6 +21,22 @@ import { signInAs } from './helpers/session';
 const PANEL = (page: Page) =>
   page.locator('section').filter({ has: page.getByRole('heading', { name: 'AI 模型链' }) });
 
+// 2026-05: panel 默认折叠（low-frequency task，避免挤占视线）。所有交互
+// 测试需要先展开。封装在这里，单点维护。
+async function expandPanel(page: Page): Promise<Locator> {
+  const panel = PANEL(page);
+  await expect(panel).toBeVisible();
+  // 关键：等到 ready 态 — loading 态时 chevron toggle 还没渲染，直接找
+  // toggle 会拿到 count=0 然后 skip click，导致后续找按钮找不到。
+  // chevron toggle 只在 ready 态出现。
+  await expect(panel.getByRole('button', { name: /AI 模型链/ })).toBeVisible();
+  const toggle = panel.getByRole('button', { expanded: false, name: /AI 模型链/ });
+  if ((await toggle.count()) > 0) {
+    await toggle.click();
+  }
+  return panel;
+}
+
 test.beforeEach(async () => {
   await resetTestDb();
 });
@@ -29,8 +45,7 @@ test('LLM chain panel renders with default 1-row chain after reset', async ({ pa
   const boss = await seedE2EUser('boss-llm-1', 'super_admin');
   await signInAs(page, boss.email, boss.password);
 
-  const panel = PANEL(page);
-  await expect(panel).toBeVisible();
+  const panel = await expandPanel(page);
 
   // resetTestDb seeds llm_chain to a single gemini row, so we expect 1 li
   // inside the chain ul.
@@ -38,11 +53,29 @@ test('LLM chain panel renders with default 1-row chain after reset', async ({ pa
   await expect(rows).toHaveCount(1);
 });
 
+test('LLM chain panel is collapsed by default and expands on chevron click', async ({ page }) => {
+  const boss = await seedE2EUser('boss-llm-collapse', 'super_admin');
+  await signInAs(page, boss.email, boss.password);
+
+  const panel = PANEL(page);
+  await expect(panel).toBeVisible();
+
+  // 折叠态：rows 不可见、Reset/Save 不可见
+  await expect(panel.locator('ul > li')).toHaveCount(0);
+  await expect(panel.getByRole('button', { name: /^保存$/ })).toHaveCount(0);
+
+  // 点 chevron 展开
+  await panel.getByRole('button', { expanded: false, name: /AI 模型链/ }).click();
+
+  await expect(panel.locator('ul > li')).toHaveCount(1);
+  await expect(panel.getByRole('button', { name: /^保存$/ })).toBeVisible();
+});
+
 test('add row → save → reload → row persisted', async ({ page }) => {
   const boss = await seedE2EUser('boss-llm-2', 'super_admin');
   await signInAs(page, boss.email, boss.password);
 
-  const panel = PANEL(page);
+  const panel = await expandPanel(page);
   await panel.getByRole('button', { name: /添加一项/ }).click();
 
   // Now 2 rows. Edit the new row's model to a recognisable value.
@@ -66,8 +99,9 @@ test('add row → save → reload → row persisted', async ({ page }) => {
 
   // Reload, expect 2 rows with the marker model
   await page.reload();
-  await expect(PANEL(page).locator('ul > li')).toHaveCount(2);
-  await expect(PANEL(page).locator('ul > li').nth(1).locator('input[type="text"]')).toHaveValue(
+  const panelAfterReload = await expandPanel(page);
+  await expect(panelAfterReload.locator('ul > li')).toHaveCount(2);
+  await expect(panelAfterReload.locator('ul > li').nth(1).locator('input[type="text"]')).toHaveValue(
     'gemini-2.5-pro-test-marker',
   );
 });
@@ -76,7 +110,7 @@ test('delete middle row in a 3-row chain leaves first + last intact', async ({ p
   const boss = await seedE2EUser('boss-llm-3', 'super_admin');
   await signInAs(page, boss.email, boss.password);
 
-  const panel = PANEL(page);
+  const panel = await expandPanel(page);
   // Build a 3-row chain: [gemini, gemini, gemini] but with distinguishable models
   await panel.getByRole('button', { name: /添加一项/ }).click();
   await panel.getByRole('button', { name: /添加一项/ }).click();
@@ -101,7 +135,7 @@ test('toggle enabled on row 2 does not affect row 1 or 3', async ({ page }) => {
   const boss = await seedE2EUser('boss-llm-4', 'super_admin');
   await signInAs(page, boss.email, boss.password);
 
-  const panel = PANEL(page);
+  const panel = await expandPanel(page);
   await panel.getByRole('button', { name: /添加一项/ }).click();
   await panel.getByRole('button', { name: /添加一项/ }).click();
   const rows = panel.locator('ul > li');
@@ -120,7 +154,7 @@ test('switching provider on a row resets model to that provider\'s preset', asyn
   const boss = await seedE2EUser('boss-llm-5', 'super_admin');
   await signInAs(page, boss.email, boss.password);
 
-  const panel = PANEL(page);
+  const panel = await expandPanel(page);
   const firstRow = panel.locator('ul > li').first();
   const providerSelect = firstRow.locator('select');
   const modelInput = firstRow.locator('input[type="text"]');
@@ -140,7 +174,7 @@ test('save button stays disabled when nothing is dirty', async ({ page }) => {
   const boss = await seedE2EUser('boss-llm-6', 'super_admin');
   await signInAs(page, boss.email, boss.password);
 
-  const panel = PANEL(page);
+  const panel = await expandPanel(page);
   const saveBtn = panel.getByRole('button', { name: /^保存$/ });
   // Just landed; localChain mirrors server. Save should be disabled.
   await expect(saveBtn).toBeDisabled();
