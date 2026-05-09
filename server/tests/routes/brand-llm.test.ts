@@ -1,9 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 
 import { app } from '../helpers/app.js';
-import { resetDb, seedUser } from '../helpers/db.js';
+import { resetDb, seedUser, testDb } from '../helpers/db.js';
 import { authHeader, mintJwt } from '../helpers/jwt.js';
+
+const GLOBAL_CONFIG_ID = 1;
 
 describe('GET /api/brand (public)', () => {
   beforeEach(async () => {
@@ -11,10 +13,57 @@ describe('GET /api/brand (public)', () => {
   });
 
   it('returns current brand without auth', async () => {
+    // Strict ISO8601 + brand-in-set kills L23 .select('brand, updated_at') →
+    // .select('') (loose .toBeTruthy let the mutation through).
     const res = await request(app).get('/api/brand');
     expect(res.status).toBe(200);
     expect(['google', 'aws']).toContain(res.body.brand);
-    expect(res.body.updatedAt).toBeTruthy();
+    expect(typeof res.body.updatedAt).toBe('string');
+    expect(res.body.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('500 INTERNAL when DB brand value is corrupted', async () => {
+    // Kills L31 if(!brand.success) → if(false), L31:25 BlockStatement,
+    // L33 throw HttpError(500,'INTERNAL',`Invalid brand in DB: ${...}`)
+    // and the two string literals in that template.
+    const db = testDb();
+    const { error } = await db
+      .from('global_config')
+      .update({ brand: 'corrupt-brand' })
+      .eq('id', GLOBAL_CONFIG_ID);
+    if (error) throw new Error(`seed corrupt brand: ${error.message}`);
+
+    const res = await request(app).get('/api/brand');
+    expect(res.status).toBe(500);
+    expect(res.body.code).toBe('INTERNAL');
+    expect(res.body.message).toMatch(/invalid brand/i);
+    expect(res.body.message).toMatch(/corrupt-brand/);
+  });
+
+  it('500 INTERNAL when global_config row is missing', async () => {
+    // Kills L27 if(error) GET path, L27:41 'INTERNAL' string, L37 catch block.
+    // .single() on no rows returns PGRST116 error (not data=null), so this
+    // exercises the error branch, not L28 if(!data) — which is dead code by
+    // single()'s contract and intentionally left equivalent.
+    const db = testDb();
+    const { error: delErr } = await db
+      .from('global_config')
+      .delete()
+      .eq('id', GLOBAL_CONFIG_ID);
+    if (delErr) throw new Error(`delete global_config: ${delErr.message}`);
+
+    try {
+      const res = await request(app).get('/api/brand');
+      expect(res.status).toBe(500);
+      expect(res.body.code).toBe('INTERNAL');
+      // message comes from supabase error (PGRST116-ish), not from our literal
+      expect(typeof res.body.message).toBe('string');
+      expect(res.body.message.length).toBeGreaterThan(0);
+    } finally {
+      await db
+        .from('global_config')
+        .insert({ id: GLOBAL_CONFIG_ID, brand: 'google' });
+    }
   });
 });
 
@@ -50,7 +99,8 @@ describe('PUT /api/brand — super_admin only', () => {
     expect(get.body.brand).toBe('aws');
   });
 
-  it('400 for invalid brand value', async () => {
+  it('400 for invalid brand value (with code=VALIDATION + brand-hint message)', async () => {
+    // Mutation kills: L46 'VALIDATION' + L46 'Invalid brand (must be...)' StringLiteral
     const boss = await seedUser({ email: 'boss-bad@example.com', role: 'super_admin' });
     const token = mintJwt({ sub: boss.userId, email: boss.email });
 
@@ -59,6 +109,77 @@ describe('PUT /api/brand — super_admin only', () => {
       .set(authHeader(token))
       .send({ brand: 'azure' });
     expect(res.status).toBe(400);
+    expect(res.body.code).toBe('VALIDATION');
+    // message 必须含 google 或 aws 提示（防 L46 字符串 mutation 改成 ""）
+    expect(res.body.message).toMatch(/google|aws/i);
+  });
+
+  it('PUT empty body returns 400 not 500 (kills L44 OptionalChaining)', async () => {
+    // L44 mutation: req.body?.brand → req.body.brand。当 body 是 undefined 时
+    // 后者会 TypeError → 500。这条断言 400 杀 mutation。
+    const boss = await seedUser({ email: 'boss-empty@example.com', role: 'super_admin' });
+    const token = mintJwt({ sub: boss.userId, email: boss.email });
+
+    const res = await request(app)
+      .put('/api/brand')
+      .set(authHeader(token));
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('VALIDATION');
+  });
+
+  it('PUT empty object body returns 400 (no brand field)', async () => {
+    const boss = await seedUser({ email: 'boss-empty2@example.com', role: 'super_admin' });
+    const token = mintJwt({ sub: boss.userId, email: boss.email });
+    const res = await request(app)
+      .put('/api/brand')
+      .set(authHeader(token))
+      .send({});
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT response body has both brand + updatedAt (kills L54 select StringLiteral)', async () => {
+    // L54 mutation: .select('brand, updated_at') → '' 时 Supabase 行为变。
+    // 严格断言两个字段都在 + updatedAt 是合法 ISO timestamp。
+    const boss = await seedUser({ email: 'boss-fields@example.com', role: 'super_admin' });
+    const token = mintJwt({ sub: boss.userId, email: boss.email });
+
+    const res = await request(app)
+      .put('/api/brand')
+      .set(authHeader(token))
+      .send({ brand: 'aws' });
+    expect(res.status).toBe(200);
+    expect(res.body.brand).toBe('aws');
+    expect(typeof res.body.updatedAt).toBe('string');
+    expect(res.body.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/); // ISO8601
+  });
+
+  it('PUT 500 INTERNAL when global_config row is missing', async () => {
+    // Kills L57 if(error) PUT path + L57:41 'INTERNAL' string. Update on a
+    // missing row returns PGRST116 error from .single(); the catch in L37 fires
+    // and propagates the HttpError. Restore the row in finally so subsequent
+    // tests still find global_config.
+    const boss = await seedUser({ email: 'boss-missing@example.com', role: 'super_admin' });
+    const token = mintJwt({ sub: boss.userId, email: boss.email });
+
+    const db = testDb();
+    const { error: delErr } = await db
+      .from('global_config')
+      .delete()
+      .eq('id', GLOBAL_CONFIG_ID);
+    if (delErr) throw new Error(`delete global_config: ${delErr.message}`);
+
+    try {
+      const res = await request(app)
+        .put('/api/brand')
+        .set(authHeader(token))
+        .send({ brand: 'aws' });
+      expect(res.status).toBe(500);
+      expect(res.body.code).toBe('INTERNAL');
+    } finally {
+      await db
+        .from('global_config')
+        .insert({ id: GLOBAL_CONFIG_ID, brand: 'google' });
+    }
   });
 });
 

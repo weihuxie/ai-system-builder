@@ -21,3 +21,5 @@ server/evals/eval-result-prod.json
 # Stryker mutation testing reports — large HTML output, not versioned
 server/stryker-report/
 server/.stryker-tmp/
+server/stryker-report-integration/
+server/.stryker-tmp-integration/

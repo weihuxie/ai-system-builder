@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Integration mutation config — mutate routes/* using real Supabase via .env.test. Slow (35-60 min per file scope) so we run only on demand, not in CI. Scope intentionally narrow: 1 routes file at a time, paired with the spec(s) that cover it.",
+  "packageManager": "npm",
+  "testRunner": "vitest",
+  "vitest": {
+    "configFile": "vitest.integration-mutation.config.ts"
+  },
+  "mutate": [
+    "src/routes/brand.ts"
+  ],
+  "checkers": [],
+  "reporters": ["progress", "html", "json", "clear-text"],
+  "htmlReporter": { "fileName": "stryker-report-integration/index.html" },
+  "jsonReporter": { "fileName": "stryker-report-integration/mutation.json" },
+  "_coverageComment": "off — Stryker's vitest runner perTest coverage breaks on integration tests with shared DB state; full re-run per mutant is the safe option.",
+  "coverageAnalysis": "off",
+  "thresholds": {
+    "high": 70,
+    "low": 50,
+    "break": 0
+  },
+  "tempDirName": ".stryker-tmp-integration",
+  "concurrency": 1,
+  "_concurrencyComment": "1 because Supabase free-tier rate limits + shared test DB. Parallel mutants would step on each other's resetDb / seed calls.",
+  "timeoutMS": 120000,
+  "_inPlaceComment": "inPlace=true 让 Stryker 直接 mutate 源文件，避免 sandbox 里 ESM .js→.ts 解析 bug (跟 unit config 同套问题)。",
+  "inPlace": true
+}
