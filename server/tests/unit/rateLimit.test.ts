@@ -129,6 +129,36 @@ describe('limiter response payload', () => {
   });
 });
 
+describe('sttLimiter config (kills L41-43 surviving)', () => {
+  // sttLimiter 配置 surviving: standardHeaders='draft-7' / legacyHeaders=false /
+  // message.code+message。这些跟 generateLimiter 同结构但是独立实例，需要单独验。
+
+  it('STT 429 message has the specific transcription wording', async () => {
+    process.env.NODE_ENV = 'production';
+    const app = buildAppWithLimiter(sttLimiter);
+    const ip = `10.0.0.71:${Date.now()}`;
+    for (let i = 0; i < STT_RATE_LIMIT; i++) {
+      await request(app).get('/limited').set('X-Forwarded-For', ip);
+    }
+    const overflow = await request(app).get('/limited').set('X-Forwarded-For', ip);
+    expect(overflow.body.code).toBe('RATE_LIMITED');
+    // 杀 L41/L43 StringLiteral mutation: 把 'RATE_LIMITED' 或 message 改成 ''
+    expect(overflow.body.message).toBe('Too many transcription requests. Try again in a minute.');
+  });
+
+  it('STT limiter draft-7 RateLimit headers (kills L42 BooleanLiteral standardHeaders)', async () => {
+    process.env.NODE_ENV = 'production';
+    const app = buildAppWithLimiter(sttLimiter);
+    const ip = `10.0.0.72:${Date.now()}`;
+    const res = await request(app).get('/limited').set('X-Forwarded-For', ip);
+    // standardHeaders='draft-7' → header 必须存在；mutation 改成 true 会变 default 名
+    expect(res.headers['ratelimit']).toBeDefined();
+    expect(res.headers['ratelimit']).toMatch(new RegExp(`limit=${STT_RATE_LIMIT}`));
+    // legacyHeaders=false → 不应该出现 X-RateLimit-*
+    expect(res.headers['x-ratelimit-limit']).toBeUndefined();
+  });
+});
+
 describe('draft-7 RateLimit headers (well-behaved client self-throttle)', () => {
   it('successful request includes RateLimit + RateLimit-Policy headers', async () => {
     process.env.NODE_ENV = 'production';

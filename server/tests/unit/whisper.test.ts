@@ -221,6 +221,33 @@ describe('whisperTranscribe · empty response', () => {
   });
 });
 
+describe('whisperTranscribe · endpoint URL + Blob construction', () => {
+  // 杀 L24 STRINGLITERAL → "" (endpoint) 和 L53 ARRAY/OBJECT → []/{}
+  it('hits OpenAI transcription endpoint exactly', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('hi', { status: 200 }));
+    await whisperTranscribe({ audio, mimeType: 'audio/webm', lang: 'en' });
+    expect(fetchSpy.mock.calls[0]![0]).toBe('https://api.openai.com/v1/audio/transcriptions');
+  });
+
+  it('Blob preserves audio bytes (not [] empty)', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('hi', { status: 200 }));
+    const knownBytes = Buffer.from('UNIQUE-AUDIO-MARKER-BYTES');
+    await whisperTranscribe({ audio: knownBytes, mimeType: 'audio/webm', lang: 'en' });
+    const form = fetchSpy.mock.calls[0]![1]?.body as FormData;
+    const file = form.get('file') as File;
+    // L53 [] mutation 把 [args.audio] 改成 []，Blob 大小变 0
+    expect(file.size).toBe(knownBytes.length);
+  });
+
+  it('Blob mimeType matches input arg (not {} default)', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('hi', { status: 200 }));
+    await whisperTranscribe({ audio, mimeType: 'audio/webm', lang: 'en' });
+    const form = fetchSpy.mock.calls[0]![1]?.body as FormData;
+    const file = form.get('file') as File;
+    expect(file.type).toBe('audio/webm');
+  });
+});
+
 describe('whisperTranscribe · timeout / abort', () => {
   it('classifies AbortError as overload (timeout)', async () => {
     const abortErr = new Error('Aborted');

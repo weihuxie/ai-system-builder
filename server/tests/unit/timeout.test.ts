@@ -100,15 +100,44 @@ describe('raceWithTimeout · rejects on timeout', () => {
 });
 
 describe('raceWithTimeout · cleanup', () => {
-  it('clears the timeout when promise resolves first (no leaked timer)', async () => {
+  it('clears the timeout when promise resolves first (timer count 检查严格化)', async () => {
     vi.useFakeTimers();
     try {
       const fast = Promise.resolve('quick');
       await raceWithTimeout(fast, 1_000_000, 'test');
-      // 如果 timer 没 clear，advanceTimers 会触发 reject 但 promise 已 resolved
-      // —— 这条不严格验内部 timer 但配合下面"无 unhandled rejection"间接验证
-      vi.advanceTimersByTime(1_000_000);
-      expect(true).toBe(true); // 走到这里没报 unhandled rejection 即通过
+      // 严格断言：cleanup 后 active timer 数 = 0。如果 finally block 被 mutation
+      // 跳过（{} block / if (timer) 条件被改），timer 会留下来，count > 0。
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('no unhandled rejection after promise resolves (advance time should be safe)', async () => {
+    vi.useFakeTimers();
+    try {
+      const fast = Promise.resolve('done');
+      await raceWithTimeout(fast, 1000, 'test');
+      // promise 已 resolve；timer 应已 clear。advance 不会触发 timeout 抛 → 没 unhandled
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('timer is set and count = 1 mid-race (sanity that timer was scheduled)', async () => {
+    vi.useFakeTimers();
+    try {
+      const hung = new Promise<string>(() => {});
+      const racePromise = raceWithTimeout(hung, 5000, 'test');
+      // pre-attach catch handler — 避免 advance 触发 reject 时被算作 unhandled
+      racePromise.catch(() => {});
+      // 进入 race 后 timer 数 = 1（因为 hung promise 不会 resolve）
+      expect(vi.getTimerCount()).toBe(1);
+      // cleanup
+      await vi.advanceTimersByTimeAsync(5000);
+      await expect(racePromise).rejects.toThrow();
     } finally {
       vi.useRealTimers();
     }

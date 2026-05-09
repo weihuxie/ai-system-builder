@@ -167,13 +167,30 @@ describe('rowToProduct · industries normalisation (migration 0005)', () => {
 });
 
 describe('productToRow · partial PATCH semantics', () => {
-  it('only includes fields that are explicitly set', () => {
+  it('only includes fields that are explicitly set (strict — no undefined keys)', () => {
+    // 用 toStrictEqual 而非 toEqual：vitest toEqual 容忍 { id: undefined } ≡ {}，
+    // 让 PATCH undefined-check 的 mutation 漏网（if (p.id !== undefined) → if (true)
+    // 会让 row.id 被赋值成 undefined，但 toEqual 看不出区别）。toStrictEqual
+    // 严格匹配 + Object.keys 显式断言 keys 数量，杀这类 mutation。
     const row = productToRow({ id: 'X', isParticipating: false });
-    expect(row).toEqual({ id: 'X', is_participating: false });
+    expect(row).toStrictEqual({ id: 'X', is_participating: false });
+    expect(Object.keys(row).sort()).toEqual(['id', 'is_participating']);
     // 其它字段必须不出现（PATCH 语义关键 — 否则会把别的列写空）
     expect('name' in row).toBe(false);
     expect('description' in row).toBe(false);
     expect('owner_id' in row).toBe(false);
+  });
+
+  it('PATCH 单字段：只 set name 时其它 5 个字段都不出现 (kills 5 ConditionalExpression mutants)', () => {
+    const row = productToRow({ name: { 'zh-CN': '', 'zh-HK': '', en: 'X', ja: '' } });
+    expect(Object.keys(row)).toEqual(['name']);
+  });
+
+  it('PATCH 单字段：只 set description / audience / url / industries 各自只出现一个 key', () => {
+    expect(Object.keys(productToRow({ description: { 'zh-CN': '', 'zh-HK': '', en: '', ja: '' } }))).toEqual(['description']);
+    expect(Object.keys(productToRow({ audience: { 'zh-CN': '', 'zh-HK': '', en: '', ja: '' } }))).toEqual(['audience']);
+    expect(Object.keys(productToRow({ url: { google: { 'zh-CN': '', 'zh-HK': '', en: '', ja: '' }, aws: { 'zh-CN': '', 'zh-HK': '', en: '', ja: '' } } }))).toEqual(['url']);
+    expect(Object.keys(productToRow({ industries: ['retail'] }))).toEqual(['industries']);
   });
 
   it('converts camelCase → snake_case for DB columns', () => {
@@ -209,8 +226,36 @@ describe('productToRow · partial PATCH semantics', () => {
     expect(row.industries).toEqual(['retail']);
   });
 
-  it('returns empty object when input is empty (degenerate but not crash)', () => {
-    expect(productToRow({})).toEqual({});
+  it('returns empty object when input is empty (strict — no implicit undefined keys)', () => {
+    // toStrictEqual + keys.length=0 → 杀 if undefined-check mutation
+    expect(productToRow({})).toStrictEqual({});
+    expect(Object.keys(productToRow({})).length).toBe(0);
+  });
+});
+
+describe('inflateBrandUrls · L47 LogicalOperator + ConditionalExpression', () => {
+  // L47 surviving mutation:
+  //   - LogicalOperator: `v && typeof v === 'object'` → `v || typeof v === 'object'`
+  //   - ConditionalExpression: 整个条件 → `true`
+  // 这两条都让"非 object 非 string 的输入"走错分支。补几条 falsy 输入测试。
+
+  it('non-object non-string returns empty LangMap (number)', () => {
+    // 这个 case 走的就是 line 56 默认分支。如果 mutation 让条件 → true，
+    // 函数会尝试从 number 上读 .zh-CN 等 → 全是 undefined → 仍然返 empty
+    // LangMap，看似行为一致 — 但分支差异在 typeof obj['xx'] === 'string'
+    // check 上。我们再 pin 几条 case 让 mutation 难以等价。
+    const result = rowToProduct(minimalRow({ url: { google: 42 } }));
+    expect(result.url.google).toEqual({ 'zh-CN': '', 'zh-HK': '', en: '', ja: '' });
+  });
+
+  it('non-object non-string returns empty LangMap (true)', () => {
+    const result = rowToProduct(minimalRow({ url: { google: true } }));
+    expect(result.url.google).toEqual({ 'zh-CN': '', 'zh-HK': '', en: '', ja: '' });
+  });
+
+  it('non-object non-string returns empty LangMap (Symbol)', () => {
+    const result = rowToProduct(minimalRow({ url: { google: Symbol('s') } as never }));
+    expect(result.url.google).toEqual({ 'zh-CN': '', 'zh-HK': '', en: '', ja: '' });
   });
 });
 

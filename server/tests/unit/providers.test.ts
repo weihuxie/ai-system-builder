@@ -215,6 +215,141 @@ describe('kimiProvider', () => {
     const body = JSON.parse(String(fetchSpy.mock.calls[0]![1]?.body));
     expect(body.temperature).toBe(0.2);
   });
+
+  // ───────────────────────────────────────────
+  // schemaHint 拼接 (杀 L118-127 的 StringLiteral mutants)
+  // ───────────────────────────────────────────
+  it('fullPrompt contains "OUTPUT FORMAT" header (kills L120 StringLiteral)', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(ok200('{"x":1}'));
+    await kimiProvider.generate('kimi-k2.6', baseArgs);
+    const body = JSON.parse(String(fetchSpy.mock.calls[0]![1]?.body));
+    const userMsg = body.messages[0].content as string;
+    expect(userMsg).toContain('OUTPUT FORMAT');
+  });
+
+  it('fullPrompt embeds the activeProductIds set verbatim', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(ok200('{"x":1}'));
+    await kimiProvider.generate('kimi-k2.6', baseArgs);
+    const body = JSON.parse(String(fetchSpy.mock.calls[0]![1]?.body));
+    const userMsg = body.messages[0].content as string;
+    // L122 把每个 id 包进 "ID" 形式 + join。空 array mutation 会丢这些
+    expect(userMsg).toContain('"CRM"');
+    expect(userMsg).toContain('"CLM"');
+    expect(userMsg).toContain('"OMS"');
+  });
+
+  it('fullPrompt has selectedProducts contract phrase (kills L122 StringLiteral)', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(ok200('{"x":1}'));
+    await kimiProvider.generate('kimi-k2.6', baseArgs);
+    const body = JSON.parse(String(fetchSpy.mock.calls[0]![1]?.body));
+    expect((body.messages[0].content as string)).toContain('"selectedProducts"');
+    expect((body.messages[0].content as string)).toContain('exactly 3 product IDs');
+  });
+
+  it('fullPrompt has rationale contract phrase + JSON-only directive', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(ok200('{"x":1}'));
+    await kimiProvider.generate('kimi-k2.6', baseArgs);
+    const body = JSON.parse(String(fetchSpy.mock.calls[0]![1]?.body));
+    const userMsg = body.messages[0].content as string;
+    expect(userMsg).toContain('"rationale"');
+    expect(userMsg).toMatch(/JSON only/i);
+    expect(userMsg).toMatch(/Do NOT include/i);
+  });
+
+  it('fullPrompt example shape JSON snippet present (kills L125 StringLiteral)', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(ok200('{"x":1}'));
+    await kimiProvider.generate('kimi-k2.6', baseArgs);
+    const body = JSON.parse(String(fetchSpy.mock.calls[0]![1]?.body));
+    const userMsg = body.messages[0].content as string;
+    // example 字面量 — 帮 LLM 锚定 JSON 形状
+    expect(userMsg).toContain('Example shape');
+    expect(userMsg).toMatch(/\{"selectedProducts":\["A","B","C"\]/);
+  });
+
+  it('user prompt prefix preserved (orig prompt + \\n + schemaHint)', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(ok200('{"x":1}'));
+    await kimiProvider.generate('kimi-k2.6', baseArgs);
+    const body = JSON.parse(String(fetchSpy.mock.calls[0]![1]?.body));
+    const userMsg = body.messages[0].content as string;
+    // 原 prompt 在前，schemaHint 在后；起始必须是 baseArgs.prompt 内容
+    expect(userMsg.startsWith(baseArgs.prompt)).toBe(true);
+  });
+
+  // ───────────────────────────────────────────
+  // OptionalChaining 边界 (杀 L157)
+  // ───────────────────────────────────────────
+  it('handles choices=[{}] (no .message field) — fatal Empty', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ choices: [{}] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const r = await kimiProvider.generate('kimi-k2.6', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('fatal');
+  });
+
+  it('handles choices=[{message:{}}] (no content) — fatal Empty', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ choices: [{ message: {} }] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const r = await kimiProvider.generate('kimi-k2.6', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('fatal');
+  });
+
+  it('handles missing choices field — fatal Empty', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const r = await kimiProvider.generate('kimi-k2.6', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('fatal');
+  });
+
+  // ───────────────────────────────────────────
+  // body.slice(0, 300) 截断 (杀 L151 MethodExpression)
+  // ───────────────────────────────────────────
+  it('truncates very long error body to 300 chars in error message', async () => {
+    const long = 'X'.repeat(2000);
+    vi.spyOn(global, 'fetch').mockResolvedValue(error(500, long));
+    const r = await kimiProvider.generate('kimi-k2.6', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      // 完整 body 2000 chars + "Kimi 500: " prefix；slice 后应该 ≤ 300 + prefix
+      // 用 X 精确数：300 个 X 在 message 里，2000 个 X 不在
+      const xCount = (r.message.match(/X/g) ?? []).length;
+      expect(xCount).toBe(300);
+    }
+  });
+
+  // ───────────────────────────────────────────
+  // isConfigured arrow function 杀 L110
+  // ───────────────────────────────────────────
+  it('isConfigured returns true when KIMI_API_KEY set', () => {
+    expect(kimiProvider.isConfigured()).toBe(true);
+  });
+
+  it('isConfigured returns false when KIMI_API_KEY missing', () => {
+    delete process.env.KIMI_API_KEY;
+    expect(kimiProvider.isConfigured()).toBe(false);
+  });
+
+  it('isConfigured returns boolean type, never undefined', () => {
+    // 杀 L110 ArrowFunction → "() => undefined" mutation
+    expect(typeof kimiProvider.isConfigured()).toBe('boolean');
+  });
+
+  it('provider id is "kimi" (kills id StringLiteral mutation)', () => {
+    expect(kimiProvider.id).toBe('kimi');
+  });
 });
 
 // ───────────────────────────────────────────
@@ -262,6 +397,53 @@ describe('deepseekProvider', () => {
     const r = await deepseekProvider.generate('deepseek-chat', baseArgs);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.kind).toBe('overload');
+  });
+
+  it('isConfigured returns boolean (kills L180 ArrowFunction → undefined)', () => {
+    expect(typeof deepseekProvider.isConfigured()).toBe('boolean');
+    expect(deepseekProvider.isConfigured()).toBe(true);
+    delete process.env.DEEPSEEK_API_KEY;
+    expect(deepseekProvider.isConfigured()).toBe(false);
+  });
+
+  it('provider id is "deepseek"', () => {
+    expect(deepseekProvider.id).toBe('deepseek');
+  });
+
+  it('truncates error body to 300 chars (kills L218 body.slice MethodExpression)', async () => {
+    const long = 'Y'.repeat(2000);
+    vi.spyOn(global, 'fetch').mockResolvedValue(error(500, long));
+    const r = await deepseekProvider.generate('deepseek-chat', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      const yCount = (r.message.match(/Y/g) ?? []).length;
+      expect(yCount).toBe(300);
+    }
+  });
+
+  it('handles choices=[] empty array — fatal', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ choices: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const r = await deepseekProvider.generate('deepseek-chat', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('fatal');
+  });
+
+  it('classifies fetch network error as fatal with custom message fallback', async () => {
+    // 杀 L228 LogicalOperator: `(e as Error).message || 'DeepSeek fetch failed'`
+    // 改 `&&` 后空 message 不会被 fallback 到默认字符串
+    const noMessageErr = new Error('');
+    vi.spyOn(global, 'fetch').mockRejectedValue(noMessageErr);
+    const r = await deepseekProvider.generate('deepseek-chat', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      // empty err.message → fallback 到 'DeepSeek fetch failed'
+      expect(r.message).toBe('DeepSeek fetch failed');
+    }
   });
 });
 
@@ -373,5 +555,62 @@ describe('geminiProvider', () => {
     expect(geminiProvider.isConfigured()).toBe(true);
     delete process.env.GEMINI_API_KEY;
     expect(geminiProvider.isConfigured()).toBe(false);
+  });
+
+  it('isConfigured returns boolean (kills L67 ArrowFunction → undefined)', () => {
+    expect(typeof geminiProvider.isConfigured()).toBe('boolean');
+  });
+
+  it('schema selectedProducts has type=ARRAY of strings (kills schema StringLiteral)', async () => {
+    generateContentMock.mockResolvedValue({ text: '{}' });
+    await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    const schema = generateContentMock.mock.calls[0][0].config.responseSchema;
+    expect(schema.properties.selectedProducts.type).toBe('array');
+    expect(schema.properties.selectedProducts.items.type).toBe('string');
+  });
+
+  it('schema rationale property descriptions reference each id (kills L42 StringLiteral)', async () => {
+    generateContentMock.mockResolvedValue({ text: '{}' });
+    await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    const schema = generateContentMock.mock.calls[0][0].config.responseSchema;
+    // L42 描述字符串里包含 ${id}，每个 id 一个描述
+    expect(schema.properties.rationale.properties.CRM.description).toMatch(/CRM/);
+    expect(schema.properties.rationale.properties.CRM.description).toMatch(/2-3 sentence/);
+  });
+
+  it('schema required field includes both selectedProducts and rationale (kills L61 ArrayDeclaration)', async () => {
+    generateContentMock.mockResolvedValue({ text: '{}' });
+    await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    const schema = generateContentMock.mock.calls[0][0].config.responseSchema;
+    // L61 [] mutation 把 required 改成空数组，让 schema 不强制 fields
+    expect(schema.required).toEqual(['selectedProducts', 'rationale']);
+  });
+
+  it('schema selectedProducts description present (kills L53 StringLiteral)', async () => {
+    generateContentMock.mockResolvedValue({ text: '{}' });
+    await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    const schema = generateContentMock.mock.calls[0][0].config.responseSchema;
+    expect(schema.properties.selectedProducts.description).toMatch(/3 product IDs/);
+  });
+
+  it('schema rationale obj-level description present (kills L58 StringLiteral)', async () => {
+    generateContentMock.mockResolvedValue({ text: '{}' });
+    await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    const schema = generateContentMock.mock.calls[0][0].config.responseSchema;
+    expect(schema.properties.rationale.description).toMatch(/productId/);
+  });
+
+  it('config sets responseMimeType=application/json (locks JSON contract)', async () => {
+    generateContentMock.mockResolvedValue({ text: '{}' });
+    await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    const config = generateContentMock.mock.calls[0][0].config;
+    expect(config.responseMimeType).toBe('application/json');
+  });
+
+  it('contents arg is the prompt string verbatim', async () => {
+    generateContentMock.mockResolvedValue({ text: '{}' });
+    const customPrompt = 'TEST-PROMPT-MARKER';
+    await geminiProvider.generate('gemini-2.5-flash', { ...baseArgs, prompt: customPrompt });
+    expect(generateContentMock.mock.calls[0][0].contents).toBe(customPrompt);
   });
 });
