@@ -8,9 +8,14 @@
   },
   "mutate": [
     "src/middleware/errors.ts",
+    "src/middleware/rateLimit.ts",
     "src/lib/generateCache.ts",
     "src/lib/prompt.ts",
-    "src/lib/providers.ts"
+    "src/lib/providers.ts",
+    "src/lib/timeout.ts",
+    "src/lib/mappers.ts",
+    "src/lib/whisper.ts",
+    "src/lib/logger.ts"
   ],
   "checkers": [],
   "reporters": ["progress", "html", "json", "clear-text"],
@@ -24,5 +29,7 @@
   },
   "tempDirName": ".stryker-tmp",
   "concurrency": 2,
-  "timeoutMS": 30000
+  "timeoutMS": 30000,
+  "_inPlaceComment": "inPlace=true 让 Stryker 直接 mutate 源文件而不是 sandbox copy。代价：mutation 跑期间源码被反复改写，崩溃时可能留下损坏副本（git restore 修复）。收益：解决 Stryker vitest runner 在 sandbox 中无法正确解析 TS-ESM .js→.ts 路径的 bug，让 prompt.ts 这种走 .js 扩展 import 的模块的 instrumentation 真正生效。",
+  "inPlace": true
 }

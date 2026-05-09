@@ -97,12 +97,17 @@ const build = (overrides: Partial<Parameters<typeof buildRecommendationPrompt>[0
 // 1. Brand 上下文锁
 // ───────────────────────────────
 describe('brand context', () => {
-  it('mentions "Google Cloud" when brand=google', () => {
-    expect(build({ brand: 'google' })).toContain('Google Cloud');
+  it('mentions "Google Cloud" when brand=google (interpolated, not hardcoded)', () => {
+    // 同 AWS 反向：用插值点确保 BRAND_NAME.google → "" 的 mutation 被 kill
+    expect(build({ brand: 'google' })).toContain('current brand is Google Cloud');
   });
 
   it('mentions "AWS" when brand=aws', () => {
-    expect(build({ brand: 'aws' })).toContain('AWS');
+    // 注意：assert 必须用 BRAND_NAME[aws] 被实际插值的位置（不是任何 "AWS"
+    // 字面量都行 —— prompt 模板里有硬编码 "AWS Summit" 在举例中）。
+    // 这里 "current brand is AWS." 锁定到 line 39 的 ${brandName} 插值点，
+    // 杀 BRAND_NAME.aws → "" 那个 mutation。
+    expect(build({ brand: 'aws' })).toContain('current brand is AWS');
   });
 
   it('does NOT contain "Google Cloud" when brand=aws (no brand cross-contamination)', () => {
@@ -169,10 +174,16 @@ describe('product rendering', () => {
   it('separates products with a clear delimiter so the model can parse', () => {
     const out = build({ lang: 'en' });
     // 2 fixture products → at least 1 between-product separator (\n\n).
-    // We assert by counting "ID:" markers — if rendered correctly there are 2.
     const idMarkers = out.match(/ID: /g);
     expect(idMarkers).not.toBeNull();
     expect(idMarkers!.length).toBe(2);
+
+    // 锁住产品块之间真有 blank line 分隔（杀 join('\n\n') → join('') mutation）。
+    // 取两个 "ID:" 之间的 substring，必须包含至少一个 \n\n。
+    const firstIdIdx = out.indexOf('ID: ');
+    const secondIdIdx = out.indexOf('ID: ', firstIdIdx + 1);
+    const between = out.slice(firstIdIdx, secondIdIdx);
+    expect(between).toContain('\n\n');
   });
 });
 
