@@ -11,7 +11,6 @@
 
 import cors from 'cors';
 import express from 'express';
-import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 
 import { adminRouter } from './routes/admin.js';
@@ -23,8 +22,16 @@ import { productsRouter } from './routes/products.js';
 import { quickScenariosRouter } from './routes/quickScenarios.js';
 import { sttRouter } from './routes/stt.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
+import { generateLimiter, sttLimiter } from './middleware/rateLimit.js';
 
 const app = express();
+
+// Trust loopback proxies only — lets supertest fake X-Forwarded-For from
+// 127.0.0.1 in rate-limit tests (each test fakes a unique IP for bucket
+// isolation). On Vercel prod, connections come from Vercel's runtime layer
+// (not loopback), so this setting is a no-op there — req.ip still comes
+// from @vercel/node's built-in handling.
+app.set('trust proxy', 'loopback');
 
 // ── Security headers (helmet) ──
 // Bare minimum: HSTS already shipped by Vercel, but everything else (X-Frame,
@@ -100,36 +107,8 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// ── Rate limit (CLAUDE.md §4.5 #1) ──
-// Per audit F1, /api/generate and /api/stt are unauthenticated entry points
-// that hit paid LLM/Whisper APIs. Without a limiter, a single misbehaving
-// client (or a Summit attendee with cURL) can drain quota.
-//
-// Window: 60 s sliding (the limiter uses a fixed window of windowMs).
-// Generate: 10/min/IP — typical lecturer demo flow does 1-2/min.
-// STT: 20/min/IP — voice recordings come in bursts.
-//
-// Bucketing by IP via express defaults; behind Vercel/Cloud Run we'd want to
-// trust X-Forwarded-For, but Vercel sets req.ip correctly via @vercel/node so
-// we leave defaults.
-//
-// `standardHeaders: 'draft-7'` returns RateLimit-* headers so a
-// well-behaved client can self-throttle.
-const generateLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 10,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { code: 'RATE_LIMITED', message: 'Too many requests. Try again in a minute.' },
-});
-const sttLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 20,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { code: 'RATE_LIMITED', message: 'Too many transcription requests. Try again in a minute.' },
-});
-
+// Rate limiters extracted to ./middleware/rateLimit.ts so test code can
+// reset stores between specs (CLAUDE.md §4.5 F1 + audit Top-1).
 app.use('/api/generate', generateLimiter, generateRouter);
 app.use('/api/stt', sttLimiter, sttRouter);
 app.use('/api/products', productsRouter);

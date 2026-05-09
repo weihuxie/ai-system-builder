@@ -156,4 +156,80 @@ describe('LLM chain failover · /api/generate', () => {
     // behavior so it's intentional and visible.
     expect(callTrace).toEqual(['gemini']);
   });
+
+  // ───────────────────────────────────────────
+  // E (audit Top-5): cache hit / AI_PARSE 死区补充
+  // 之前 generate.ts:69-87 cache hit 路径 + 131-135 JSON.parse 抛异常
+  // 分支无集成测试。Cache hit 是 Summit 8 个 quick scenario × N click 的
+  // 主路径 — 把 cache 反向改一行，generate 仍然能运行只是每次都打 LLM，
+  // 用户感觉慢但不报错；这条路径必须显式锁。
+  // ───────────────────────────────────────────
+
+  it('cache hit: same input twice → second call skips LLM entirely', async () => {
+    nextResults.gemini = { ok: true, rawText: validRationale(['CRM', 'CLM', 'OMS']) };
+
+    // First call: hits Gemini, populates cache
+    const res1 = await request(app).post('/api/generate').send({ userInput: 'cached scenario', lang: 'en' });
+    expect(res1.status).toBe(200);
+    expect(callTrace).toEqual(['gemini']);
+
+    // Second call: identical input → cache hit, no LLM touched
+    const res2 = await request(app).post('/api/generate').send({ userInput: 'cached scenario', lang: 'en' });
+    expect(res2.status).toBe(200);
+    expect(res2.body.selectedProducts).toEqual(['CRM', 'CLM', 'OMS']);
+    // callTrace 还是只有第一次的 gemini —— 第二次没打 provider
+    expect(callTrace).toEqual(['gemini']);
+  });
+
+  it('cache miss when input differs even slightly', async () => {
+    nextResults.gemini = { ok: true, rawText: validRationale(['CRM', 'CLM', 'OMS']) };
+
+    await request(app).post('/api/generate').send({ userInput: 'scenario A', lang: 'en' });
+    await request(app).post('/api/generate').send({ userInput: 'scenario B', lang: 'en' });
+
+    // 不同 userInput → 两次都打 provider
+    expect(callTrace).toEqual(['gemini', 'gemini']);
+  });
+
+  it('cache miss when lang differs (key includes lang)', async () => {
+    nextResults.gemini = { ok: true, rawText: validRationale(['CRM', 'CLM', 'OMS']) };
+
+    await request(app).post('/api/generate').send({ userInput: 'same input', lang: 'en' });
+    await request(app).post('/api/generate').send({ userInput: 'same input', lang: 'ja' });
+
+    // Same input, different lang → cache key differs → both hit gemini
+    expect(callTrace).toEqual(['gemini', 'gemini']);
+  });
+
+  it('AI_PARSE: provider returns syntactically invalid JSON → 502 AI_PARSE', async () => {
+    // Gemini 返非 JSON（理论上 responseSchema 应防止，但 Kimi/DeepSeek 走 prompt
+    // 也可能返 markdown 包裹的 JSON 之类）。源码 generate.ts:131-135 的
+    // JSON.parse 抛异常分支之前零集成测试。
+    nextResults.gemini = {
+      ok: true,
+      rawText: 'I am sorry, I cannot help with that. Here is some prose instead.',
+    };
+
+    const res = await request(app).post('/api/generate').send({ userInput: 'help', lang: 'en' });
+    expect(res.status).toBe(502);
+    expect(res.body.code).toBe('AI_PARSE');
+    // AI_PARSE 不 fallback — 跟 AI_INVALID 同语义（已经收到了"看起来正常"
+    // 的响应，再换一家不会更好）。锁住这个契约。
+    expect(callTrace).toEqual(['gemini']);
+  });
+
+  it('AI_PARSE: provider returns valid JSON but wrong shape → AI_INVALID', async () => {
+    // 区分 AI_PARSE 和 AI_INVALID：
+    //   - JSON.parse 失败 → AI_PARSE
+    //   - JSON.parse 成功但 schema 不对（少 key / 多 key / 类型错）→ AI_INVALID
+    nextResults.gemini = {
+      ok: true,
+      rawText: JSON.stringify({ wrongField: 'x' }), // 缺 selectedProducts/rationale
+    };
+
+    const res = await request(app).post('/api/generate').send({ userInput: 'help', lang: 'en' });
+    expect(res.status).toBe(502);
+    expect(res.body.code).toBe('AI_INVALID');
+    expect(callTrace).toEqual(['gemini']);
+  });
 });
