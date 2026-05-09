@@ -30,41 +30,48 @@ test('super_admin filter chips: 4 个互斥子集 + 各自过滤生效', async (
 
   await signInAs(page, boss.email, boss.password);
 
+  // G (audit Top-4): 全部 selector 走 data-testid，跟 i18n 文案 + chip
+  // 顺序解耦。重命名 chip / 改文案 / 调 chip 顺序都不会让此 spec 误报。
+  const rowById = (id: string) =>
+    page.locator('[data-testid="product-row"]').filter({ has: page.locator(`code:has-text("${id}")`) });
+
   // 默认 filter='all'，3 行都可见
-  await expect(page.locator('text=platform-a').first()).toBeVisible();
-  await expect(page.locator('text=mine-a').first()).toBeVisible();
-  await expect(page.locator('text=others-a').first()).toBeVisible();
+  await expect(rowById('platform-a')).toBeVisible();
+  await expect(rowById('mine-a')).toBeVisible();
+  await expect(rowById('others-a')).toBeVisible();
 
   // 点 Mine → 只看到 mine-a
-  await page.getByRole('button', { name: /^我的 \(\d+\)$/ }).click();
-  await expect(page.locator('text=mine-a').first()).toBeVisible();
-  await expect(page.locator('text=platform-a')).toHaveCount(0);
-  await expect(page.locator('text=others-a')).toHaveCount(0);
+  await page.getByTestId('product-filter-mine').click();
+  await expect(rowById('mine-a')).toBeVisible();
+  await expect(rowById('platform-a')).toHaveCount(0);
+  await expect(rowById('others-a')).toHaveCount(0);
 
   // 点 Platform → 只看到 platform-a
-  await page.getByRole('button', { name: /^平台 \(\d+\)$/ }).click();
-  await expect(page.locator('text=platform-a').first()).toBeVisible();
-  await expect(page.locator('text=mine-a')).toHaveCount(0);
-  await expect(page.locator('text=others-a')).toHaveCount(0);
+  await page.getByTestId('product-filter-platform').click();
+  await expect(rowById('platform-a')).toBeVisible();
+  await expect(rowById('mine-a')).toHaveCount(0);
+  await expect(rowById('others-a')).toHaveCount(0);
 
-  // 点 Others → 只看到 others-a（这是新加的能力）
-  await page.getByRole('button', { name: /^其他 editor \(\d+\)$/ }).click();
-  await expect(page.locator('text=others-a').first()).toBeVisible();
-  await expect(page.locator('text=mine-a')).toHaveCount(0);
-  await expect(page.locator('text=platform-a')).toHaveCount(0);
+  // 点 Others → 只看到 others-a（新加的能力）
+  await page.getByTestId('product-filter-others').click();
+  await expect(rowById('others-a')).toBeVisible();
+  await expect(rowById('mine-a')).toHaveCount(0);
+  await expect(rowById('platform-a')).toHaveCount(0);
 
   // 回 All → 3 个都可见
-  await page.getByRole('button', { name: /^全部 \(\d+\)$/ }).click();
-  await expect(page.locator('text=platform-a').first()).toBeVisible();
-  await expect(page.locator('text=mine-a').first()).toBeVisible();
-  await expect(page.locator('text=others-a').first()).toBeVisible();
+  await page.getByTestId('product-filter-all').click();
+  await expect(rowById('platform-a')).toBeVisible();
+  await expect(rowById('mine-a')).toBeVisible();
+  await expect(rowById('others-a')).toBeVisible();
 
-  // platform 行的 owner badge 仍是「平台」（之前的契约不能丢）
-  const platformRow = page.locator('li').filter({ hasText: 'platform-a' });
-  await expect(platformRow.getByText('平台', { exact: true })).toBeVisible();
-
-  // filter chip 不能再叫「无主（孤儿池）」
-  await expect(page.getByRole('button', { name: /无主|孤儿/ })).toHaveCount(0);
+  // platform 行的 owner badge 走 data-owner 属性，不依赖 "平台" 文案
+  const platformRow = rowById('platform-a');
+  await expect(platformRow.locator('[data-testid="product-owner-badge"]')).toHaveAttribute(
+    'data-owner',
+    'platform',
+  );
+  // owner badge 在视觉上仍是文案 "平台"（这条仅 sanity，文案改了不挂主测）
+  await expect(platformRow.locator('[data-testid="product-owner-badge"]')).toContainText('平台');
 });
 
 test('super_admin can invite a new editor via the Users panel', async ({ page }) => {

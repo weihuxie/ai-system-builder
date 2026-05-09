@@ -174,6 +174,8 @@ export default function ProductList({ me }: { me: AuthedUser }) {
               key={f}
               type="button"
               onClick={() => setFilter(f)}
+              data-testid={`product-filter-${f}`}
+              data-active={filter === f}
               className={[
                 'rounded-full px-3 py-1 transition-colors',
                 filter === f
@@ -247,6 +249,8 @@ export default function ProductList({ me }: { me: AuthedUser }) {
           return (
             <li
               key={p.id}
+              data-testid="product-row"
+              data-product-id={p.id}
               className={[
                 'py-3',
                 platformRow && 'opacity-70', // visually fade read-only reference rows
@@ -277,7 +281,11 @@ export default function ProductList({ me }: { me: AuthedUser }) {
                       {p.isParticipating ? 'on' : 'off'}
                     </button>
                     {me.role === 'super_admin' && (
-                      <span className="rounded-full border border-slate-200 bg-slate-50/70 px-2 py-0.5 text-[10px] text-slate-500">
+                      <span
+                        data-testid="product-owner-badge"
+                        data-owner={p.ownerId === null ? 'platform' : p.ownerEmail ?? 'unknown'}
+                        className="rounded-full border border-slate-200 bg-slate-50/70 px-2 py-0.5 text-[10px] text-slate-500"
+                      >
                         {p.ownerEmail ?? ui.adminProductBadgePlatform}
                       </span>
                     )}
