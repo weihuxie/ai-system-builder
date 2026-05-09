@@ -17,3 +17,7 @@ coverage/
 # Eval artifacts — transient, not versioned
 server/evals/eval-result.json
 server/evals/eval-result-prod.json
+
+# Stryker mutation testing reports — large HTML output, not versioned
+server/stryker-report/
+server/.stryker-tmp/

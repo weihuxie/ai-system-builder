@@ -112,3 +112,14 @@ export function clearGenerateCache(): void {
 export function _peekGenerateCache(): { size: number; version: number } {
   return { size: store.size, version };
 }
+
+/**
+ * Test-only: physically empty the Map and reset version. Production code
+ * uses clearGenerateCache (lazy version bump) instead — this is a hammer
+ * for test isolation when one test fills the store and the next checks
+ * absolute sizes.
+ */
+export function _resetGenerateCacheForTests(): void {
+  store.clear();
+  version = 1;
+}

@@ -86,4 +86,110 @@ describe('errorHandler · dev passthrough', () => {
     expect(res.body.details).toBeDefined();
     expect(JSON.stringify(res.body)).toContain('I am secret raw output');
   });
+
+  it('keeps full rawText payload (negative case for prod-strip)', async () => {
+    // 反向断言：在 dev 下 rawText 必须出现在 response。Stryker 之前把
+    // line 35 的 `process.env.NODE_ENV === 'production'` 改成 `true`
+    // (永远 strip) 时，prod 测试仍绿，但这条测试会挂。
+    const res = await request(buildApp()).get('/leak-test/ai-parse');
+    expect(res.body.details).toMatchObject({
+      rawText: 'I am secret raw output from the model',
+    });
+  });
+});
+
+describe('errorHandler · non-Error payloads (defensive logging path)', () => {
+  // Stryker line 47 LogicalOperator (`||` → `&&`) 和 OptionalChaining 在
+  // 当前 control flow 下是 **等价 mutation**：err 实际从不为 null
+  // (Express 把 null next() 当 "continue"，不进 errorHandler)，所以 `?.`
+  // 跟 `.` 行为一致。诚实做法是把这归为 "equivalent mutation" 接受 survive
+  // ——而不是写测试硬撑。
+  //
+  // 但 String fallback (line 47 末尾 `?? String(err)`) 在 err.message 缺失
+  // 时会触发，这条**可以**测：传一个普通 object（不是 Error 实例、没 message）
+  // 走 unknown 分支，断言 res 仍干净。
+
+  it('handles plain string thrown via next()', async () => {
+    const app = express();
+    app.get('/x', (_req, _res, next) => {
+      next('plain string error' as unknown as Error);
+    });
+    app.use(errorHandler);
+    const res = await request(app).get('/x');
+    expect(res.status).toBe(500);
+    expect(res.body.code).toBe('INTERNAL');
+    // String 错误内容不能泄露
+    expect(JSON.stringify(res.body)).not.toContain('plain string error');
+  });
+
+  it('handles object without message/stack via next()', async () => {
+    const app = express();
+    app.get('/x', (_req, _res, next) => {
+      next({ weird: true } as unknown as Error);
+    });
+    app.use(errorHandler);
+    const res = await request(app).get('/x');
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({ code: 'INTERNAL', message: 'Internal server error' });
+  });
+});
+
+describe('errorHandler · HttpError without details', () => {
+  // 锁住 HttpError 在 details=undefined 时不挂、不偷渡 details key。
+  // prod-strip 分支的 short-circuit (line 35 `body.details !== undefined`)
+  // 之前被 Stryker 改成 `true` 时仍绿——补这条让两个分支都被验。
+
+  it('returns clean { code, message } when HttpError has no details (prod)', async () => {
+    const orig = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try {
+      const app = express();
+      app.get('/no-details', (_req, _res, next) => {
+        next(new HttpError(404, 'NOT_FOUND', 'Resource missing'));
+      });
+      app.use(errorHandler);
+      const res = await request(app).get('/no-details');
+      expect(res.status).toBe(404);
+      expect(res.body).toEqual({ code: 'NOT_FOUND', message: 'Resource missing' });
+      expect('details' in res.body).toBe(false);
+    } finally {
+      process.env.NODE_ENV = orig;
+    }
+  });
+
+  it('returns clean { code, message } when HttpError has no details (dev)', async () => {
+    const orig = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    try {
+      const app = express();
+      app.get('/no-details-dev', (_req, _res, next) => {
+        next(new HttpError(404, 'NOT_FOUND', 'Resource missing'));
+      });
+      app.use(errorHandler);
+      const res = await request(app).get('/no-details-dev');
+      expect(res.status).toBe(404);
+      expect(res.body.code).toBe('NOT_FOUND');
+      expect(res.body.message).toBe('Resource missing');
+      // dev 里 details=undefined 也不应该出现在 JSON
+      expect(JSON.stringify(res.body)).not.toMatch(/"details"/);
+    } finally {
+      process.env.NODE_ENV = orig;
+    }
+  });
+});
+
+describe('errorHandler · HttpError status code preservation', () => {
+  // 锁住非 5xx 状态码也按 HttpError 走（不会被 unknown 路径吞成 500）。
+  // 之前测试只验了 502 和 500，403/404 等通用 4xx 没显式测过。
+  it('preserves 401 / 403 / 404 / 422 (4xx range)', async () => {
+    for (const status of [401, 403, 404, 422] as const) {
+      const app = express();
+      app.get('/x', (_req, _res, next) => {
+        next(new HttpError(status, 'VALIDATION', `status ${status}`));
+      });
+      app.use(errorHandler);
+      const res = await request(app).get('/x');
+      expect(res.status).toBe(status);
+    }
+  });
 });
