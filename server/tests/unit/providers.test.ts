@@ -25,7 +25,31 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { deepseekProvider, kimiProvider } from '../../src/lib/providers.js';
+// Mock @google/genai SDK at module level so geminiProvider sees a stub.
+// Use vi.hoisted because vi.mock factory is hoisted ABOVE imports — without
+// hoisted(), `generateContentMock` is undefined when the factory runs.
+const { generateContentMock } = vi.hoisted(() => ({
+  generateContentMock: vi.fn(),
+}));
+
+vi.mock('@google/genai', () => {
+  // class wrapper — `new GoogleGenAI(...)` 必须返回有 .models 的对象。
+  // 之前用 vi.fn().mockImplementation(() => ({...})) 调 `new` 时 vitest 把
+  // 实现函数本身当成构造结果返回，导致 ai.models.generateContent 是源代码字符串。
+  class MockGoogleGenAI {
+    models = { generateContent: generateContentMock };
+  }
+  return {
+    GoogleGenAI: MockGoogleGenAI,
+    Type: {
+      OBJECT: 'object',
+      STRING: 'string',
+      ARRAY: 'array',
+    },
+  };
+});
+
+import { deepseekProvider, geminiProvider, kimiProvider } from '../../src/lib/providers.js';
 
 const baseArgs = {
   prompt: 'You are a helpful assistant. Recommend products.',
@@ -43,15 +67,18 @@ const error = (status: number, body = 'error body') =>
   new Response(body, { status });
 
 beforeEach(() => {
-  // 默认两个 key 都有，每个 case 自己 unset 可以测 disabled 路径
+  // 默认 3 个 key 都有，每个 case 自己 unset 可以测 disabled 路径
   process.env.KIMI_API_KEY = 'fake-kimi-key';
   process.env.DEEPSEEK_API_KEY = 'fake-deepseek-key';
+  process.env.GEMINI_API_KEY = 'fake-gemini-key';
+  generateContentMock.mockReset();
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
   delete process.env.KIMI_API_KEY;
   delete process.env.DEEPSEEK_API_KEY;
+  delete process.env.GEMINI_API_KEY;
 });
 
 // ───────────────────────────────────────────
@@ -235,5 +262,116 @@ describe('deepseekProvider', () => {
     const r = await deepseekProvider.generate('deepseek-chat', baseArgs);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.kind).toBe('overload');
+  });
+});
+
+// ───────────────────────────────────────────
+// Gemini (uses @google/genai SDK, mocked at module level)
+// ───────────────────────────────────────────
+describe('geminiProvider', () => {
+  it('returns ok=true with rawText when SDK returns valid response', async () => {
+    generateContentMock.mockResolvedValue({ text: '{"selectedProducts":["CRM"],"rationale":{}}' });
+    const r = await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.rawText).toContain('selectedProducts');
+  });
+
+  it('returns fatal "Empty response" when SDK returns text=""', async () => {
+    generateContentMock.mockResolvedValue({ text: '' });
+    const r = await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.kind).toBe('fatal');
+      expect(r.message).toMatch(/empty/i);
+    }
+  });
+
+  it('returns fatal when SDK returns text=undefined', async () => {
+    generateContentMock.mockResolvedValue({ text: undefined });
+    const r = await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('fatal');
+  });
+
+  it('classifies "503 UNAVAILABLE" SDK error as overload (上海场关键)', async () => {
+    generateContentMock.mockRejectedValue(new Error('[GoogleGenAIError]: 503 UNAVAILABLE'));
+    const r = await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('overload');
+  });
+
+  it('classifies "429 RESOURCE_EXHAUSTED" as overload', async () => {
+    generateContentMock.mockRejectedValue(
+      new Error('[GoogleGenAIError]: 429 RESOURCE_EXHAUSTED quota exceeded'),
+    );
+    const r = await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('overload');
+  });
+
+  it('classifies "high demand" message as overload (Vercel iad1 常见)', async () => {
+    generateContentMock.mockRejectedValue(new Error('Server is under high demand, retry later'));
+    const r = await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('overload');
+  });
+
+  it('classifies "quota" message as overload', async () => {
+    generateContentMock.mockRejectedValue(new Error('Daily quota exceeded for project'));
+    const r = await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('overload');
+  });
+
+  it('classifies generic SDK error as fatal (auth / config / 4xx)', async () => {
+    generateContentMock.mockRejectedValue(new Error('API key not valid'));
+    const r = await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.kind).toBe('fatal');
+  });
+
+  it('classifies TimeoutError (raceWithTimeout) as overload', async () => {
+    // raceWithTimeout 包装 SDK 调用：如果 SDK 超过 GENERATE_TIMEOUT_MS 不返回，
+    // 抛 TimeoutError。geminiProvider 必须把它分到 overload 让 chain 继续。
+    // 用 fake timer 把 15s 真实超时压成 ms 级测试。
+    vi.useFakeTimers();
+    try {
+      generateContentMock.mockImplementation(() => new Promise(() => {})); // never resolves
+      const promise = geminiProvider.generate('gemini-2.5-flash', baseArgs);
+      // 推进时间到 GENERATE_TIMEOUT_MS（15s）后让 raceWithTimeout 触发 reject
+      await vi.advanceTimersByTimeAsync(15_000);
+      const r = await promise;
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.kind).toBe('overload');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('passes through model name + temperature to SDK', async () => {
+    generateContentMock.mockResolvedValue({ text: '{}' });
+    await geminiProvider.generate('gemini-2.5-pro', { ...baseArgs, temperature: 0.2 });
+    const call = generateContentMock.mock.calls[0][0];
+    expect(call.model).toBe('gemini-2.5-pro');
+    expect(call.config.temperature).toBe(0.2);
+  });
+
+  it('builds responseSchema with one rationale property per active product id', async () => {
+    generateContentMock.mockResolvedValue({ text: '{}' });
+    await geminiProvider.generate('gemini-2.5-flash', baseArgs);
+    const call = generateContentMock.mock.calls[0][0];
+    const schema = call.config.responseSchema;
+    expect(schema.properties.rationale.properties).toHaveProperty('CRM');
+    expect(schema.properties.rationale.properties).toHaveProperty('CLM');
+    expect(schema.properties.rationale.properties).toHaveProperty('OMS');
+    // selectedProducts 必须 minItems=3, maxItems=3 锁推荐数量契约
+    expect(schema.properties.selectedProducts.minItems).toBe('3');
+    expect(schema.properties.selectedProducts.maxItems).toBe('3');
+  });
+
+  it('isConfigured reflects GEMINI_API_KEY presence', () => {
+    expect(geminiProvider.isConfigured()).toBe(true);
+    delete process.env.GEMINI_API_KEY;
+    expect(geminiProvider.isConfigured()).toBe(false);
   });
 });

@@ -1,8 +1,35 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 
 import { errorHandler, HttpError } from '../../src/middleware/errors.js';
+
+// 之前 errors.ts 6 个 surviving mutants，关键 3 个（L44 ObjectLiteral / L47
+// LogicalOperator / L48 OptionalChaining）都在 logEvent 调用里 —— mutation
+// 只改日志内容不改响应，response-based 断言抓不到。补 console.log spy 直接
+// 验日志结构。
+let logSpy: ReturnType<typeof vi.spyOn>;
+beforeEach(() => {
+  logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+});
+afterEach(() => {
+  logSpy.mockRestore();
+});
+
+/** Pull the JSON object that logEvent emitted, given a sub-string of `event`. */
+function findLog(eventSubstr: string): Record<string, unknown> | null {
+  for (const call of logSpy.mock.calls) {
+    const arg = call[0];
+    if (typeof arg !== 'string') continue;
+    try {
+      const obj = JSON.parse(arg) as Record<string, unknown>;
+      if (typeof obj.event === 'string' && obj.event.includes(eventSubstr)) return obj;
+    } catch {
+      // not a JSON line, skip
+    }
+  }
+  return null;
+}
 
 // F6: errorHandler must not leak server-internal payloads (rawText, stack)
 // to clients in production. In dev, full details flow through to ease
@@ -67,6 +94,50 @@ describe('errorHandler · prod sanitisation', () => {
     // No stack leaked
     expect(JSON.stringify(res.body)).not.toContain('boom');
     expect(JSON.stringify(res.body)).not.toContain('at ');
+  });
+});
+
+describe('errorHandler · logEvent contract on unknown errors', () => {
+  // 锁住 L44/L47/L48 mutation: logEvent 名称、payload、message/stack 字段
+  // 都不能丢。response-based 断言抓不到这些（response 永远是 generic 500）。
+
+  it('emits logEvent with name "unhandled_error" (kills L44 StringLiteral → "")', async () => {
+    await request(buildApp()).get('/leak-test/unknown');
+    const log = findLog('unhandled_error');
+    expect(log).not.toBeNull();
+    expect(log!.event).toBe('unhandled_error');
+  });
+
+  it('logEvent payload is non-empty object (kills L44 ObjectLiteral → {})', async () => {
+    await request(buildApp()).get('/leak-test/unknown');
+    const log = findLog('unhandled_error');
+    expect(log).not.toBeNull();
+    // mutation `{}` 会让 method/path/message/stack 全部丢失
+    expect(log!.method).toBe('GET');
+    expect(log!.path).toBe('/leak-test/unknown');
+  });
+
+  it('logEvent message field has the err.message (kills L47 LogicalOperator + OptionalChaining)', async () => {
+    await request(buildApp()).get('/leak-test/unknown');
+    const log = findLog('unhandled_error');
+    expect(log).not.toBeNull();
+    // 原代码: (err as Error)?.message ?? String(err)
+    // L47 LogicalOperator 把 ?? 改 && 时，err.message='boom' 真值会让结果变成
+    // String(err)='Error: boom — internal detail with stack secret'，跟 'boom'
+    // 不一样。这条精确锁死值。
+    expect(log!.message).toBe('boom — internal detail with stack secret');
+  });
+
+  it('logEvent stack field is set when err has a stack (kills L48 OptionalChaining)', async () => {
+    // err = new Error(...) → err.stack 是真字符串。
+    // 如果 OptionalChaining 被改成 `.stack`，且 err 永远非 null（当前 control
+    // flow），行为不变 — 这是等价 mutation。但我们仍验 stack 字段是字符串
+    // 类型且非空（防 stack 字段被某个其它 mutation 设成 undefined）。
+    await request(buildApp()).get('/leak-test/unknown');
+    const log = findLog('unhandled_error');
+    expect(log).not.toBeNull();
+    expect(typeof log!.stack).toBe('string');
+    expect((log!.stack as string).length).toBeGreaterThan(0);
   });
 });
 
