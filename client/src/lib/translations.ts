@@ -107,6 +107,24 @@ export interface UiStrings {
   adminFieldDescriptionPlaceholder: string;
   /** Placeholder for audience input — example roles / personas. */
   adminFieldAudiencePlaceholder: string;
+  /** ✨ Translate button — main button in lang tab row. */
+  adminTranslate: string;
+  /** Loading label while translate request in flight. */
+  adminTranslating: string;
+  /** Tooltip when zh-CN name is filled — explains what the button does. */
+  adminTranslateTitle: string;
+  /** Error when user clicks translate before filling zh-CN name. */
+  adminTranslateNeedZhFirst: string;
+  /** Success toast — "filled {count} empty fields". */
+  adminTranslateDone: string;
+  /** Partial success — "{count} filled, {failed} langs failed". */
+  adminTranslatePartialFailed: string;
+  /** Info toast — translate ran but every target lang was already filled. */
+  adminTranslateNothingToFill: string;
+  /** Generic translate error (network / 502). */
+  adminTranslateFailed: string;
+  /** B3 inline bubble label — "translate this {lang} tab from zh-CN". */
+  adminTranslateTabBubble: string;
   adminAddProduct: string;
   adminEditProduct: string;
   adminDeleteProduct: string;
@@ -324,6 +342,15 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductEditorTourStep4: '每种语言 × 每个品牌一个 URL 槽，至少填 1 个；其它槽运行时按 brand→lang 自动 fallback',
     adminFieldDescriptionPlaceholder: '比如：帮 CFO/财务总监搞定多币种报销和 AP 自动化，覆盖出差、采购、付款全流程',
     adminFieldAudiencePlaceholder: '比如：CFO、财务总监、采购负责人',
+    adminTranslate: '✨ 一键翻译',
+    adminTranslating: '翻译中…',
+    adminTranslateTitle: '把简中的名称/描述/人群一键翻成繁中、EN、日本語',
+    adminTranslateNeedZhFirst: '请先在简中 tab 填名称（作为翻译源）',
+    adminTranslateDone: '✨ 已自动填充 {count} 个空字段',
+    adminTranslatePartialFailed: '已填 {count} 个；{failed} 翻译失败请重试',
+    adminTranslateNothingToFill: '其它语言都已手填，没有可填的空字段',
+    adminTranslateFailed: '翻译失败，请稍后重试',
+    adminTranslateTabBubble: '从简中翻译此 {lang}',
     adminAddProduct: '新增产品',
     adminEditProduct: '编辑',
     adminDeleteProduct: '删除',
@@ -481,6 +508,15 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductEditorTourStep4: '每種語言 × 每個品牌一個 URL 槽，至少填 1 個；其它槽運行時按 brand→lang 自動 fallback',
     adminFieldDescriptionPlaceholder: '比如：幫 CFO/財務總監搞定多幣種報銷和 AP 自動化，覆蓋出差、採購、付款全流程',
     adminFieldAudiencePlaceholder: '比如：CFO、財務總監、採購負責人',
+    adminTranslate: '✨ 一鍵翻譯',
+    adminTranslating: '翻譯中…',
+    adminTranslateTitle: '把簡中的名稱/描述/人群一鍵翻成繁中、EN、日本語',
+    adminTranslateNeedZhFirst: '請先在簡中 tab 填名稱（作為翻譯源）',
+    adminTranslateDone: '✨ 已自動填充 {count} 個空欄位',
+    adminTranslatePartialFailed: '已填 {count} 個；{failed} 翻譯失敗請重試',
+    adminTranslateNothingToFill: '其它語言都已手填，沒有可填的空欄位',
+    adminTranslateFailed: '翻譯失敗，請稍後重試',
+    adminTranslateTabBubble: '從簡中翻譯此 {lang}',
     adminAddProduct: '新增產品',
     adminEditProduct: '編輯',
     adminDeleteProduct: '刪除',
@@ -638,6 +674,15 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductEditorTourStep4: 'One URL slot per (language × brand). Fill at least one; others fall back at runtime via brand → lang resolution',
     adminFieldDescriptionPlaceholder: 'e.g. Helps CFOs/Finance Directors handle multi-currency expense reports and AP automation across travel, procurement and payment',
     adminFieldAudiencePlaceholder: 'e.g. CFO, Finance Director, Procurement Lead',
+    adminTranslate: '✨ Translate',
+    adminTranslating: 'Translating…',
+    adminTranslateTitle: 'Translate the name / description / audience from 简中 to 繁中, EN and 日本語',
+    adminTranslateNeedZhFirst: 'Fill the 简中 tab name first (it is the translation source)',
+    adminTranslateDone: '✨ Filled {count} empty field(s)',
+    adminTranslatePartialFailed: 'Filled {count}; failed for: {failed}',
+    adminTranslateNothingToFill: 'All other langs already filled — nothing to translate',
+    adminTranslateFailed: 'Translation failed, please retry',
+    adminTranslateTabBubble: 'Translate this {lang} from 简中',
     adminAddProduct: 'Add product',
     adminEditProduct: 'Edit',
     adminDeleteProduct: 'Delete',
@@ -795,6 +840,15 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductEditorTourStep4: '言語 × ブランドごとに 1 つの URL 枠。最低 1 つ入力すれば、他は実行時に brand → lang の順でフォールバック',
     adminFieldDescriptionPlaceholder: '例：CFO/財務責任者向け、多通貨経費精算と AP 自動化を出張・調達・支払い全工程でサポート',
     adminFieldAudiencePlaceholder: '例：CFO、財務責任者、調達責任者',
+    adminTranslate: '✨ 一括翻訳',
+    adminTranslating: '翻訳中…',
+    adminTranslateTitle: '簡中の名称・説明・対象を 繁中・EN・日本語 に一括翻訳',
+    adminTranslateNeedZhFirst: 'まず簡中タブで名称を入力（翻訳元として使用）',
+    adminTranslateDone: '✨ 空欄を {count} 件自動入力しました',
+    adminTranslatePartialFailed: '{count} 件入力済み；{failed} は翻訳失敗、再試行してください',
+    adminTranslateNothingToFill: '他言語はすべて入力済み — 翻訳対象がありません',
+    adminTranslateFailed: '翻訳失敗、後ほど再試行してください',
+    adminTranslateTabBubble: 'この {lang} を簡中から翻訳',
     adminAddProduct: '製品を追加',
     adminEditProduct: '編集',
     adminDeleteProduct: '削除',

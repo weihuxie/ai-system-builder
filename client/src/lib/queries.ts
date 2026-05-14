@@ -23,6 +23,8 @@ import type {
   ProductItem,
   QuickOption,
   SttResponse,
+  TranslateProductResponse,
+  TranslatedFields,
 } from '@asb/shared';
 import { DEFAULT_QUICK_OPTIONS } from '@asb/shared';
 
@@ -137,6 +139,28 @@ export function useCloneProductMutation(): UseMutationResult<ProductItem, Error,
       qc.invalidateQueries({ queryKey: queryKeys.products });
       qc.invalidateQueries({ queryKey: queryKeys.adminProducts });
     },
+  });
+}
+
+// ───────────────────────────────
+// Translate product fields from zh-CN to zh-HK / en / ja in one shot.
+// Server walks the admin-configured LLM chain (same as /api/generate) and
+// returns a translations map + a `failed` array of langs that LLM didn't
+// emit parseable output for (E2 partial success).
+// ───────────────────────────────
+export function useTranslateProductMutation(): UseMutationResult<
+  TranslateProductResponse,
+  Error,
+  TranslatedFields
+> {
+  return useMutation({
+    mutationFn: (fields) =>
+      apiFetch<TranslateProductResponse>('/admin/translate/product', {
+        method: 'POST',
+        body: JSON.stringify({ fields }),
+      }),
+    // No cache invalidation — translation result goes into ProductEditor's
+    // local draft state, not into a query cache.
   });
 }
 

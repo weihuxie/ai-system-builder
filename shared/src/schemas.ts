@@ -98,6 +98,38 @@ export const GenerateRequestSchema = z.object({
   lang: LangSchema,
 });
 
+// ─────────────────────────────────────────────
+// 产品多语言翻译 — admin 在 ProductEditor 填简中后一键翻成其他 3 lang
+// source lang 写死 zh-CN（决策 F1），所以请求里不带 sourceLang 字段
+// ─────────────────────────────────────────────
+export const TranslateProductRequestSchema = z.object({
+  fields: z.object({
+    name: z.string().min(1).max(200),
+    description: z.string().max(2000).default(''),
+    audience: z.string().max(500).default(''),
+  }),
+});
+export type TranslateProductRequest = z.infer<typeof TranslateProductRequestSchema>;
+
+/** Target langs (everything except zh-CN, which is the fixed source). */
+export type TranslateTargetLang = Exclude<Lang, 'zh-CN'>;
+
+export interface TranslatedFields {
+  name: string;
+  description: string;
+  audience: string;
+}
+
+export interface TranslateProductResponse {
+  /** Partial because LLM may fail on some langs (E2: write what succeeded). */
+  translations: Partial<Record<TranslateTargetLang, TranslatedFields>>;
+  /** target langs that LLM didn't return parseable output for. */
+  failed: TranslateTargetLang[];
+  provider?: 'gemini' | 'kimi' | 'deepseek';
+  model?: string;
+  latencyMs: number;
+}
+
 /**
  * Solution schema — the *contract* we enforce on Gemini output.
  * Note: rationale is validated loosely (Gemini's responseSchema support for

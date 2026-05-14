@@ -21,6 +21,7 @@ import { llmRouter } from './routes/llm.js';
 import { productsRouter } from './routes/products.js';
 import { quickScenariosRouter } from './routes/quickScenarios.js';
 import { sttRouter } from './routes/stt.js';
+import { translateRouter } from './routes/translate.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { generateLimiter, sttLimiter } from './middleware/rateLimit.js';
 
@@ -112,6 +113,11 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/generate', generateLimiter, generateRouter);
 app.use('/api/stt', sttLimiter, sttRouter);
 app.use('/api/products', productsRouter);
+// Translate goes under /api/admin/translate so it inherits admin trust +
+// shares generate limiter (LLM 调用同款成本)。Mount BEFORE the broader
+// /api/admin so the more-specific path matches first (express middleware 是
+// 顺序 fallthrough，更具体的放前面避免歧义)。
+app.use('/api/admin/translate', generateLimiter, translateRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/brand', brandRouter);
 app.use('/api/geo', geoRouter);

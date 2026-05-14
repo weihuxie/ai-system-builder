@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Sparkles, X } from 'lucide-react';
+import { Languages, Loader2, Sparkles, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 // Persisted dismissal flag for the create-mode onboarding card. Bumped to
 // .v1 so we can invalidate (.v2 etc) if we materially rewrite the steps.
@@ -16,7 +17,11 @@ import {
   type ProductItem,
 } from '@asb/shared';
 
-import { useAdminProductsQuery, useUpsertProductMutation } from '../../lib/queries';
+import {
+  useAdminProductsQuery,
+  useTranslateProductMutation,
+  useUpsertProductMutation,
+} from '../../lib/queries';
 import { t } from '../../lib/translations';
 import ErrorBanner from '../ErrorBanner';
 
@@ -113,6 +118,7 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
   const ui = t(lang);
   const [draft, setDraft] = useState<Draft>(toDraft(initial));
   const upsert = useUpsertProductMutation();
+  const translate = useTranslateProductMutation();
   const mode = initial ? 'update' : 'create';
 
   // Default lang tab: in CREATE mode start on EN (because name.en is required
@@ -165,6 +171,76 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
   useEffect(() => {
     setDraft(toDraft(initial));
   }, [initial]);
+
+  // ───────────────────────────────
+  // ✨ Translate: source = zh-CN (固定，决策 F1)，target = zh-HK / en / ja。
+  // 服务端走 admin-configured LLM chain（决策 A1），D2 prompt 保留缩写，
+  // E2 部分成功也写入。前端这里实现 C2 merge —— 只填 draft 里 EMPTY 的字段，
+  // 不动用户已经编辑过的内容。
+  // ───────────────────────────────
+  const zhCnName = draft.name['zh-CN'].trim();
+  const zhCnReady = zhCnName.length > 0;
+
+  const handleTranslate = async () => {
+    if (!zhCnReady) {
+      toast.error(ui.adminTranslateNeedZhFirst);
+      return;
+    }
+    try {
+      const result = await translate.mutateAsync({
+        name: draft.name['zh-CN'].trim(),
+        description: draft.description['zh-CN'].trim(),
+        audience: draft.audience['zh-CN'].trim(),
+      });
+
+      // C2 merge: 只填 draft 里当前为空的 field，保护已编辑内容
+      let filledCount = 0;
+      setDraft((prev) => {
+        const next: Draft = {
+          ...prev,
+          name: { ...prev.name },
+          description: { ...prev.description },
+          audience: { ...prev.audience },
+        };
+        for (const [targetLang, fields] of Object.entries(result.translations)) {
+          if (!fields) continue;
+          const l = targetLang as Lang;
+          for (const fkey of ['name', 'description', 'audience'] as const) {
+            const current = next[fkey][l].trim();
+            const incoming = fields[fkey];
+            if (!current && incoming) {
+              next[fkey] = { ...next[fkey], [l]: incoming };
+              filledCount++;
+            }
+          }
+        }
+        return next;
+      });
+
+      if (result.failed.length > 0) {
+        toast.warning(
+          ui.adminTranslatePartialFailed
+            .replace('{count}', String(filledCount))
+            .replace('{failed}', result.failed.join(', ')),
+        );
+      } else if (filledCount === 0) {
+        // 所有 target lang 都已经手填过了 — translate 没填进任何字段
+        toast.info(ui.adminTranslateNothingToFill);
+      } else {
+        toast.success(ui.adminTranslateDone.replace('{count}', String(filledCount)));
+      }
+    } catch (e) {
+      toast.error((e as Error).message || ui.adminTranslateFailed);
+    }
+  };
+
+  // B3: 当前 tab 是非 zh-CN 且 3 个 field 都空 → 浮一个 inline 气泡提示
+  // "从简中翻译此 tab"。点击行为跟主按钮一致（一次填全所有空 lang）。
+  const currentTabEmpty =
+    editingLang !== 'zh-CN' &&
+    !draft.name[editingLang].trim() &&
+    !draft.description[editingLang].trim() &&
+    !draft.audience[editingLang].trim();
 
   const submit = async () => {
     if (enNameMissing || idCollision || upsert.isPending) return;
@@ -273,24 +349,56 @@ export default function ProductEditor({ lang, initial, onClose }: Props) {
           </p>
         </div>
 
-        {/* Lang tabs (no separate ID field — identity = name.en, derived at save) */}
-        <div className="mt-5 inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5 text-xs">
-          {ALL_LANGS.map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => setEditingLang(l)}
-              className={[
-                'rounded-full px-3 py-1 transition-colors',
-                l === editingLang
-                  ? 'accent-bg text-white font-medium'
-                  : 'text-slate-600 hover:text-slate-900',
-              ].join(' ')}
-            >
-              {LANG_LABEL[l]}
-            </button>
-          ))}
+        {/* Lang tabs + ✨ 一键翻译按钮 (B1)。tabs 左，翻译按钮右。
+            按钮 source 固定 zh-CN (F1)，所以 zh-CN name 空时 disabled。 */}
+        <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
+          <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5 text-xs">
+            {ALL_LANGS.map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => setEditingLang(l)}
+                className={[
+                  'rounded-full px-3 py-1 transition-colors',
+                  l === editingLang
+                    ? 'accent-bg text-white font-medium'
+                    : 'text-slate-600 hover:text-slate-900',
+                ].join(' ')}
+              >
+                {LANG_LABEL[l]}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleTranslate}
+            disabled={!zhCnReady || translate.isPending}
+            data-testid="translate-button"
+            title={zhCnReady ? ui.adminTranslateTitle : ui.adminTranslateNeedZhFirst}
+            className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/[0.08] px-3 py-1 text-xs font-medium text-blue-200 hover:bg-blue-500/[0.15] disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {translate.isPending ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Languages size={12} />
+            )}
+            {translate.isPending ? ui.adminTranslating : ui.adminTranslate}
+          </button>
         </div>
+
+        {/* B3: 当前 tab 非 zh-CN 且 3 个 field 都空 → 提示从简中翻译 */}
+        {currentTabEmpty && zhCnReady && (
+          <button
+            type="button"
+            onClick={handleTranslate}
+            disabled={translate.isPending}
+            data-testid="translate-bubble"
+            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/[0.06] px-3 py-2 text-xs text-blue-200 hover:bg-blue-500/[0.1] disabled:opacity-40"
+          >
+            <Sparkles size={12} />
+            {ui.adminTranslateTabBubble.replace('{lang}', LANG_LABEL[editingLang])}
+          </button>
+        )}
 
         {/* Name / Description / Audience — one lang at a time */}
         {(
