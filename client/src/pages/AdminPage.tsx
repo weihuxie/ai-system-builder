@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { LogOut } from 'lucide-react';
+import { ExternalLink, LogOut } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 
 import { useBrandQuery, useMeQuery, queryKeys } from '../lib/queries';
@@ -118,6 +118,19 @@ export default function AdminPage() {
           </div>
           <div className="flex items-center gap-3">
             <LangSwitch />
+            {/* 预览首页：admin 改完产品后一键看效果。新 tab 打开，保留 admin
+                上下文，方便对照着改。只在已登录态显示。 */}
+            {(authed || session) && (
+              <a
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-full accent-bg text-white px-3 py-1.5 text-xs font-medium hover:brightness-110"
+              >
+                <ExternalLink size={12} />
+                {ui.adminPreviewHome}
+              </a>
+            )}
             {(authed || session) && (
               <button
                 type="button"

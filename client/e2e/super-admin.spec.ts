@@ -17,6 +17,18 @@ test('super_admin sees all admin panels', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /产品管理/ })).toBeVisible();
 });
 
+test('header has 预览首页 link → homepage in new tab', async ({ page }) => {
+  // 2026-05: admin 改完产品一键看首页效果。锁住 link 存在 + href=/ +
+  // target=_blank（新 tab 保留 admin 上下文）。
+  const boss = await seedE2EUser('boss-preview', 'super_admin');
+  await signInAs(page, boss.email, boss.password);
+
+  const previewLink = page.getByRole('link', { name: /预览首页/ });
+  await expect(previewLink).toBeVisible();
+  await expect(previewLink).toHaveAttribute('href', '/');
+  await expect(previewLink).toHaveAttribute('target', '_blank');
+});
+
 test('super_admin filter chips: 4 个互斥子集 + 各自过滤生效', async ({ page }) => {
   // 2026-05: filter 从 3 chip (All / Mine / Platform) 扩成 4 chip
   // (Mine / Platform / Others / All)。为啥：原 3 个混着层级（All 是

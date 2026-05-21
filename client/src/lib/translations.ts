@@ -66,6 +66,8 @@ export interface UiStrings {
   adminNotWhitelistedHint: string;
   adminSwitchAccount: string;
   adminLogout: string;
+  /** Header button: open the public homepage in a new tab to preview changes. */
+  adminPreviewHome: string;
   adminBrandSwitchTitle: string;
   adminProductsTitle: string;
   /** Lead-in copy for editors: counts of own vs platform products. {my} {platform} placeholders. */
@@ -319,6 +321,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminNotWhitelistedHint: '你的邮箱未在白名单里。请联系 super_admin 添加后再登录。',
     adminSwitchAccount: '切换账号',
     adminLogout: '退出',
+    adminPreviewHome: '预览首页',
     adminBrandSwitchTitle: '品牌切换',
     adminProductsTitle: '产品管理',
     adminProductsEditorHint: '我的产品 {my} 个 · 平台参考 {platform} 个（仅查看，不可编辑）',
@@ -485,6 +488,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminNotWhitelistedHint: '你的郵箱未在白名單內。請聯絡 super_admin 新增後再登錄。',
     adminSwitchAccount: '切換帳號',
     adminLogout: '退出',
+    adminPreviewHome: '預覽首頁',
     adminBrandSwitchTitle: '品牌切換',
     adminProductsTitle: '產品管理',
     adminProductsEditorHint: '我的產品 {my} 個 · 平台參考 {platform} 個（僅檢視，不可編輯）',
@@ -651,6 +655,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminNotWhitelistedHint: 'Your email is not on the allow-list. Ask a super_admin to invite you, then try again.',
     adminSwitchAccount: 'Switch account',
     adminLogout: 'Log out',
+    adminPreviewHome: 'Preview homepage',
     adminBrandSwitchTitle: 'Brand',
     adminProductsTitle: 'Products',
     adminProductsEditorHint: '{my} of yours · {platform} platform reference (read-only)',
@@ -817,6 +822,7 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminNotWhitelistedHint: 'このメールはホワイトリストに登録されていません。super_adminに招待を依頼してください。',
     adminSwitchAccount: 'アカウント切替',
     adminLogout: 'ログアウト',
+    adminPreviewHome: 'ホームをプレビュー',
     adminBrandSwitchTitle: 'ブランド',
     adminProductsTitle: '製品管理',
     adminProductsEditorHint: '自分の製品 {my} 件 · プラットフォーム参照 {platform} 件（閲覧のみ、編集不可）',
