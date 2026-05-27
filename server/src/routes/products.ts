@@ -48,6 +48,7 @@ productsRouter.get('/', async (_req, res, next) => {
       .from('products')
       .select('*')
       .eq('is_participating', true)
+      .is('deleted_at', null) // 软删除 (0006)：回收站里的不进 public catalog
       .order('id');
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
     const rows = (data ?? []) as ProductRow[];
@@ -74,7 +75,14 @@ productsRouter.get('/', async (_req, res, next) => {
 productsRouter.get('/admin', ...adminChain, async (req, res, next) => {
   try {
     const user = req.user!;
+    // ?deleted=true → 回收站视图（只看软删除的）；默认只看 live 的。
+    const showDeleted = req.query.deleted === 'true';
     let q = getSupabase().from('products').select('*').order('id');
+    if (showDeleted) {
+      q = q.not('deleted_at', 'is', null);
+    } else {
+      q = q.is('deleted_at', null);
+    }
     if (user.role === 'editor') {
       // PostgREST .or() with .is.null clause — syntax: 'col.is.null'
       q = q.or(`owner_id.eq.${user.id},owner_id.is.null`);
@@ -261,6 +269,8 @@ productsRouter.post('/:id/clone', ...adminChain, async (req, res, next) => {
   }
 });
 
+// DELETE 改成软删除 (0006)：标 deleted_at = now() 而不是物理删行，误删可恢复。
+// 回收站 + 前端撤销 toast 都依赖这个。
 productsRouter.delete('/:id', ...adminChain, async (req, res, next) => {
   try {
     const idParsed = z.string().min(1).max(64).safeParse(req.params.id);
@@ -272,11 +282,48 @@ productsRouter.delete('/:id', ...adminChain, async (req, res, next) => {
       throw new HttpError(403, 'OWNERSHIP_REQUIRED', 'Not your product');
     }
 
-    const { error } = await getSupabase().from('products').delete().eq('id', idParsed.data);
+    const { error } = await getSupabase()
+      .from('products')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', idParsed.data);
     if (error) throw new HttpError(500, 'INTERNAL', error.message);
-    // Product gone → catalog shrunk → invalidate.
+    // Product hidden from catalog → invalidate generate cache.
     clearGenerateCache();
     res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ───────────────────────────────────────────
+// POST /api/products/:id/restore (admin)
+// 从回收站恢复软删除的产品 — deleted_at 清回 NULL。ownership-gated 同 DELETE。
+// ───────────────────────────────────────────
+productsRouter.post('/:id/restore', ...adminChain, async (req, res, next) => {
+  try {
+    const idParsed = z.string().min(1).max(64).safeParse(req.params.id);
+    if (!idParsed.success) throw new HttpError(400, 'VALIDATION', 'Invalid id');
+
+    const user = req.user!;
+    const allowed = await canEditProduct(user, idParsed.data);
+    if (!allowed) {
+      throw new HttpError(403, 'OWNERSHIP_REQUIRED', 'Not your product');
+    }
+
+    const { data, error } = await getSupabase()
+      .from('products')
+      .update({ deleted_at: null })
+      .eq('id', idParsed.data)
+      .select()
+      .single();
+    if (error) throw new HttpError(500, 'INTERNAL', error.message);
+
+    const row = data as ProductRow;
+    const emailMap = await buildOwnerEmailMap([row.owner_id]);
+    clearGenerateCache();
+    res
+      .status(200)
+      .json(rowToProduct(row, row.owner_id ? (emailMap.get(row.owner_id) ?? null) : null));
   } catch (err) {
     next(err);
   }

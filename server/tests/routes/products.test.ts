@@ -184,6 +184,109 @@ describe('DELETE /api/products/:id — ownership', () => {
     const res = await request(app).delete('/api/products/keep').set(authHeader(token));
     expect(res.status).toBe(403);
   });
+
+  // ── 软删除 (0006) ──
+  it('DELETE is soft — row stays in DB with deleted_at set', async () => {
+    const ed = await seedUser({ email: 'ed-soft@example.com', role: 'editor' });
+    await seedProduct({ id: 'soft-gone', ownerId: ed.userId });
+    const token = mintJwt({ sub: ed.userId, email: ed.email });
+
+    await request(app).delete('/api/products/soft-gone').set(authHeader(token)).expect(204);
+
+    // Row 物理上还在，只是 deleted_at 被标了 — 不是 hard delete
+    const { data } = await testDb()
+      .from('products')
+      .select('id, deleted_at')
+      .eq('id', 'soft-gone')
+      .single();
+    expect(data?.id).toBe('soft-gone');
+    expect(data?.deleted_at).not.toBeNull();
+  });
+
+  it('soft-deleted product is excluded from public GET /api/products', async () => {
+    await seedProduct({ id: 'hidden-after-del', ownerId: null });
+    const sa = await seedUser({ email: 'sa-del@example.com', role: 'super_admin' });
+    const token = mintJwt({ sub: sa.userId, email: sa.email });
+
+    // visible before delete
+    const before = await request(app).get('/api/products');
+    expect(before.body.map((p: { id: string }) => p.id)).toContain('hidden-after-del');
+
+    await request(app).delete('/api/products/hidden-after-del').set(authHeader(token)).expect(204);
+
+    // gone from public catalog after soft delete
+    const after = await request(app).get('/api/products');
+    expect(after.body.map((p: { id: string }) => p.id)).not.toContain('hidden-after-del');
+  });
+
+  it('soft-deleted product excluded from default GET /admin but shown with ?deleted=true', async () => {
+    const sa = await seedUser({ email: 'sa-bin@example.com', role: 'super_admin' });
+    await seedProduct({ id: 'bin-me', ownerId: null });
+    const token = mintJwt({ sub: sa.userId, email: sa.email });
+
+    await request(app).delete('/api/products/bin-me').set(authHeader(token)).expect(204);
+
+    // default admin list (live only) — bin-me 不在
+    const live = await request(app).get('/api/products/admin').set(authHeader(token));
+    expect(live.body.map((p: { id: string }) => p.id)).not.toContain('bin-me');
+
+    // recycle bin view — bin-me 在
+    const bin = await request(app).get('/api/products/admin?deleted=true').set(authHeader(token));
+    expect(bin.body.map((p: { id: string }) => p.id)).toContain('bin-me');
+  });
+});
+
+describe('POST /api/products/:id/restore — 回收站恢复', () => {
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  it('restore clears deleted_at and product reappears in catalog', async () => {
+    const sa = await seedUser({ email: 'sa-restore@example.com', role: 'super_admin' });
+    await seedProduct({ id: 'comeback', ownerId: null });
+    const token = mintJwt({ sub: sa.userId, email: sa.email });
+
+    await request(app).delete('/api/products/comeback').set(authHeader(token)).expect(204);
+    // gone from public
+    let pub = await request(app).get('/api/products');
+    expect(pub.body.map((p: { id: string }) => p.id)).not.toContain('comeback');
+
+    // restore
+    const res = await request(app).post('/api/products/comeback/restore').set(authHeader(token));
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe('comeback');
+    expect(res.body.deletedAt).toBeNull();
+
+    // back in public catalog
+    pub = await request(app).get('/api/products');
+    expect(pub.body.map((p: { id: string }) => p.id)).toContain('comeback');
+  });
+
+  it('editor can restore own product', async () => {
+    const ed = await seedUser({ email: 'ed-restore@example.com', role: 'editor' });
+    await seedProduct({ id: 'mine-back', ownerId: ed.userId });
+    const token = mintJwt({ sub: ed.userId, email: ed.email });
+
+    await request(app).delete('/api/products/mine-back').set(authHeader(token)).expect(204);
+    const res = await request(app).post('/api/products/mine-back/restore').set(authHeader(token));
+    expect(res.status).toBe(200);
+    expect(res.body.deletedAt).toBeNull();
+  });
+
+  it('403 when editor restores another\'s product', async () => {
+    const ed1 = await seedUser({ email: 'ed-r1@example.com', role: 'editor' });
+    const ed2 = await seedUser({ email: 'ed-r2@example.com', role: 'editor' });
+    await seedProduct({ id: 'not-yours', ownerId: ed1.userId });
+    const sa = await seedUser({ email: 'sa-r@example.com', role: 'super_admin' });
+    const saToken = mintJwt({ sub: sa.userId, email: sa.email });
+    // super_admin soft-deletes it
+    await request(app).delete('/api/products/not-yours').set(authHeader(saToken)).expect(204);
+
+    // ed2 tries to restore ed1's product
+    const ed2Token = mintJwt({ sub: ed2.userId, email: ed2.email });
+    const res = await request(app).post('/api/products/not-yours/restore').set(authHeader(ed2Token));
+    expect(res.status).toBe(403);
+  });
 });
 
 describe('POST /api/products/:id/clone', () => {

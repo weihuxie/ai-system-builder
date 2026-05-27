@@ -82,6 +82,15 @@ export interface UiStrings {
   adminProductFilterOthers: string;
   /** Super_admin filter chip label: "All" — full superset, reset-style. */
   adminProductFilterAll: string;
+  /** Recycle bin filter chip + restore flow (0006 soft delete). */
+  adminProductFilterTrash: string;
+  adminProductRestore: string;
+  /** toast: 已恢复『{name}』 (uses pickLang name as description). */
+  adminProductRestored: string;
+  /** toast on delete: 已删除『{name}』· [撤销]. {name} placeholder. */
+  adminProductDeleted: string;
+  /** Undo action label in the delete toast. */
+  adminUndo: string;
   /** ARIA + tooltip text for the expand chevron (collapsed → click to open). */
   adminProductExpand: string;
   /** ARIA + tooltip text for the expand chevron (expanded → click to close). */
@@ -130,7 +139,6 @@ export interface UiStrings {
   adminAddProduct: string;
   adminEditProduct: string;
   adminDeleteProduct: string;
-  adminConfirmDelete: string;
   adminSave: string;
   adminCancel: string;
   /** Inline meta below the EN name input on create — shows the auto-derived
@@ -330,6 +338,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductFilterMine: '我的',
     adminProductFilterOthers: '其他 editor',
     adminProductFilterAll: '全部',
+    adminProductFilterTrash: '回收站',
+    adminProductRestore: '恢复',
+    adminProductRestored: '已恢复',
+    adminProductDeleted: '已删除『{name}』',
+    adminUndo: '撤销',
     adminProductExpand: '展开详情',
     adminProductCollapse: '收起',
     adminEditorTourTitle: '👋 第一次进来？快速上手',
@@ -357,7 +370,6 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminAddProduct: '新增产品',
     adminEditProduct: '编辑',
     adminDeleteProduct: '删除',
-    adminConfirmDelete: '确定删除此产品？',
     adminSave: '保存',
     adminCancel: '取消',
     adminFieldEnNameHint: '保存后系统将以代号 "{id}" 作为此产品的内部引用（AI 推荐和日志）。',
@@ -497,6 +509,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductFilterMine: '我的',
     adminProductFilterOthers: '其他 editor',
     adminProductFilterAll: '全部',
+    adminProductFilterTrash: '回收站',
+    adminProductRestore: '還原',
+    adminProductRestored: '已還原',
+    adminProductDeleted: '已刪除『{name}』',
+    adminUndo: '復原',
     adminProductExpand: '展開詳情',
     adminProductCollapse: '收起',
     adminEditorTourTitle: '👋 第一次進來？快速上手',
@@ -524,7 +541,6 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminAddProduct: '新增產品',
     adminEditProduct: '編輯',
     adminDeleteProduct: '刪除',
-    adminConfirmDelete: '確定刪除此產品？',
     adminSave: '保存',
     adminCancel: '取消',
     adminFieldEnNameHint: '保存後系統將以代號 "{id}" 作為此產品的內部引用（AI 推薦和日誌）。',
@@ -664,6 +680,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductFilterMine: 'Mine',
     adminProductFilterOthers: 'Other editors',
     adminProductFilterAll: 'All',
+    adminProductFilterTrash: 'Trash',
+    adminProductRestore: 'Restore',
+    adminProductRestored: 'Restored',
+    adminProductDeleted: 'Deleted “{name}”',
+    adminUndo: 'Undo',
     adminProductExpand: 'Show full details',
     adminProductCollapse: 'Collapse',
     adminEditorTourTitle: '👋 New here? Quick tour',
@@ -691,7 +712,6 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminAddProduct: 'Add product',
     adminEditProduct: 'Edit',
     adminDeleteProduct: 'Delete',
-    adminConfirmDelete: 'Delete this product?',
     adminSave: 'Save',
     adminCancel: 'Cancel',
     adminFieldEnNameHint: 'On save this product will be referenced internally as code "{id}" (AI recommendations + logs).',
@@ -831,6 +851,11 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminProductFilterMine: '自分',
     adminProductFilterOthers: '他のエディター',
     adminProductFilterAll: 'すべて',
+    adminProductFilterTrash: 'ゴミ箱',
+    adminProductRestore: '復元',
+    adminProductRestored: '復元しました',
+    adminProductDeleted: '「{name}」を削除しました',
+    adminUndo: '元に戻す',
     adminProductExpand: '詳細を表示',
     adminProductCollapse: '閉じる',
     adminEditorTourTitle: '👋 はじめての方へ — クイックガイド',
@@ -858,7 +883,6 @@ export const TRANSLATIONS: Record<Lang, UiStrings> = {
     adminAddProduct: '製品を追加',
     adminEditProduct: '編集',
     adminDeleteProduct: '削除',
-    adminConfirmDelete: 'この製品を削除しますか？',
     adminSave: '保存',
     adminCancel: 'キャンセル',
     adminFieldEnNameHint: '保存後、システムは内部参照（AI 推奨・ログ）でコード "{id}" を使用します。',

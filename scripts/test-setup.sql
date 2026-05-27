@@ -239,6 +239,17 @@ alter table public.products
 
 
 -- ═══════════════════════════════════════════════════════════════
+-- ── 0006_soft_delete.sql ──
+-- ═══════════════════════════════════════════════════════════════
+
+alter table public.products
+  add column if not exists deleted_at timestamptz;
+
+create index if not exists products_deleted_at_idx
+  on public.products (deleted_at);
+
+
+-- ═══════════════════════════════════════════════════════════════
 -- ── 完成 ──
 -- 下一步：在本地 repo 根目录创建 .env.test（见 README / .env.test.example），
 -- 填上这个项目的 URL / service key / JWT secret / anon key。

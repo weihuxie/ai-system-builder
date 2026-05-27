@@ -44,6 +44,11 @@ export interface ProductItem {
   // (cross-cutting products like CLM/Expense surface in every industry filter).
   // Optional in type for backward compat with rows created before migration 0005.
   industries?: string[];
+  // Soft-delete timestamp (0006 migration). NULL/absent = live product.
+  // Non-null = in 回收站 (recycle bin), filtered out of public catalog + AI
+  // recommendations, restorable by owner / super_admin. Hard delete removed
+  // entirely —误删后可恢复。
+  deletedAt?: string | null;
 }
 
 // ───────────────────────────────────────────

@@ -44,6 +44,8 @@ export const queryKeys = {
   /** Admin-scoped (auth + role filtered) products list. Distinct cache key
    *  from `products` because anon + admin views return different rowsets. */
   adminProducts: ['admin-products'] as const,
+  /** Recycle bin — soft-deleted products (deleted_at IS NOT NULL). */
+  adminDeletedProducts: ['admin-products-deleted'] as const,
   brand: ['brand'] as const,
   llmChain: ['llm-chain'] as const,
   me: ['me'] as const,
@@ -90,6 +92,16 @@ export function useAdminProductsQuery(enabled: boolean): UseQueryResult<ProductI
   });
 }
 
+// Recycle bin — soft-deleted products. Separate cache key from the live list.
+export function useDeletedProductsQuery(enabled: boolean): UseQueryResult<ProductItem[]> {
+  return useQuery({
+    queryKey: queryKeys.adminDeletedProducts,
+    queryFn: () => apiFetch<ProductItem[]>('/products/admin?deleted=true'),
+    enabled,
+    staleTime: 10_000,
+  });
+}
+
 export function useUpsertProductMutation(): UseMutationResult<
   ProductItem,
   Error,
@@ -113,6 +125,7 @@ export function useUpsertProductMutation(): UseMutationResult<
   });
 }
 
+// Soft delete (0006) — marks deleted_at, moves product to recycle bin.
 export function useDeleteProductMutation(): UseMutationResult<void, Error, string> {
   const qc = useQueryClient();
   return useMutation({
@@ -120,10 +133,24 @@ export function useDeleteProductMutation(): UseMutationResult<void, Error, strin
       await apiFetch<void>(`/products/${id}`, { method: 'DELETE' });
     },
     onSuccess: () => {
-      // Invalidate BOTH the public catalog (homepage) AND the admin scoped list.
-      // Skipping adminProducts would leave the editor's UI stale after their own edits.
       qc.invalidateQueries({ queryKey: queryKeys.products });
       qc.invalidateQueries({ queryKey: queryKeys.adminProducts });
+      // Bin grew by one — refresh recycle bin count/list too.
+      qc.invalidateQueries({ queryKey: queryKeys.adminDeletedProducts });
+    },
+  });
+}
+
+// Restore from recycle bin — clears deleted_at, product reappears in catalog.
+// Powers both the undo toast (A) and the recycle bin's 恢复 button (B).
+export function useRestoreProductMutation(): UseMutationResult<ProductItem, Error, string> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiFetch<ProductItem>(`/products/${id}/restore`, { method: 'POST' }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.products });
+      qc.invalidateQueries({ queryKey: queryKeys.adminProducts });
+      qc.invalidateQueries({ queryKey: queryKeys.adminDeletedProducts });
     },
   });
 }

@@ -32,6 +32,8 @@ export interface ProductRow {
   /** jsonb array of industry IDs (migration 0005). May be missing on rows
    *  inserted before the migration ran — normalised to [] on read. */
   industries?: unknown;
+  /** soft-delete timestamp (migration 0006). null/absent = live product. */
+  deleted_at?: string | null;
 }
 
 function emptyLangMap(): LangMap {
@@ -90,6 +92,7 @@ export function rowToProduct(row: ProductRow, ownerEmail: string | null = null):
     ownerId: row.owner_id,
     ownerEmail,
     industries: normaliseIndustries(row.industries),
+    deletedAt: row.deleted_at ?? null,
   };
 }
 
