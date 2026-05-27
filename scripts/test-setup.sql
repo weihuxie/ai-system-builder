@@ -250,6 +250,33 @@ create index if not exists products_deleted_at_idx
 
 
 -- ═══════════════════════════════════════════════════════════════
+-- ── 0007_brand_huawei.sql ──
+-- ═══════════════════════════════════════════════════════════════
+
+do $$
+declare
+  cname text;
+begin
+  for cname in
+    select con.conname
+    from pg_constraint con
+    join pg_class rel on rel.oid = con.conrelid
+    join pg_namespace nsp on nsp.oid = rel.relnamespace
+    where nsp.nspname = 'public'
+      and rel.relname = 'global_config'
+      and con.contype = 'c'
+      and pg_get_constraintdef(con.oid) ilike '%brand%'
+  loop
+    execute format('alter table public.global_config drop constraint %I', cname);
+  end loop;
+end $$;
+
+alter table public.global_config
+  add constraint global_config_brand_check
+  check (brand in ('google', 'aws', 'huawei'));
+
+
+-- ═══════════════════════════════════════════════════════════════
 -- ── 完成 ──
 -- 下一步：在本地 repo 根目录创建 .env.test（见 README / .env.test.example），
 -- 填上这个项目的 URL / service key / JWT secret / anon key。

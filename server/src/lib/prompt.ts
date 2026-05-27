@@ -4,6 +4,7 @@ import { pickLang } from '@asb/shared';
 const BRAND_NAME: Record<Brand, string> = {
   google: 'Google Cloud',
   aws: 'AWS',
+  huawei: 'Huawei Cloud',
 };
 
 /**
@@ -39,7 +40,8 @@ You are a senior solution architect at the ${brandName} Summit.
 Context: the current brand is ${brandName}.
 When explaining recommendations, favor ${brandName}'s ecosystem, products, and integrations
 where naturally applicable (e.g., for a "CRM" recommendation under AWS Summit, mention
-Amazon Connect / AppFlow / Lambda integrations; under Google Summit, mention Workspace / Vertex AI).
+Amazon Connect / AppFlow / Lambda integrations; under Google Summit, mention Workspace / Vertex AI;
+under Huawei Summit, mention ModelArts / Pangu / 鲲鹏 stack).
 Do NOT invent products outside <products>. Selection MUST come from <products>.
 
 Answer ONLY based on the <products> list.

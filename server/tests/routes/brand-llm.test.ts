@@ -93,6 +93,21 @@ describe('PUT /api/brand — super_admin only', () => {
     expect(get.body.brand).toBe('aws');
   });
 
+  it('super_admin can flip to huawei (0007 brand check 已放开)', async () => {
+    const boss = await seedUser({ email: 'boss-hw@example.com', role: 'super_admin' });
+    const token = mintJwt({ sub: boss.userId, email: boss.email });
+
+    const res = await request(app)
+      .put('/api/brand')
+      .set(authHeader(token))
+      .send({ brand: 'huawei' });
+    expect(res.status).toBe(200);
+    expect(res.body.brand).toBe('huawei');
+
+    const get = await request(app).get('/api/brand');
+    expect(get.body.brand).toBe('huawei');
+  });
+
   it('400 for invalid brand value (with code=VALIDATION + brand-hint message)', async () => {
     // Mutation kills: L46 'VALIDATION' + L46 'Invalid brand (must be...)' StringLiteral
     const boss = await seedUser({ email: 'boss-bad@example.com', role: 'super_admin' });

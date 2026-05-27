@@ -22,7 +22,7 @@ import ProductEditor from './ProductEditor';
 // different demo laptop sees the tour again.
 const TOUR_DISMISS_KEY = 'asb.editor-tour-dismissed.v1';
 
-const BRAND_LABEL: Record<Brand, string> = { google: 'Google', aws: 'AWS' };
+const BRAND_LABEL: Record<Brand, string> = { google: 'Google', aws: 'AWS', huawei: 'Huawei' };
 
 // 4 互斥子集 + All（superset）。语义诚实：Mine + Platform + Others = All
 // （super_admin 视角下 mine 和 others 都是 "ownerId 不为 NULL" 的子集，

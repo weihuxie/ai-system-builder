@@ -6,8 +6,8 @@
 export type Lang = 'zh-CN' | 'zh-HK' | 'en' | 'ja';
 export const ALL_LANGS: readonly Lang[] = ['zh-CN', 'zh-HK', 'en', 'ja'] as const;
 
-export type Brand = 'google' | 'aws';
-export const ALL_BRANDS: readonly Brand[] = ['google', 'aws'] as const;
+export type Brand = 'google' | 'aws' | 'huawei';
+export const ALL_BRANDS: readonly Brand[] = ['google', 'aws', 'huawei'] as const;
 
 export type LangMap = Record<Lang, string>;
 export type BrandMap = Record<Brand, string>;

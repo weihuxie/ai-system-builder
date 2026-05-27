@@ -58,12 +58,16 @@ function inflateBrandUrls(v: unknown): LangMap {
   return emptyLangMap();
 }
 
-/** Normalise a DB `url` JSONB value into BrandLangMap, tolerating legacy shapes. */
+/** Normalise a DB `url` JSONB value into BrandLangMap, tolerating legacy shapes.
+ *  老数据没有 huawei 键 (添加 brand 之前的产品) → 自动 fallback 到空 LangMap，
+ *  消费侧 pickBrandLang 会从 huawei.<lang> → huawei.en → google.<lang> → google.en
+ *  逐级 fallback (详见 CLAUDE.md §2.5.1)。 */
 function normaliseUrl(raw: unknown): BrandLangMap {
   const obj = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   return {
     google: inflateBrandUrls(obj.google),
     aws: inflateBrandUrls(obj.aws),
+    huawei: inflateBrandUrls(obj.huawei),
   };
 }
 

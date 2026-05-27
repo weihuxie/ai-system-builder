@@ -69,7 +69,8 @@
 - `0004_quick_scenarios.sql` — global_config 加 quick_scenarios 列
 - `0005_product_industries.sql` — products 加 industries jsonb default '[]'
 - `0006_soft_delete.sql` — products 加 deleted_at timestamptz（软删除/回收站）+ index
-- 一键脚本：`scripts/test-setup.sql` 把 0001-0006 拼起来贴 Supabase SQL Editor 即可
+- `0007_brand_huawei.sql` — global_config.brand check 加 'huawei'（drop 老匿名 check + 新 check 命名 global_config_brand_check）
+- 一键脚本：`scripts/test-setup.sql` 把 0001-0007 拼起来贴 Supabase SQL Editor 即可
 
 #### 2.3.1 邀请 editor 的当前流程（whitelist + 一次性链接）
 

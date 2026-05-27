@@ -8,6 +8,7 @@ import ErrorBanner from '../ErrorBanner';
 const BRAND_LABEL: Record<Brand, string> = {
   google: 'Google',
   aws: 'AWS',
+  huawei: 'Huawei',
 };
 
 export default function BrandSwitch() {

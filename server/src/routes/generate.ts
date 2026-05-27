@@ -6,6 +6,7 @@ import {
   GenerateRequestSchema,
   LlmChainSchema,
   SolutionSchema,
+  type Brand,
   type GenerateResponse,
   type LlmChain,
 } from '@asb/shared';
@@ -44,7 +45,7 @@ generateRouter.post('/', async (req, res, next) => {
     if (products.length === 0) {
       throw new HttpError(500, 'INTERNAL', 'No active products configured');
     }
-    const brand = (cfgRow?.brand ?? 'google') as 'google' | 'aws';
+    const brand = (cfgRow?.brand ?? 'google') as Brand;
 
     // Parse chain from DB; fall back to defaults if DB value is malformed.
     const parsedChain = LlmChainSchema.safeParse(cfgRow?.llm_chain);

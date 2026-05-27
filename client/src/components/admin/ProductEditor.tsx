@@ -69,7 +69,7 @@ function emptyLangMap(): LangMap {
   return { 'zh-CN': '', 'zh-HK': '', en: '', ja: '' };
 }
 function emptyBrandLangMap(): BrandLangMap {
-  return { google: emptyLangMap(), aws: emptyLangMap() };
+  return { google: emptyLangMap(), aws: emptyLangMap(), huawei: emptyLangMap() };
 }
 function toDraft(p?: ProductItem | null): Draft {
   if (!p) {
@@ -96,7 +96,7 @@ const LANG_LABEL: Record<Lang, string> = {
   en: 'EN',
   ja: '日本語',
 };
-const BRAND_LABEL: Record<Brand, string> = { google: 'Google', aws: 'AWS' };
+const BRAND_LABEL: Record<Brand, string> = { google: 'Google', aws: 'AWS', huawei: 'Huawei' };
 
 interface Props {
   lang: Lang;

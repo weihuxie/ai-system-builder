@@ -34,6 +34,18 @@ export const THEMES: Record<Brand, BrandTheme> = {
     accent: '#ff9900', // AWS orange
     accentMuted: 'rgba(255,153,0,0.40)',
   },
+  huawei: {
+    id: 'huawei',
+    logoUrl: '/logos/hand.png',
+    headerTitle: {
+      'zh-CN': 'Huawei Summit | Build Your Business System with AI',
+      'zh-HK': 'Huawei Summit | Build Your Business System with AI',
+      en: 'Huawei Summit | Build Your Business System with AI',
+      ja: 'Huawei Summit | Build Your Business System with AI',
+    },
+    accent: '#C7000B', // Huawei red
+    accentMuted: 'rgba(199,0,11,0.40)',
+  },
 };
 
 export function applyTheme(brand: Brand): void {

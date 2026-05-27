@@ -10,7 +10,7 @@ import { z } from 'zod';
 import type { Lang, Brand } from './types.js';
 
 export const LangSchema = z.enum(['zh-CN', 'zh-HK', 'en', 'ja']);
-export const BrandSchema = z.enum(['google', 'aws']);
+export const BrandSchema = z.enum(['google', 'aws', 'huawei']);
 
 export const LangMapSchema = z.object({
   'zh-CN': z.string(),
@@ -25,9 +25,12 @@ export const BrandMapSchema = z.object({
 });
 
 // Per-brand × per-lang URL map. See types.ts BrandLangMap for the rationale.
+// Huawei 是 2026-05 新加的 brand — 老 ProductItem 数据可能没有这个键，
+// 让 Zod parse 时给个空 LangMap 兜底，避免老数据 PUT/POST 时 validation fail。
 export const BrandLangMapSchema = z.object({
   google: LangMapSchema,
   aws: LangMapSchema,
+  huawei: LangMapSchema.default({ 'zh-CN': '', 'zh-HK': '', en: '', ja: '' }),
 });
 
 export const ProductItemSchema = z.object({
